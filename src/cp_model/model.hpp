@@ -15,7 +15,7 @@
 #include "../system/mapping.hpp"
 #include "../systemDesign/designDecisions.hpp"
 #include "../throughput/throughputSSE.hpp"
-#include "../throughput/throughputMCM.hpp"
+#include "../throughput/throughputMCR.hpp"
 
 using namespace Gecode;
 
