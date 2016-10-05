@@ -1,0 +1,134 @@
+// *** GENERAL CONSTRAINTS ***
+
+
+if(platform->getInterconnectType() == TDMA_BUS){
+  for(unsigned int ki=0; ki<channels.size(); ki++){
+    int src_ch1 = channels[ki]->source;
+    int dst_ch1 = channels[ki]->destination;
+    int tok_ch1 = channels[ki]->initTokens;
+    
+    //receiving doesn't take any time on TDMA bus (buffer in receiving node's local memory)
+    rel(*this, wcct_r[ki]==0); 
+    //if src and dst actors are located on same proc, communication doesn't take any time
+    rel(*this, (proc[src_ch1]==proc[dst_ch1]) >> (wcct_b[ki]==0));
+    rel(*this, (proc[src_ch1]==proc[dst_ch1]) >> (wcct_s[ki]==0));
+    rel(*this, (proc[src_ch1]==proc[dst_ch1]) >> (recbufferSz[ki]==1));
+    rel(*this, (proc[src_ch1]==proc[dst_ch1]) >> (sendbufferSz[ki]==0));
+    //if src and dst actors are on different proc, wcct is sum of blocking and transfer time
+    rel(*this, (proc[src_ch1]!=proc[dst_ch1]) >> (wcct_b[ki] == blockingTime_s[ki]));
+    rel(*this, (proc[src_ch1]!=proc[dst_ch1]) >> (wcct_s[ki] == transferTime_s[ki]));
+    rel(*this, (proc[src_ch1]!=proc[dst_ch1]) >> (wcct_b[ki] > 0));
+    rel(*this, (proc[src_ch1]!=proc[dst_ch1]) >> (wcct_s[ki] > 0));
+    rel(*this, (proc[src_ch1]!=proc[dst_ch1]) >> (recbufferSz[ki]>=1));
+    rel(*this, (proc[src_ch1]!=proc[dst_ch1]) >> (sendbufferSz[ki]>=1));
+    
+    //blocking and transfer times for all channels, depending on TDMA allocation
+    //Does element exist in a reified version?
+    IntVarArgs bt_sj(*this, platform->nodes(), 0, Int::Limits::max);
+    IntVarArgs tt_sj(*this, platform->nodes(), 0, Int::Limits::max);
+    IntArgs wcbts(mapping->wcBlockingTimes()); //blocking
+    IntArgs wctts(mapping->wcTransferTimes(ki)); //transfer
+    for(size_t j=0; j<platform->nodes(); j++){
+      element(*this, wcbts, tdmaAlloc[j], bt_sj[j]);
+      element(*this, wctts, tdmaAlloc[j], tt_sj[j]);
+    }
+    element(*this, bt_sj, proc[src_ch1], blockingTime_s[ki]);
+    element(*this, tt_sj, proc[src_ch1], transferTime_s[ki]);
+    
+    //order-based scheduling of messages
+    rel(*this, sendNext[ki]!=ki);
+    rel(*this, (sendNext[ki]>=apps->n_programChannels()) >> (sendNext[ki]==apps->n_programChannels()+proc[src_ch1]));
+    rel(*this, recNext[ki]!=ki);
+    rel(*this, (recNext[ki]>=apps->n_programChannels()) >> (recNext[ki]==apps->n_programChannels()+proc[dst_ch1]));
+   
+    for(unsigned int kj=0; kj<channels.size(); kj++){
+      int src_ch2 = channels[kj]->source;
+      int dst_ch2 = channels[kj]->destination;
+      int tok_ch2 = channels[kj]->initTokens;
+      if(ki != kj){
+        //sending
+        rel(*this, (proc[src_ch1]==proc[src_ch2] && rank[src_ch1] < rank[src_ch2]) >> (sendNext[kj]!=ki));
+        rel(*this, (proc[src_ch1]!=proc[src_ch2]) >> (sendNext[kj]!=ki));
+        if(src_ch1==src_ch2){
+          //TODO: think about the role of inital tokens for this case. Intuitively, (if proc[dst_ch1]!=proc[dst_ch2]),
+          //the channel without initial tokens should communicate first. But are there situations where it is
+          //advantageous to not do that?
+          rel(*this, (proc[dst_ch1]==proc[dst_ch2] && rank[dst_ch1] < rank[dst_ch2]) >> (sendNext[kj] != ki)); 
+          if(tok_ch1==tok_ch2){
+            rel(*this, (proc[dst_ch1]!=proc[dst_ch2] && proc[src_ch1]==proc[dst_ch1]) >> (sendNext[kj] != ki)); 
+          }
+          if(apps->dependsOn(dst_ch1,dst_ch2)){ 
+            rel(*this, sendNext[kj] != ki); 
+          }
+        }
+        //receiving
+        //if(tok_ch1==0 && tok_ch2==0)
+        rel(*this, (proc[dst_ch1]==proc[dst_ch2] && rank[dst_ch1] < rank[dst_ch2]) >> (recNext[kj]!=ki));
+        rel(*this, (proc[dst_ch1]!=proc[dst_ch2]) >> (recNext[kj]!=ki));
+        if(dst_ch1==dst_ch2){
+          if(tok_ch1==tok_ch2){ //if both channels have the same amount of initial tokens (none or one)
+            rel(*this, (proc[src_ch1]==proc[src_ch2] && rank[src_ch1] < rank[src_ch2]) >> (recNext[kj] != ki));
+            rel(*this, (proc[src_ch1]!=proc[src_ch2] && proc[src_ch1]==proc[dst_ch1]) >> (recNext[kj] != ki));
+          }else if(tok_ch1<tok_ch2){ //ch1 has no initial token, but ch2 does
+            //TODO: investigate this situation (see more info on TODO list)
+          }
+          //The constraint below, as equivalent to the sending-version, does not make
+          //sense for receiving order. Depending on sending times (token size, tdma allocation), the token from src_ch2
+          //may arrive earlier than the token from src_ch1
+          //if(apps->dependsOn(src_ch1,src_ch2)){ 
+          //  rel(*this, recNext[ki] < recNext[kj]); 
+          //}
+        }
+      }
+    }
+
+    //ordering of dummy nodes
+    for(size_t j=0; j<platform->nodes(); j++){
+      if(j<platform->nodes()-1){
+        rel(*this, (proc[src_ch1]!=j+1) >> (sendNext[apps->n_programChannels()+j]!=ki));
+        rel(*this, (proc[dst_ch1]!=j+1) >> (recNext[apps->n_programChannels()+j]!=ki));
+        rel(*this, sendNext[apps->n_programChannels()+j]<apps->n_programChannels() 
+                   || sendNext[apps->n_programChannels()+j]==apps->n_programChannels()+j+1);
+        rel(*this, recNext[apps->n_programChannels()+j]<apps->n_programChannels() 
+                   || recNext[apps->n_programChannels()+j]==apps->n_programChannels()+j+1);
+      }else{
+        rel(*this, (proc[src_ch1]!=0) >> (sendNext[apps->n_programChannels()+j]!=ki));
+        rel(*this, (proc[dst_ch1]!=0) >> (recNext[apps->n_programChannels()+j]!=ki));
+        rel(*this, sendNext[apps->n_programChannels()+j]<apps->n_programChannels() 
+                   || sendNext[apps->n_programChannels()+j]==apps->n_programChannels());
+        rel(*this, recNext[apps->n_programChannels()+j]<apps->n_programChannels() 
+                   || recNext[apps->n_programChannels()+j]==apps->n_programChannels());
+      }
+    }
+  }
+  circuit(*this, sendNext, ICL_DOM);
+  circuit(*this, recNext, ICL_DOM);
+  
+  //TDMA slot allocation
+  //count how many channels on each proc communicate via the bus
+  IntVarArgs sendingProcs(*this, apps->n_programChannels(), 0, platform->nodes()+1);
+  IntVarArgs channelsOnProc(*this, platform->nodes()+1, 0, apps->n_programChannels());
+  for(unsigned int ki=0; ki<channels.size(); ki++){
+    int src_ch = channels[ki]->source;
+    int dst_ch = channels[ki]->destination;
+    for(size_t j=0; j<platform->nodes(); j++){
+      rel(*this, (proc[src_ch]==j && proc[src_ch]!=proc[dst_ch]) >> (sendingProcs[ki]==j));
+    }
+    rel(*this, (proc[src_ch]==proc[dst_ch]) >> (sendingProcs[ki]==platform->nodes()));
+  }
+  count(*this, sendingProcs, channelsOnProc);
+  for(size_t j=0; j<platform->nodes(); j++){
+    //if all actors are on the same node, no communication via the bus
+    rel(*this, (procsUsed==1) >> (tdmaAlloc[j]==0));
+    //if no messages are sent from proc, allocate no tdma slots
+    rel(*this, (channelsOnProc[j]==0) >> (tdmaAlloc[j]==0));
+    //...otherwise, allocate at least one slot
+    rel(*this, (channelsOnProc[j]>0) >> (tdmaAlloc[j]>0));
+  }
+  rel(*this, sum(tdmaAlloc) <= platform->tdmaSlots());
+}
+
+
+// *** CONSTRAINTS FORCING THE DESIGN DECISIONS ***
+
+

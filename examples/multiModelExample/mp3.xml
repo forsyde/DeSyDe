@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sdf3 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" type="sdf" version="1.0"
+      xsi:noNamespaceSchemaLocation="http://www.es.ele.tue.nl/sdf3/xsd/sdf3-sdf.xsd">
+   <applicationGraph name="mp3decoder">
+      <sdf name="mp3decoder" type="g">
+         <actor name="mp3decoder_ReadBitstreamAndExtractFrames" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+            <port name="oport1_4" type="out" rate="1"/>
+            <port name="oport1_5" type="out" rate="1"/>
+            <port name="oport1_6" type="out" rate="1"/>
+            <port name="oport1_7" type="out" rate="1"/>
+            <port name="oport1_8" type="out" rate="1"/>
+            <port name="oport1_9" type="out" rate="1"/>
+         </actor>
+         <actor name="mp3decoder_ProcessChanuleZeroLeft0" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="iport2_1" type="in" rate="1"/>
+            <port name="iport3_1" type="in" rate="1"/>
+            <port name="iport4_1" type="in" rate="1"/>
+            <port name="oport1_2" type="out" rate="1"/>
+         </actor>
+         <actor name="mp3decoder_ProcessGranuleZero0" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="iport2_1" type="in" rate="1"/>
+            <port name="iport3_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+            <port name="oport1_2" type="out" rate="1"/>
+            <port name="oport1_3" type="out" rate="1"/>
+            <port name="oport1_4" type="out" rate="1"/>
+            <port name="oport1_5" type="out" rate="1"/>
+            <port name="oport1_6" type="out" rate="1"/>
+         </actor>
+         <actor name="mp3decoder_ProcessGranuleOne0" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="iport2_1" type="in" rate="1"/>
+            <port name="iport3_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+            <port name="oport1_2" type="out" rate="1"/>
+            <port name="oport1_3" type="out" rate="1"/>
+            <port name="oport1_4" type="out" rate="1"/>
+            <port name="oport1_5" type="out" rate="1"/>
+            <port name="oport1_6" type="out" rate="1"/>
+         </actor>
+         <actor name="mp3decoder_ProcessChanuleZeroRight0" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="iport2_1" type="in" rate="1"/>
+            <port name="iport3_1" type="in" rate="1"/>
+            <port name="iport4_1" type="in" rate="1"/>
+            <port name="oport1_2" type="out" rate="1"/>
+         </actor>
+         <actor name="mp3decoder_ProcessChanuleOneRight0" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="iport2_1" type="in" rate="1"/>
+            <port name="iport3_1" type="in" rate="1"/>
+            <port name="iport4_1" type="in" rate="1"/>
+            <port name="oport1_2" type="out" rate="1"/>
+         </actor>
+         <actor name="mp3decoder_ProcessChanuleOneLeft0" type="a">
+            <port name="iport4_1" type="in" rate="1"/>
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="iport2_1" type="in" rate="1"/>
+            <port name="iport3_1" type="in" rate="1"/>
+            <port name="oport1_2" type="out" rate="1"/>
+         </actor>
+         <channel name="mp3decoder_ReadBitstreamAndExtractFrames_oport1_1_mp3decoder_ReadBitstreamAndExtractFrames_iport1_1"
+                  srcActor="mp3decoder_ReadBitstreamAndExtractFrames"
+                  srcPort="oport1_1"
+                  dstActor="mp3decoder_ReadBitstreamAndExtractFrames"
+                  dstPort="iport1_1"
+                  initialTokens="1"/>
+         <channel name="mp3decoder_ReadBitstreamAndExtractFrames_oport1_4_mp3decoder_ProcessGranuleZero0_iport1_1"
+                  srcActor="mp3decoder_ReadBitstreamAndExtractFrames"
+                  srcPort="oport1_4"
+                  dstActor="mp3decoder_ProcessGranuleZero0"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="mp3decoder_ReadBitstreamAndExtractFrames_oport1_5_mp3decoder_ProcessGranuleZero0_iport2_1"
+                  srcActor="mp3decoder_ReadBitstreamAndExtractFrames"
+                  srcPort="oport1_5"
+                  dstActor="mp3decoder_ProcessGranuleZero0"
+                  dstPort="iport2_1"
+                  initialTokens="0"/>
+         <channel name="mp3decoder_ReadBitstreamAndExtractFrames_oport1_6_mp3decoder_ProcessGranuleZero0_iport3_1"
+                  srcActor="mp3decoder_ReadBitstreamAndExtractFrames"
+                  srcPort="oport1_6"
+                  dstActor="mp3decoder_ProcessGranuleZero0"
+                  dstPort="iport3_1"
+                  initialTokens="0"/>
+         <channel name="mp3decoder_ReadBitstreamAndExtractFrames_oport1_7_mp3decoder_ProcessGranuleOne0_iport1_1"
+                  srcActor="mp3decoder_ReadBitstreamAndExtractFrames"
+                  srcPort="oport1_7"
+                  dstActor="mp3decoder_ProcessGranuleOne0"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="mp3decoder_ReadBitstreamAndExtractFrames_oport1_8_mp3decoder_ProcessGranuleOne0_iport2_1"
+                  srcActor="mp3decoder_ReadBitstreamAndExtractFrames"
+                  srcPort="oport1_8"
+                  dstActor="mp3decoder_ProcessGranuleOne0"
+                  dstPort="iport2_1"
+                  initialTokens="0"/>
+         <channel name="mp3decoder_ReadBitstreamAndExtractFrames_oport1_9_mp3decoder_ProcessGranuleOne0_iport3_1"
+                  srcActor="mp3decoder_ReadBitstreamAndExtractFrames"
+                  srcPort="oport1_9"
+                  dstActor="mp3decoder_ProcessGranuleOne0"
+                  dstPort="iport3_1"
+                  initialTokens="0"/>
+         <channel name="mp3decoder_ProcessChanuleZeroLeft0_oport1_2_mp3decoder_ProcessChanuleOneLeft0_iport4_1"
+                  srcActor="mp3decoder_ProcessChanuleZeroLeft0"
+                  srcPort="oport1_2"
+                  dstActor="mp3decoder_ProcessChanuleOneLeft0"
+                  dstPort="iport4_1"
+                  initialTokens="0"/>
+         <channel name="mp3decoder_ProcessGranuleZero0_oport1_1_mp3decoder_ProcessChanuleZeroLeft0_iport1_1"
+                  srcActor="mp3decoder_ProcessGranuleZero0"
+                  srcPort="oport1_1"
+                  dstActor="mp3decoder_ProcessChanuleZeroLeft0"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="mp3decoder_ProcessGranuleZero0_oport1_2_mp3decoder_ProcessChanuleZeroLeft0_iport2_1"
+                  srcActor="mp3decoder_ProcessGranuleZero0"
+                  srcPort="oport1_2"
+                  dstActor="mp3decoder_ProcessChanuleZeroLeft0"
+                  dstPort="iport2_1"
+                  initialTokens="0"/>
+         <channel name="mp3decoder_ProcessGranuleZero0_oport1_3_mp3decoder_ProcessChanuleZeroLeft0_iport3_1"
+                  srcActor="mp3decoder_ProcessGranuleZero0"
+                  srcPort="oport1_3"
+                  dstActor="mp3decoder_ProcessChanuleZeroLeft0"
+                  dstPort="iport3_1"
+                  initialTokens="0"/>
+         <channel name="mp3decoder_ProcessGranuleZero0_oport1_4_mp3decoder_ProcessChanuleZeroRight0_iport1_1"
+                  srcActor="mp3decoder_ProcessGranuleZero0"
+                  srcPort="oport1_4"
+                  dstActor="mp3decoder_ProcessChanuleZeroRight0"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="mp3decoder_ProcessGranuleZero0_oport1_5_mp3decoder_ProcessChanuleZeroRight0_iport2_1"
+                  srcActor="mp3decoder_ProcessGranuleZero0"
+                  srcPort="oport1_5"
+                  dstActor="mp3decoder_ProcessChanuleZeroRight0"
+                  dstPort="iport2_1"
+                  initialTokens="0"/>
+         <channel name="mp3decoder_ProcessGranuleZero0_oport1_6_mp3decoder_ProcessChanuleZeroRight0_iport3_1"
+                  srcActor="mp3decoder_ProcessGranuleZero0"
+                  srcPort="oport1_6"
+                  dstActor="mp3decoder_ProcessChanuleZeroRight0"
+                  dstPort="iport3_1"
+                  initialTokens="0"/>
+         <channel name="mp3decoder_ProcessGranuleOne0_oport1_1_mp3decoder_ProcessChanuleOneLeft0_iport1_1"
+                  srcActor="mp3decoder_ProcessGranuleOne0"
+                  srcPort="oport1_1"
+                  dstActor="mp3decoder_ProcessChanuleOneLeft0"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="mp3decoder_ProcessGranuleOne0_oport1_2_mp3decoder_ProcessChanuleOneLeft0_iport2_1"
+                  srcActor="mp3decoder_ProcessGranuleOne0"
+                  srcPort="oport1_2"
+                  dstActor="mp3decoder_ProcessChanuleOneLeft0"
+                  dstPort="iport2_1"
+                  initialTokens="0"/>
+         <channel name="mp3decoder_ProcessGranuleOne0_oport1_3_mp3decoder_ProcessChanuleOneLeft0_iport3_1"
+                  srcActor="mp3decoder_ProcessGranuleOne0"
+                  srcPort="oport1_3"
+                  dstActor="mp3decoder_ProcessChanuleOneLeft0"
+                  dstPort="iport3_1"
+                  initialTokens="0"/>
+         <channel name="mp3decoder_ProcessGranuleOne0_oport1_4_mp3decoder_ProcessChanuleOneRight0_iport1_1"
+                  srcActor="mp3decoder_ProcessGranuleOne0"
+                  srcPort="oport1_4"
+                  dstActor="mp3decoder_ProcessChanuleOneRight0"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="mp3decoder_ProcessGranuleOne0_oport1_5_mp3decoder_ProcessChanuleOneRight0_iport2_1"
+                  srcActor="mp3decoder_ProcessGranuleOne0"
+                  srcPort="oport1_5"
+                  dstActor="mp3decoder_ProcessChanuleOneRight0"
+                  dstPort="iport2_1"
+                  initialTokens="0"/>
+         <channel name="mp3decoder_ProcessGranuleOne0_oport1_6_mp3decoder_ProcessChanuleOneRight0_iport3_1"
+                  srcActor="mp3decoder_ProcessGranuleOne0"
+                  srcPort="oport1_6"
+                  dstActor="mp3decoder_ProcessChanuleOneRight0"
+                  dstPort="iport3_1"
+                  initialTokens="0"/>
+         <channel name="mp3decoder_ProcessChanuleZeroRight0_oport1_2_mp3decoder_ProcessChanuleOneRight0_iport4_1"
+                  srcActor="mp3decoder_ProcessChanuleZeroRight0"
+                  srcPort="oport1_2"
+                  dstActor="mp3decoder_ProcessChanuleOneRight0"
+                  dstPort="iport4_1"
+                  initialTokens="0"/>
+         <channel name="mp3decoder_ProcessChanuleOneRight0_oport1_2_mp3decoder_ProcessChanuleZeroRight0_iport4_1"
+                  srcActor="mp3decoder_ProcessChanuleOneRight0"
+                  srcPort="oport1_2"
+                  dstActor="mp3decoder_ProcessChanuleZeroRight0"
+                  dstPort="iport4_1"
+                  initialTokens="1"/>
+         <channel name="mp3decoder_ProcessChanuleOneLeft0_oport1_2_mp3decoder_ProcessChanuleZeroLeft0_iport4_1"
+                  srcActor="mp3decoder_ProcessChanuleOneLeft0"
+                  srcPort="oport1_2"
+                  dstActor="mp3decoder_ProcessChanuleZeroLeft0"
+                  dstPort="iport4_1"
+                  initialTokens="1"/>
+      </sdf>
+      <sdfProperties>
+         <actorProperties actor="mp3decoder_ReadBitstreamAndExtractFrames">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="mp3decoder_ProcessChanuleZeroLeft0">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="mp3decoder_ProcessGranuleZero0">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="mp3decoder_ProcessGranuleOne0">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="mp3decoder_ProcessChanuleZeroRight0">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="mp3decoder_ProcessChanuleOneRight0">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="mp3decoder_ProcessChanuleOneLeft0">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <channelProperties channel="mp3decoder_ReadBitstreamAndExtractFrames_oport1_1_mp3decoder_ReadBitstreamAndExtractFrames_iport1_1">
+            <tokenSize sz="32"/>
+         </channelProperties>
+         <channelProperties channel="mp3decoder_ReadBitstreamAndExtractFrames_oport1_4_mp3decoder_ProcessGranuleZero0_iport1_1">
+            <tokenSize sz="384"/>
+         </channelProperties>
+         <channelProperties channel="mp3decoder_ReadBitstreamAndExtractFrames_oport1_5_mp3decoder_ProcessGranuleZero0_iport2_1">
+            <tokenSize sz="2752"/>
+         </channelProperties>
+         <channelProperties channel="mp3decoder_ReadBitstreamAndExtractFrames_oport1_6_mp3decoder_ProcessGranuleZero0_iport3_1">
+            <tokenSize sz="40512"/>
+         </channelProperties>
+         <channelProperties channel="mp3decoder_ReadBitstreamAndExtractFrames_oport1_7_mp3decoder_ProcessGranuleOne0_iport1_1">
+            <tokenSize sz="384"/>
+         </channelProperties>
+         <channelProperties channel="mp3decoder_ReadBitstreamAndExtractFrames_oport1_8_mp3decoder_ProcessGranuleOne0_iport2_1">
+            <tokenSize sz="2752"/>
+         </channelProperties>
+         <channelProperties channel="mp3decoder_ReadBitstreamAndExtractFrames_oport1_9_mp3decoder_ProcessGranuleOne0_iport3_1">
+            <tokenSize sz="40512"/>
+         </channelProperties>
+         <channelProperties channel="mp3decoder_ProcessChanuleZeroLeft0_oport1_2_mp3decoder_ProcessChanuleOneLeft0_iport4_1">
+            <tokenSize sz="32768"/>
+         </channelProperties>
+         <channelProperties channel="mp3decoder_ProcessGranuleZero0_oport1_1_mp3decoder_ProcessChanuleZeroLeft0_iport1_1">
+            <tokenSize sz="384"/>
+         </channelProperties>
+         <channelProperties channel="mp3decoder_ProcessGranuleZero0_oport1_2_mp3decoder_ProcessChanuleZeroLeft0_iport2_1">
+            <tokenSize sz="2752"/>
+         </channelProperties>
+         <channelProperties channel="mp3decoder_ProcessGranuleZero0_oport1_3_mp3decoder_ProcessChanuleZeroLeft0_iport3_1">
+            <tokenSize sz="18432"/>
+         </channelProperties>
+         <channelProperties channel="mp3decoder_ProcessGranuleZero0_oport1_4_mp3decoder_ProcessChanuleZeroRight0_iport1_1">
+            <tokenSize sz="384"/>
+         </channelProperties>
+         <channelProperties channel="mp3decoder_ProcessGranuleZero0_oport1_5_mp3decoder_ProcessChanuleZeroRight0_iport2_1">
+            <tokenSize sz="2752"/>
+         </channelProperties>
+         <channelProperties channel="mp3decoder_ProcessGranuleZero0_oport1_6_mp3decoder_ProcessChanuleZeroRight0_iport3_1">
+            <tokenSize sz="18432"/>
+         </channelProperties>
+         <channelProperties channel="mp3decoder_ProcessGranuleOne0_oport1_1_mp3decoder_ProcessChanuleOneLeft0_iport1_1">
+            <tokenSize sz="384"/>
+         </channelProperties>
+         <channelProperties channel="mp3decoder_ProcessGranuleOne0_oport1_2_mp3decoder_ProcessChanuleOneLeft0_iport2_1">
+            <tokenSize sz="2752"/>
+         </channelProperties>
+         <channelProperties channel="mp3decoder_ProcessGranuleOne0_oport1_3_mp3decoder_ProcessChanuleOneLeft0_iport3_1">
+            <tokenSize sz="18432"/>
+         </channelProperties>
+         <channelProperties channel="mp3decoder_ProcessGranuleOne0_oport1_4_mp3decoder_ProcessChanuleOneRight0_iport1_1">
+            <tokenSize sz="384"/>
+         </channelProperties>
+         <channelProperties channel="mp3decoder_ProcessGranuleOne0_oport1_5_mp3decoder_ProcessChanuleOneRight0_iport2_1">
+            <tokenSize sz="2752"/>
+         </channelProperties>
+         <channelProperties channel="mp3decoder_ProcessGranuleOne0_oport1_6_mp3decoder_ProcessChanuleOneRight0_iport3_1">
+            <tokenSize sz="18432"/>
+         </channelProperties>
+         <channelProperties channel="mp3decoder_ProcessChanuleZeroRight0_oport1_2_mp3decoder_ProcessChanuleOneRight0_iport4_1">
+            <tokenSize sz="32768"/>
+         </channelProperties>
+         <channelProperties channel="mp3decoder_ProcessChanuleOneRight0_oport1_2_mp3decoder_ProcessChanuleZeroRight0_iport4_1">
+            <tokenSize sz="32768"/>
+         </channelProperties>
+         <channelProperties channel="mp3decoder_ProcessChanuleOneLeft0_oport1_2_mp3decoder_ProcessChanuleZeroLeft0_iport4_1">
+            <tokenSize sz="32768"/>
+         </channelProperties>
+      </sdfProperties>
+   </applicationGraph>
+</sdf3>

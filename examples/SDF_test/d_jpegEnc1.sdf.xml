@@ -1,0 +1,92 @@
+<?xml version="1.0"?>
+<sdf3 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.0" type="sdf" xsi:noNamespaceSchemaLocation="http://www.es.ele.tue.nl/sdf3/xsd/sdf3-sdf.xsd">
+  <applicationGraph name="d_jpegEnc1">
+    <sdf name="d_jpegEnc1" type="JPEGENC">
+      <actor name="getImage" type="GI">
+        <port name="p0" type="out" rate="1"/>
+      </actor>
+      <actor name="CC" type="CC">
+        <port name="p0" type="in" rate="1"/>
+        <port name="p0_1" type="out" rate="16"/>
+      </actor>
+      <actor name="DCT" type="DCT">
+        <port name="p0" type="in" rate="1"/>
+        <port name="p0_1" type="out" rate="1"/>
+      </actor>
+      <actor name="Huffman" type="Huffman">
+        <port name="p0" type="in" rate="1"/>
+        <port name="p0_1" type="out" rate="1"/>
+      </actor>
+      <actor name="CS" type="CS">
+        <port name="p0" type="in" rate="16"/>
+        <port name="p0_1" type="out" rate="1"/>
+      </actor>
+      <actor name="writeImage" type="WI">
+        <port name="p0" type="in" rate="1"/>
+      </actor>
+      <channel name="chJ0_0" srcActor="getImage" srcPort="p0" dstActor="CC" dstPort="p0"/>
+      <channel name="chJ0_1" srcActor="CC" srcPort="p0_1" dstActor="DCT" dstPort="p0"/>
+      <channel name="chJ0_2" srcActor="DCT" srcPort="p0_1" dstActor="Huffman" dstPort="p0"/>
+      <channel name="chJ0_3" srcActor="Huffman" srcPort="p0_1" dstActor="CS" dstPort="p0"/>
+      <channel name="chJ0_4" srcActor="CS" srcPort="p0_1" dstActor="writeImage" dstPort="p0"/>
+    </sdf>
+    <sdfProperties>
+      <actorProperties actor="getImage">
+        <processor type="proc" default="true">
+          <executionTime time="413"/>
+          <memory>
+            <stateSize max="8"/>
+          </memory>
+        </processor>
+      </actorProperties>
+      <actorProperties actor="CC">
+        <processor type="proc" default="true">
+          <executionTime time="1101"/>
+          <memory>
+            <stateSize max="4"/>
+          </memory>
+        </processor>
+      </actorProperties>
+      <actorProperties actor="DCT">
+        <processor type="proc" default="true">
+          <executionTime time="252"/>
+          <memory>
+            <stateSize max="6"/>
+          </memory>
+        </processor>
+      </actorProperties>
+      <actorProperties actor="CS">
+        <processor type="proc" default="true">
+          <executionTime time="2524"/>
+          <memory>
+            <stateSize max="4"/>
+          </memory>
+        </processor>
+      </actorProperties>
+      <actorProperties actor="writeImage">
+        <processor type="proc" default="true">
+          <executionTime time="132"/>
+          <memory>
+            <stateSize max="5"/>
+          </memory>
+        </processor>
+      </actorProperties>
+      <channelProperties channel="chJ0_0">
+        <tokenSize sz="128"/>
+      </channelProperties>
+      <channelProperties channel="chJ0_1">
+        <tokenSize sz="128"/>
+      </channelProperties>
+      <channelProperties channel="chJ0_2">
+        <tokenSize sz="128"/>
+      </channelProperties>
+      <channelProperties channel="chJ0_3">
+        <tokenSize sz="128"/>
+      </channelProperties>
+      <channelProperties channel="chJ0_4">
+        <tokenSize sz="128"/>
+      </channelProperties>
+      <graphProperties/>
+    </sdfProperties>
+  </applicationGraph>
+</sdf3>

@@ -1,0 +1,150 @@
+// *** GENERAL CONSTRAINTS ***
+
+  for(size_t ii=0; ii<apps->n_SDFActors(); ii++){
+    rel(*this, next[ii]!=ii); //should always be true because of HSDF (every node fires only once in an iteration)
+    for(size_t ij=0; ij<apps->n_SDFActors(); ij++){
+      if(apps->dependsOn(ii,ij)){ //ij depends on ii
+        //cout << apps->getName(ij) << " depends on " << apps->getName(ii) << endl;
+        //precedence relations from the input sdfg cannot be violated
+        rel(*this, next[ij]!=ii);
+        rel(*this, rank[ij] > rank[ii]);
+        
+        //if ii and ij are mapped to the same proc, ii cannot be the last actor on that proc
+        //(in order to rule out "-1" sooner)
+        //rel(*this, (proc[ii]==proc[ij]) >> (next[ii]!=-1));
+        rel(*this, (proc[ii]==proc[ij]) >> (next[ii]<apps->n_SDFActors()));
+        
+        for(size_t ik=0; ik<apps->n_SDFActors(); ik++){
+          if(ik!=ii && ik!=ij){
+            //rel(*this, (proc[ii]==proc[ij] && next[ik]==ii) >> (next[ij]!=ik));
+            //rel(*this, (proc[ii]==proc[ij] && next[ij]==ik) >> (next[ik]!=ii));){
+            rel(*this, (next[ik]==ii) >> (next[ij]!=ik));
+            rel(*this, (next[ij]==ik) >> (next[ik]!=ii));
+            rel(*this, (proc[ii]==proc[ij] && next[ii]==ik) >> (rank[ij]>rank[ik]));
+            rel(*this, (proc[ii]==proc[ij] && next[ik]==ij) >> (rank[ii]<rank[ik]));
+          }
+          for(size_t il=0; il<apps->n_SDFActors(); il++){
+            //if(ii!=ij && ii!=ik && ii!=il && ij!=ik && ij!=il && ik!=il)
+            if(ii!=il && ij!=ik && ik!=il){
+              //rel(*this, (next[ik]==ii && next[il]==ij) >> (next[ij]!=ik));
+              rel(*this, (next[ik]==ii && next[ij]==il) >> (next[il]!=ik));
+            }
+          }
+        }
+        
+      }else{
+        //check whether there's a channel from ii to ij with initial tokens
+        if(apps->getTokensOnChannel(ii, ij) > 0){
+          //cout << apps->getName(ii) << " has initial tokens for " << apps->getName(ij) << endl;
+          //then, ij must be scheduled before ii
+          rel(*this, next[ii] != ij);
+          rel(*this, rank[ij] < rank[ii]);
+        }
+      }
+      if(ii != ij){
+        //if two actors have next >= |actors|, they must be on different processors
+        rel(*this, ((next[ii]>=apps->n_SDFActors()) && (next[ij]>=apps->n_SDFActors())) >> (proc[ii]!=proc[ij])); 
+        //the further along the next chain, the higher the rank value
+        rel(*this, (next[ii]==ij) >> (rank[ij]>rank[ii]));
+        //the actor with next >= |actors| must have the highest rank on that proc
+        rel(*this, ((next[ii]>=apps->n_SDFActors()) && (proc[ii]==proc[ij])) >> (rank[ii] > rank[ij]));
+        
+        //testing some additional constraints
+        rel(*this, (rank[ii]<rank[ij]) >> (next[ij]!=ii));
+        rel(*this, (proc[ii]==proc[ij]) >> (rank[ii] != rank[ij]));
+        //rel(*this, (next[ii]==ij) >> (next[ij]!=ii));
+        rel(*this, (procsUsed==1 && next[ii]==ij) >> (rank[ii]==rank[ij]-1));
+
+        //an actor ij can only be a next of ii if they are on the same processing node
+        rel(*this, (proc[ii]!=proc[ij]) >> (next[ii]!=ij));
+
+        //if actors ii and ij originate from the same parent actor in the SDF graph,
+        //then they shall be scheduled according to index (lowest first).
+        //this keeps the right order and reduces complexity
+        if(apps->getSDFGraph(ii) == apps->getSDFGraph(ij)){
+          if(apps->getParentActor(ii)==apps->getParentActor(ij) && ii<ij){
+            cout << "     same parent actor: " << apps->getName(ii) << " & " << apps->getName(ij) << endl;
+            rel(*this, next[ij]!=ii);
+            rel(*this, (proc[ii]==proc[ij]) >> (rank[ii]<rank[ij]));
+          }
+        }
+        
+        //for use with the circuit constraint, next[|actors|]..next[|actors|+|nodes|] are used
+        //as dummy-actors, connecting each path of actors on the procs to a circuit
+        for(size_t j=0; j<platform->nodes(); j++){
+          rel(*this, (next[ii]==ij) >> (next[apps->n_SDFActors()+j]!=ij));
+          if(apps->dependsOn(ii,ij))
+            rel(*this, (proc[ii]==proc[ij]) >> (next[apps->n_SDFActors()+j]!=ij));
+        }
+      }// ii!=ij
+    }//for ij
+    for(size_t j=0; j<platform->nodes(); j++){
+      //on proc j, the last actor shall have next[ii]==apps->n_SDFActors()+j
+      //rel(*this, (proc[ii]==j) >> (next[ii]<=apps->n_SDFActors()+j));
+      rel(*this, (proc[ii]!=j) >> (next[ii]!=apps->n_SDFActors()+j));
+      //the rank of the last actor on a proc must be at least the number of actors mapped onto that proc
+      //rel(*this, (next[ii]==-1 && proc[ii]==j) >> (rank[ii]>=nSDFAsOnProc[j]-1));
+      rel(*this, (next[ii]==apps->n_SDFActors()+j) >> (rank[ii]>=nSDFAsOnProc[j]-1));
+    }
+    //stronger constraints on the rank variables:
+    //get the list of direct predecessors of ii
+    //make a list of all predecessors ranks + the rank of ij with next[ij]==ii
+    //add one (if ij is a dummy node, assign 0)
+    //assign the maximum of all predecessors ranks to rank_ii
+    vector<int> preds = apps->getPredecessors(ii);
+    IntVarArgs predRanks(*this, preds.size()+1, 0, apps->n_SDFActors());  
+    for(unsigned int p=0; p<preds.size(); p++){
+      rel(*this, predRanks[p] == rank[preds[p]]+1); 
+    }
+    for(size_t ij=0; ij<apps->n_SDFActors(); ij++){
+      rel(*this, (next[ij]==ii) >> (predRanks[preds.size()]==rank[ij]+1));
+    }
+    for(size_t ij=apps->n_SDFActors(); ij<apps->n_SDFActors()+platform->nodes(); ij++){
+      rel(*this, (next[ij]==ii) >> (predRanks[preds.size()]==0));
+      if(preds.size()==0){
+        if(ij-apps->n_SDFActors()<platform->nodes()-1)
+          rel(*this, (next[ij]==ii) == (rank[ii]==0 && proc[ii]==ij-apps->n_SDFActors()+1));
+        else 
+          rel(*this, (next[ij]==ii) == (rank[ii]==0 && proc[ii]==0));
+      }
+    }
+    rel(*this, rank[ii]==max(predRanks));
+  }
+  //there must be at least one actor with rank=0
+  count(*this, rank, 0, IRT_GQ, 1);
+  
+  circuit(*this, next, ICL_DOM);
+  
+  //ordering of dummy nodes |A|...|A|+|P| 
+  if(platform->nodes()>1){
+    //...with emtpy processors
+    for(size_t j=0; j<platform->nodes(); j++){
+      //...with emtpy processors
+      rel(*this, (nSDFAsOnProc[(j+1)%platform->nodes()]==0) == (next[apps->n_SDFActors()+j]==apps->n_SDFActors()+((j+1)%platform->nodes())));
+      rel(*this, (nSDFAsOnProc[(j+1)%platform->nodes()]>0) >> (next[apps->n_SDFActors()+j]<apps->n_SDFActors()));
+      //...and in the general case (|A| points to first actor on |A|+1 etc.)
+      for(size_t ii=0; ii<apps->n_SDFActors(); ii++){
+        rel(*this, (proc[ii]!=(j+1)%platform->nodes()) >> (next[apps->n_SDFActors()+j]!=ii));
+      }
+    }
+  }
+
+// *** CONSTRAINTS FORCING THE DESIGN DECISIONS ***
+
+//testing a solution
+//rel(*this, procsUsed>1);
+//rel(*this, (procsUsed==2) >> (next[10]>next[11]));
+/*rel(*this, proc[0]==0);
+rel(*this, proc[1]==0);
+rel(*this, proc[2]==1);
+rel(*this, proc[3]==2);
+rel(*this, proc[4]==3);
+rel(*this, proc[5]==4);
+rel(*this, proc[6]==4);
+rel(*this, proc[7]==1);
+rel(*this, proc[8]==0);
+rel(*this, proc[9]==1);
+rel(*this, proc[10]==1);*/
+/*rel(*this, next[0]==7);
+rel(*this, next[1]==4);
+rel(*this, next[13]==20);*/

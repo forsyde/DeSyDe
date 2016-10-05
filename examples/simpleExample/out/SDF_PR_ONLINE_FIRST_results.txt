@@ -1,0 +1,27 @@
+*** Solution number: 1, after 1 ms, search nodes: 12, fail: 0, propagate: 7080, depth: 11, nogoods: 0 ***
+----------------------------------------
+Proc: {0, 0, 0, 0, 1, 2, 1, 2}
+proc mode: {0, 0, 0, 0, 0}
+Latency: {100}
+Period: {100}
+Procs used: 3
+Proc_period: {100, [1..2147483646], [1..2147483646], [1..2147483646], [1..2147483646]}
+Proc utilization: {1000, 950, 950, 0, 0}
+Sys utilization: 580
+ProcsUsed utilization: 966
+proc power: {50000, 475000, 475000, 0, 0}
+sys power: 1000000
+least_power_est: 88200
+proc area: {50, 500, 500, 500, 500}
+sys area: 2050
+proc cost: {100, 1000, 1000, 1000, 1000}
+sys cost: 4100
+Next: 1 2 3 4 || 5 6 7 8 0 
+Rank: 0 1 2 3 
+TDMA slots: {0, 0, 0, 0, 0}
+S-order: {1, 2, 3, 4, 5, 6, 7, 0}
+wcct_b: {0, 0, 0}
+wcct_s: {0, 0, 0}
+R-order: {1, 2, 3, 4, 5, 6, 7, 0}
+wcct_r: {0, 0, 0}
+----------------------------------------

@@ -1,0 +1,39 @@
+---------------
+Found 1 possible mappings in 0 h, 0 min,0 s and 34 ms.
+	(first solution after 0:0:0:32)
+---------------
+Search statistics: 
+  35 nodes visited (10 failed)
+  Tree depth: 27
+  43042 propagators executed.
+---------------
+
+First solution: 
+Latency: {755771}
+Period: {689927}
+
+Procs used: 8
+Proc_period: {689927, 689927, 689927, 689927, 689927, 689927, 689927, 689927}
+Proc utilization: {4, 5, 9, 79, 1000, 5, 0, 0}
+Sys utilization: 137
+ProcsUsed utilization: 137
+
+proc mode: {2, 2, 2, 2, 2, 2, 2, 2}
+proc power: {865, 1038, 1730, 13840, 173000, 1038, 173, 173}
+sys power: 191857
+proc area: {12, 12, 12, 12, 12, 12, 12, 12}
+sys area: 96
+proc cost: {12, 12, 12, 12, 12, 12, 12, 12}
+sys cost: 96
+
+Proc: {0, 1, 2, 3, 4, 5, 6, 7}
+Next: 8 9 10 11 12 13 14 15 || 1 2 3 4 5 6 7 0 
+
+TDMA slots: {1, 1, 1, 1, 1, 1, 1, 0}
+S-order: {11, 2, 12, 13, 3, 6, 14, 15, 9, 16, 17, 1, 4, 5, 7, 8, 10, 18, 0}
+wcct_b: {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+wcct_s: {1, 2, 1, 9, 9, 5, 5, 1, 5, 1, 1}
+R-order: {1, 6, 9, 5, 14, 15, 7, 16, 12, 17, 18, 8, 13, 4, 3, 0, 2, 10, 11}
+wcct_r: {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+---------------
+

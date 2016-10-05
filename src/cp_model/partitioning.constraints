@@ -1,0 +1,159 @@
+/**
+ * We consider two general cases. Both cases the schedulability test (propagator) is posted.
+ *      (1)     single mode homogeneous platfroms:
+ *              in this case we use the binpacking constraint
+ *      (2)     multimode or heteregeneous platform
+ *              we need to use use the element constraint for
+ *              utilizations and WCETs, so binpacking constraint does not work.
+ *              We use several rel constraints to impose utilization
+ */             
+/**< choosing a mode for each proc. */
+for(size_t j=0; j<platform->nodes(); j++)
+{
+        rel(*this, proc_mode[j] < platform->getModes(j));
+        rel(*this, (nActorsOnProc[j]==0) >> (proc_mode[j] == 0));
+}
+
+IntArgs periods;
+IntArgs deadlines;
+IntArgs priorities;
+for(size_t i=apps->n_SDFActors(); i<apps->n_programEntities(); i++)
+{
+        periods         << apps->getTaskPeriod(i);
+        deadlines       << apps->getTaskDeadline(i);
+        priorities      << apps->getTaskPriority(i);
+}
+debug_stream    <<      "periods: "             <<      periods         <<      endl
+                                <<      "deadlines: "   <<      deadlines       <<      endl
+                                <<      "priorities: "  <<      priorities      <<      endl;
+/**
+ * Response time based schedulability test constraint
+ */ 
+Schedulability(*this, wcet, proc, proc_mode, periods, priorities, deadlines, apps->n_SDFActors());
+/** 
+ * total utilization should be less than or equal to the number of used processors. 
+*/
+        rel(*this, mapping->getLeastTotalUtilization() <= mapping->max_utilization*procsUsed);
+        debug_stream    << "LeastTotalUtilization: "    << mapping->getLeastTotalUtilization()
+                                        << " max available proc util: " << mapping->max_utilization*procsUsed.max() << endl;
+
+if(platform->homogeneous())
+{
+        debug_stream    <<      "Platform is single mode homogeneous!\n";
+        
+        IntArgs task_hm_util;
+        for(size_t ii=apps->n_SDFActors(); ii<apps->n_programEntities(); ii++)
+        {
+                task_hm_util << mapping->getUtilizationVector(ii)[0];
+        }
+        debug_stream    <<      "task_hm_util: "        <<      task_hm_util    << endl;
+        binpacking(*this, utilization, proc, task_hm_util);
+        debug_stream    << "\n \t binpacking: " <<      endl
+                                        <<      proc                            <<      endl;
+        for(size_t j=0; j<platform->nodes(); j++)                          
+                rel(*this, (nTasksOnProc[j]>0) >> (proc_power[j] == platform->getPowerCons(j)[0]*utilization[j]));
+        
+}
+else
+{
+        debug_stream    <<      "Platform is NOT single mode homogeneous!\n";
+                
+        if(platform->isFixed())
+        { /**< then wcet only depends on choice of proc. */
+                debug_stream    <<      "Platform is fixed!\n";
+                for(size_t ii=apps->n_SDFActors(); ii<apps->n_programEntities(); ii++)
+                {
+                        IntArgs utilVector(mapping->getUtilizationVector(ii));/// possible utilizations for a task depending of allocation
+                        element(*this, utilVector, proc[ii], taskUtil[ii]);
+                        IntArgs wcets(mapping->getWCETsSingleMode(ii));
+                        element(*this, wcets, proc[ii], wcet[ii]);
+                        debug_stream    <<      "tau["          <<      ii                      <<      "] "
+                                                        <<      "utils: "       <<      utilVector      <<      endl
+                                                        <<      "wcets: "       <<      wcets           <<      endl;
+                }
+        }
+        else /**< platform is multimode. */
+        {
+                cout << "platform is multimode\n";
+                for(size_t ii=apps->n_SDFActors(); ii<apps->n_programEntities(); ii++)
+                {
+                  IntVarArgs utils_procs(*this, platform->nodes(), -1, Int::Limits::max);
+                  IntVarArgs wcets_procs(*this, platform->nodes(), -1, Int::Limits::max);
+                  for(size_t j=0; j<platform->nodes(); j++)
+                  {
+                                IntArgs wcets_modes(mapping->getWCETs(ii, j));
+                                element(*this, wcets_modes, proc_mode[j], wcets_procs[j]);
+                                IntArgs utils_modes(mapping->getUtilizationModeVector(ii, j));
+                                element(*this, utils_modes, proc_mode[j], utils_procs[j]);
+                  }
+                  element(*this, utils_procs, proc[ii], taskUtil[ii]); 
+                  element(*this, wcets_procs, proc[ii], wcet[ii]);
+                }
+        }
+          
+        debug_stream << "nTasksOnProc: " << nTasksOnProc << endl;
+        for(size_t j=0; j<platform->nodes(); j++)
+        {
+                IntVarArgs proc_util(*this, apps->n_programEntities(), 0, Int::Limits::max);///The amount of contribution of task ii on the utilization of proc j
+                for(size_t ii=0; ii<apps->n_programEntities(); ii++)///Must start from zero, otherwise sum(proc_util) will have problem
+                {
+                        rel(*this, (proc[ii]==j) >> (proc_util[ii]==(taskUtil[ii])));
+                        rel(*this, (proc[ii]!=j) >> (proc_util[ii]==0));
+                }
+                rel(*this, (nTasksOnProc[j]>0) >> (utilization[j] == sum(proc_util)));
+                rel(*this, (nEntitiesOnProc[j]==0) >> (utilization[j]==0));
+                /**
+                 * utilization must be less than the max processor capacity
+                 */ 
+                rel(*this, utilization[j] <= mapping->max_utilization);
+                /**
+                 * associating power with utilization for pr tasks
+                 */ 
+                IntArgs proc_pows(platform->getPowerCons(j));
+                        
+                for(size_t m=0; m<platform->getModes(j); m++)
+                {
+                        rel(*this, ((proc_mode[j]==m) && (nTasksOnProc[j]>0) ) 
+                                          >> (proc_power[j] == proc_pows[m]*utilization[j]));
+                        debug_stream    << "proc["              <<      j       <<      "], "   
+                                                        <<      "mode["         <<      m       <<      "] "
+                                                        <<      "power="        << proc_pows[m] <<      endl;
+                }
+        }
+        
+        /**
+         * Symmetry breaking only for pr tasks
+         */
+        debug_stream    <<      "Symmetry breaking for pr tasks\n";
+        for(size_t i=0; i<platform->nodes(); i++)
+        {
+                for(size_t j=i+1; j<platform->nodes(); j++) 
+                {
+                        /**
+                         * If WCET of T0 is same on two processors, we assume they are identical
+                         * We impose that utilization[i] >= utilization[j]
+                         */
+                         int T0 = apps->n_SDFActors();
+                         vector<int> WCET_T0 = mapping->getWCETsSingleMode(T0);
+                         if(i!= j && WCET_T0[i] == WCET_T0[j])
+                         {
+                                 rel(*this, (nTasksOnProc[j]>0 && nTasksOnProc[i]>0) >> (utilization[i] >= utilization[j]));
+                                 debug_stream << "if pr task exists: U[" << i << "] >= U[" << j << "]\n";
+                         }
+                }
+        }
+        /**
+         * Assuming that the task with same type are adjacent (it is so when read from xml)
+         * We impose their allocation order
+         */ 
+        for(size_t i=apps->n_SDFActors()+1; i<apps->n_programEntities(); i++)
+        {
+                        if(apps->getTaskType(i-1).compare(apps->getTaskType(i)) == 0)
+                        {
+                                rel(*this, proc[i-1] <= proc[i]);
+                                debug_stream    <<      "proc[" <<      i-1     <<      "]<="
+                                                                <<      "proc[" <<      i       <<      "]"             <<      endl;
+                        }
+        }
+        cout << "Partitioning constraints imported \n"; 
+}

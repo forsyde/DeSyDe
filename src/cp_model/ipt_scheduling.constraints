@@ -1,0 +1,142 @@
+//HYPERPERIOD
+  vector<int> hypPeriod = apps->getHyperperiods();
+  size_t n_taskComb = hypPeriod.size();
+  IntArgs binWeights;
+  for(size_t i=0; i<apps->n_IPTTasks(); i++){
+    binWeights << (int)pow(2.0, (double)(i));
+  }
+  for(size_t j=0; j<platform->nodes(); j++){
+    BoolVarArgs allocTasks(*this, apps->n_IPTTasks(), 0, 1);
+    IntVar taskCombId(*this, 0, n_taskComb);
+    for(size_t ii=0; ii<apps->n_IPTTasks(); ii++){
+      rel(*this, (proc[ii+apps->n_SDFActors()]==j) >> (allocTasks[ii]==1));
+      rel(*this, (proc[ii+apps->n_SDFActors()]!=j) >> (allocTasks[ii]==0));
+      rel(*this, (proc[ii+apps->n_SDFActors()]==j) >> ((hyperPeriod[j]%apps->getPeriod(ii+apps->n_SDFActors()))==0));
+      rel(*this, ((proc[ii+apps->n_SDFActors()]==j)&&(nEntitiesOnProc[j]==1)) >> (hyperPeriod[j]==apps->getPeriod(ii+apps->n_SDFActors())));
+      rel(*this, (proc[ii+apps->n_SDFActors()]==j) >> (hyperPeriod[j]>0));
+    }
+    rel(*this, (nEntitiesOnProc[j]==0) >> (hyperPeriod[j]==0));
+    linear(*this, binWeights, allocTasks, IRT_EQ, taskCombId);
+    for(size_t c=1; c<=n_taskComb; c++){
+      rel(*this, (taskCombId==c) >> (hyperPeriod[j]==hypPeriod[c-1]));
+    }
+  }
+//END HYPERPERIOD
+
+//SCHEDULING 
+  //TODO: fix this when WCET is correctly integrated via Mapping-class
+  /*for(size_t j=0; j<platform->nodes(); j++){
+    for(size_t i=0; i<apps->n_IPTTasks(); i++){
+      rel(*this, (proc[i+apps->n_SDFActors()]!=j) >> (instancesOnNodeM(i,j)==0));
+      rel(*this, (proc[i+apps->n_SDFActors()]==j) >> (instancesOnNodeM(i,j)==n_instances[i]));
+    }
+    linear(*this, wcecsM.row(j), instancesOnNodeM.row(j), IRT_EQ, wcecSumOnNode[j]); //sum of execution times on node j
+    rel(*this, wcecSumOnNode[j]<=hyperPeriod[j]); //-->utilization <= 1
+  }*/
+  for(size_t i=0; i<apps->n_IPTTasks(); i++){
+    int globalIPT_id = i + apps->n_SDFActors();
+    
+    rel(*this, startM(0,i) >= apps->getPhase(globalIPT_id));
+    rel(*this, endM(0,i) <= (apps->getPhase(globalIPT_id)+apps->getDeadline(globalIPT_id)));
+    rel(*this, cardinality(execM(0,i))<=mapping->getMaxWCET(globalIPT_id));
+    for(size_t j=0; j<platform->nodes(); j++){
+      rel(*this, (proc[globalIPT_id]==j) >> (n_instances[i]==(hyperPeriod[j]/apps->getPeriod(globalIPT_id))));
+      for(int k=0; k<apps->getMaxNumberOfIPTInstances(); k++){
+        //rel(*this, ((proc[i]==j)&&(k<n_instances[i])) >> (max(execM(k,i))<=hyperPeriod[j]));
+        for(int l=0; l<apps->getMaxHyperperiod(); l++){
+          rel(*this, ((proc[globalIPT_id]==j)&&(k<n_instances[i])&&(l>hyperPeriod[j])) 
+                     >> ((singleton(l)&execM(k,i))==IntSet::empty));
+        }
+      }
+      //rel(*this, (proc[i]==j) >> (cardinality(start[i])==n_instances[i]));
+      //rel(*this, (proc[i]==j) >> (cardinality(end[i])==n_instances[i]));
+    }
+    for(int k=0; k<apps->getMaxNumberOfIPTInstances(); k++){
+      //respect deadlines
+      rel(*this, (k<n_instances[i]) >> (startM(k,i)<=(k*apps->getPeriod(globalIPT_id)+apps->getPhase(globalIPT_id)+apps->getDeadline(globalIPT_id)-wcet[globalIPT_id])));
+      rel(*this, (k<n_instances[i]) >> (endM(k,i)<=(k*apps->getPeriod(globalIPT_id)+apps->getPhase(globalIPT_id)+apps->getDeadline(globalIPT_id))));
+      //respect period (release times)
+      rel(*this, (k<n_instances[i]) >> (startM(k,i)>=(k*apps->getPeriod(globalIPT_id)+apps->getPhase(globalIPT_id))));
+      rel(*this, (k<n_instances[i]) >> (endM(k,i)>=(k*apps->getPeriod(globalIPT_id)+apps->getPhase(globalIPT_id)+wcet[globalIPT_id])));
+      //instances after the hyperperiod (which results from mapping)
+      rel(*this, (k>=n_instances[i]) >> (startM(k,i)==apps->getMaxHyperperiod()+1));
+      rel(*this, (k>=n_instances[i]) >> (endM(k,i)==apps->getMaxHyperperiod()+1));
+      rel(*this, (k<n_instances[i]) >> (cardinality(execM(k,i))>=mapping->getMinWCET(globalIPT_id)));
+      rel(*this, (k<n_instances[i]) >> (cardinality(execM(k,i))<=mapping->getMaxWCET(globalIPT_id)));
+      rel(*this, (k<n_instances[i]) >> (cardinality(execM(k,i))==wcet[globalIPT_id]));
+      rel(*this, (k>=n_instances[i]) >> (execM(k,i)==IntSet::empty));
+      //rel(*this, (k<n_instances[i]) >> (min(execM(k,i))==startM(k,i)));
+      //rel(*this, (k<n_instances[i]) >> (max(execM(k,i))==endM(k,i)-1));
+      for(int l=0; l<apps->getMaxHyperperiod(); l++){
+        rel(*this, ((k<n_instances[i])&&(l<startM(k,i))) >> ((singleton(l)&execM(k,i))==IntSet::empty));
+        rel(*this, ((k<n_instances[i])&&(l>=endM(k,i))) >> ((singleton(l)&execM(k,i))==IntSet::empty));
+        rel(*this, ((k<n_instances[i])&&(l==startM(k,i))) >> ((singleton(l)&execM(k,i))==singleton(l)));
+        rel(*this, ((k<n_instances[i])&&(l==(endM(k,i)-1))) >> ((singleton(l)&execM(k,i))==singleton(l)));
+      }
+    }
+    //rel(*this, (cardinality(start[i])==1) >> (start[i]==singleton(apps->getPhase(globalIPT_id))));
+    //rel(*this, (cardinality(end[i])==1) >> (end[i]==singleton(apps->getPhase(globalIPT_id)+wcet[globalIPT_id])));
+  }
+
+  for(size_t i=0; i<apps->n_IPTTasks(); i++){
+    int globalIPT_id = i + apps->n_SDFActors();
+    for(int k=0; k<apps->getMaxNumberOfIPTInstances(); k++){
+      if(!apps->isPreemtable(globalIPT_id)){
+        rel(*this, (k<n_instances[i]) >> (endM(k,i) == startM(k,i) + wcet[globalIPT_id]));
+      }else{ // i is preemptable
+        rel(*this, (k<n_instances[i]) >> (endM(k,i) >= startM(k,i) + wcet[globalIPT_id]));
+      }
+    }
+  }
+
+  for(size_t ii=0; ii<apps->n_IPTTasks(); ii++){
+    int globalIPT_ii = ii + apps->n_SDFActors();
+    for(int ki=0; ki<apps->getMaxNumberOfIPTInstances(); ki++){
+      for(size_t ij=0; ij<apps->n_IPTTasks(); ij++){
+        int globalIPT_ij = ij + apps->n_SDFActors();
+        for(int kj=0; kj<apps->getMaxNumberOfIPTInstances(); kj++){
+          if(ii!=ij){
+            if(!apps->isPreemtable(globalIPT_ii)&&!apps->isPreemtable(globalIPT_ij)){
+              rel(*this, (proc[globalIPT_ii]==proc[globalIPT_ij]) >>
+                         ((endM(ki,ii)<=startM(kj,ij)) ||
+                          (endM(kj,ij)<=startM(ki,ii))));
+            }else{
+              rel(*this, ((proc[globalIPT_ii]==proc[globalIPT_ij])&&(ki<n_instances[ii])&&(kj<n_instances[ij])) >> 
+                         ((execM(ki,ii)&execM(kj,ij))==IntSet::empty));
+            }
+          }
+        }
+      }
+    }
+  }
+ 
+  //on each proc, execution of at least one task should be started as early as possible 
+  // (reduces number of "meaningless" solutions)
+  for(size_t j=0; j<platform->nodes(); j++){
+    BoolVarArgs startAtPhase(*this, apps->n_IPTTasks(), 0, 1);
+    for(size_t i=0; i<apps->n_IPTTasks(); i++){
+      int globalIPT_id = i + apps->n_SDFActors();
+      rel(*this, (proc[globalIPT_id]!=j) >> (startAtPhase[i]==0));
+      rel(*this, ((proc[globalIPT_id]==j)&&(startM(0,i)==apps->getPhase(globalIPT_id))) >> (startAtPhase[i]==1));
+      rel(*this, ((proc[globalIPT_id]==j)&&(startM(0,i)!=apps->getPhase(globalIPT_id))) >> (startAtPhase[i]==0));
+    }
+    rel(*this, (nTasksOnProc[j]>0) >> (sum(startAtPhase)>0));
+  }
+  
+  //TODO: if the utilzation on a processor is 1, then there can be no slack times 
+  // (to reduce size of search tree)
+  
+  //SYMMETRY BREAKING
+  //for(size_t ji=0; ji<platform->nodes(); ji++){
+    //for(size_t jj=ji+1; jj<platform->nodes(); jj++){  
+      //if(mapping->homogeneousNodes(ji,jj)){
+        //rel(*this, (hyperPeriod[ji] == hyperPeriod[jj]) >> (utilization[ji]>=utilization[jj]));
+      //}
+    //}
+  //}
+  //if(mapping->homogeneousPlatform()){
+    ////cout << "homogeneous Platform" << endl;
+    //rel(*this, hyperPeriod, IRT_GQ);
+  //}
+
+//END SYMMETRY BREAKING

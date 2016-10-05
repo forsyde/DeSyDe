@@ -1,0 +1,39 @@
+// *** GENERAL CONSTRAINTS ***
+
+// actors consume memory for local data and for code 
+// -local data is counted for each actor
+// -sizes of receiving buffers on the proc that dst-actor is mapped to
+// -code size can either be counted for each parent actor (they
+//  use/call the same function) or for each actor, depending on the settings
+
+IntVarArgs s(*this, apps->n_programEntities()+apps->n_programChannels()+platform->nodes(), 0, 0);
+IntVarArgs e(*this, apps->n_programEntities()+apps->n_programChannels()+platform->nodes(), 1, 1);
+IntVarArgs memLoc(*this, apps->n_programEntities()+apps->n_programChannels()+platform->nodes(), 0, platform->nodes()-1);
+IntVarArgs memCons(*this, apps->n_programEntities()+apps->n_programChannels()+platform->nodes(), 0, Int::Limits::max);
+for(size_t i=0; i<apps->n_programEntities(); i++){
+  rel(*this, memLoc[i] == proc[i]);  
+  rel(*this, memCons[i] == memConsData[i]);  
+}
+for(size_t k=0; k<apps->n_programChannels(); k++){
+  rel(*this, memLoc[k+apps->n_programEntities()] == proc[channels[k]->destination]);  
+  rel(*this, memCons[k+apps->n_programEntities()] == (recbufferSz[k]*channels[k]->messageSize));  
+}
+for(size_t j=0; j<platform->nodes(); j++){ //dummy nodes if memory size is smaller for some proc_mode
+  rel(*this, memLoc[j+apps->n_programEntities()+apps->n_programChannels()] == j);
+  vector<int> mem_modes = platform->getMemorySize(j);
+  int max_mem = *max_element(mem_modes.begin(), mem_modes.end());
+  for(unsigned m=0; m<mem_modes.size(); m++){
+    rel(*this, (proc_mode[j]==m) >> 
+               (memCons[j+apps->n_programEntities()+apps->n_programChannels()] == (max_mem-mem_modes[m])));  
+  }  
+}
+
+IntArgs memSize;
+for(size_t j=0; j<platform->nodes(); j++){
+  vector<int> mem_modes = platform->getMemorySize(j);
+  memSize << *max_element(mem_modes.begin(), mem_modes.end());
+}
+cumulatives(*this, memLoc, s, e, e, memCons, memSize, true);
+
+
+// *** CONSTRAINTS FORCING THE DESIGN DECISIONS ***

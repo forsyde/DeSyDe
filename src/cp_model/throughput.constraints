@@ -1,0 +1,255 @@
+IntArgs ch_src, ch_dst, ch_tok;
+for(unsigned int ki=0; ki<channels.size(); ki++){
+    ch_src << channels[ki]->source;
+    ch_dst << channels[ki]->destination;
+    ch_tok << channels[ki]->initTokens;
+}
+                             
+IntVarArgs iterations(*this, apps->n_SDFActors(), 0, Int::Limits::max);
+IntVarArgs iterationsCh(*this, apps->n_programChannels(), 0, Int::Limits::max);
+
+//appIndex: for throughput propagator to know which actors belong to which application
+//appIndex[i] is index of last actor of application i
+IntArgs appIndex;
+for(size_t ii=0; ii<apps->n_SDFActors()-1; ii++){
+  if(apps->getSDFGraph(ii)+1 == apps->getSDFGraph(ii+1)){
+    appIndex << ii;
+  }
+}
+appIndex << apps->n_SDFActors()-1;
+
+
+//for all single-processor cycles (sum up the wcets on each proc)
+for(size_t j=0; j<platform->nodes(); j++){
+  IntVarArgs proc_wcet(*this, apps->n_SDFActors(), 0, Int::Limits::max);
+  //SDFGS
+  for(size_t ii=0; ii<apps->n_SDFActors(); ii++){
+    rel(*this, (proc[ii]==j) >> (proc_wcet[ii]==wcet[ii]));
+    rel(*this, (proc[ii]!=j) >> (proc_wcet[ii]==0));
+    rel(*this, (proc[ii]==j) >> (period[apps->getSDFGraph(ii)] >= sum(proc_wcet)));
+    rel(*this, (proc[ii]==j) >> (proc_period[j] == period[apps->getSDFGraph(ii)]));
+  }
+  rel(*this, proc_SDF_wcet_sum[j] == sum(proc_wcet));
+}
+
+
+throughputSSE(*this, latency, period, iterations, iterationsCh,
+           sendbufferSz, recbufferSz, next, wcet.slice(0, 1, apps->n_SDFActors()), wcct_s, 
+           wcct_b, sendNext, wcct_r, recNext,
+           ch_src, ch_dst, ch_tok, appIndex);
+
+for(size_t a=0; a<apps->n_SDFApps(); a++){
+  if(apps->getPeriodConstraint(a) > 0){
+    rel(*this, period[a] <= apps->getPeriodConstraint(a));
+    
+    //make explicit: if there is a throughput-bound on a, then none of its actors' wcets may exceed that bound
+    for(size_t ii=0; ii<apps->n_SDFActors(); ii++){
+      if(apps->getSDFGraph(ii) == a){
+        rel(*this, wcet[ii] <= apps->getPeriodConstraint(a));
+      }
+    }
+  }
+}
+
+for(size_t ii=0; ii<apps->n_SDFActors(); ii++){
+  for(size_t ij=0; ij<apps->n_SDFActors(); ij++){
+    if(apps->getSDFGraph(ii) != apps->getSDFGraph(ij)){
+      rel(*this, (proc[ii]==proc[ij]) >> (period[apps->getSDFGraph(ii)] == period[apps->getSDFGraph(ij)]));
+      rel(*this, (period[apps->getSDFGraph(ii)] != period[apps->getSDFGraph(ij)]) >> (proc[ii]!=proc[ij]));
+    }
+  }
+}
+
+
+
+
+for(size_t a=0; a<apps->n_SDFApps(); a++){
+  if(apps->getPeriodConstraint(a) > 0){
+    nvalues(*this, proc.slice(minA[a], 1, maxA[a]-minA[a]+1), IRT_GQ, (int)ceil((double)sumMinWCETs[a]/apps->getPeriodConstraint(a)));
+    
+    for(int ii=minA[a]; ii<=maxA[a]; ii++){
+      for(int ij=ii+1; ij<=maxA[a]; ij++){
+        if(maxMinWcetActor[ii]+maxMinWcetActor[ij]>apps->getPeriodConstraint(a)){
+          if(mapping->homogeneousPlatform()){
+            if(ii<ij){
+              rel(*this, proc[ii] < proc[ij]);
+              if(apps->dependsOn(ii,ij)){ //ij depends on ii
+                for(int ik=minA[a]; ik<=maxA[a]; ik++){
+                  if(ii!=ik && apps->dependsOn(ik,ii)){
+                    rel(*this, proc[ik] < proc[ij]);
+                  }
+                }
+                for(int ik=minA[a]; ik<=maxA[a]; ik++){
+                  if(ij!=ik && apps->dependsOn(ij,ik)){
+                    rel(*this, proc[ii] < proc[ik]);
+                  }
+                }
+              }
+            }else{
+              rel(*this, proc[ii] > proc[ij]);
+              if(apps->dependsOn(ii,ij)){ //ij depends on ii
+                for(int ik=minA[a]; ik<=maxA[a]; ik++){
+                  if(ii!=ik && apps->dependsOn(ik,ii)){
+                    rel(*this, proc[ik] > proc[ij]);
+                  }
+                }
+                for(int ik=minA[a]; ik<=maxA[a]; ik++){
+                  if(ij!=ik && apps->dependsOn(ij,ik)){
+                    rel(*this, proc[ii] > proc[ik]);
+                  }
+                }
+              }
+            }
+          }else{
+            rel(*this, proc[ii] != proc[ij]);
+            if(apps->dependsOn(ii,ij)){ //ij depends on ii
+              for(int ik=minA[a]; ik<=maxA[a]; ik++){
+                if(ii!=ik && apps->dependsOn(ik,ii)){
+                  rel(*this, proc[ik] != proc[ij]);
+                }
+              }
+              for(int ik=minA[a]; ik<=maxA[a]; ik++){
+                if(ij!=ik && apps->dependsOn(ij,ik)){
+                  rel(*this, proc[ii] != proc[ik]);
+                }
+              }
+            }
+          }
+          rel(*this, next[ii] != ij && next[ij] != ii);
+        }
+      }
+    }
+  }
+}
+
+vector<int> coMap(apps->n_SDFApps()*apps->n_SDFApps(), 0);
+for(size_t a=0; a<apps->n_SDFApps(); a++){
+  if(apps->getPeriodConstraint(a) > 0){
+    coMap[a*apps->n_SDFApps()+a] = (int)ceil((double)sumMinWCETs[a]/apps->getPeriodConstraint(a));
+    for(size_t b=a; b<apps->n_SDFApps(); b++){
+      if(a!=b){
+        if(maxMinWcet[b] > apps->getPeriodConstraint(a)){
+          //cout << "maxMinWcet[" << b << "] = " << maxMinWcet[b] <<" > ";
+          //cout << "periodBound[" << a << "] = " << apps->getPeriodConstraint(a) << endl;
+          coMap[a*apps->n_SDFApps()+b] = -1;
+          coMap[b*apps->n_SDFApps()+a] = -1;
+          for(int ii=minA[a]; ii<=maxA[a]; ii++){
+            for(int ij=minA[b]; ij<=maxA[b]; ij++){
+              //cout << "proc[" << ii<<"] != proc[" <<ij<<"]\n";
+              if(mapping->homogeneousPlatform()){
+                if(ii<ij){
+                  rel(*this, proc[ii] < proc[ij]);
+                  //cout << "proc[" << ii<<"] < proc[" <<ij<<"]\n";
+                }else{
+                  rel(*this, proc[ii] > proc[ij]);
+                  //cout << "proc[" << ii<<"] > proc[" <<ij<<"]\n";
+                }
+              }else{
+                rel(*this, proc[ii] != proc[ij]);
+                  //cout << "proc[" << ii<<"] != proc[" <<ij<<"]\n";
+              }
+              rel(*this, next[ii] != ij && next[ij] != ii);
+            }
+          }
+        }else{
+          for(int ii=minA[a]; ii<=maxA[a]; ii++){
+            for(int ij=0; ij<(int)apps->n_SDFActors(); ij++){
+              if(ii != ij){
+                if(maxMinWcetActor[ii]+maxMinWcetActor[ij]>apps->getPeriodConstraint(a)){
+                  if(mapping->homogeneousPlatform()){
+                    if(ii<ij){
+                      rel(*this, proc[ii] < proc[ij]);
+                    }else{
+                      rel(*this, proc[ii] > proc[ij]);
+                    }
+                  }else{
+                    rel(*this, proc[ii] != proc[ij]);
+                  }
+                  rel(*this, next[ii] != ij && next[ij] != ii);
+                }
+              }
+            }
+          }
+          if(apps->getPeriodConstraint(b) > 0){
+            IntVarArgs proc_coMapAB;
+            for(int ii=minA[a]; ii<=maxA[a]; ii++){
+              proc_coMapAB << proc[ii];
+            }
+            for(int ii=minA[b]; ii<=maxA[b]; ii++){
+              proc_coMapAB << proc[ii];
+            }
+            cout << "co-mapping " << apps->getGraphName(a) << " & " << apps->getGraphName(b) << " needs at least ";
+            cout << (int)ceil(((double)sumMinWCETs[a]+sumMinWCETs[b])/min(apps->getPeriodConstraint(a), apps->getPeriodConstraint(b)));
+            cout << " processors." << endl;
+            coMap[a*apps->n_SDFApps()+b] = (int)ceil(((double)sumMinWCETs[a]+sumMinWCETs[b])/min(apps->getPeriodConstraint(a), apps->getPeriodConstraint(b)));
+            coMap[b*apps->n_SDFApps()+a] = (int)ceil(((double)sumMinWCETs[a]+sumMinWCETs[b])/min(apps->getPeriodConstraint(a), apps->getPeriodConstraint(b)));
+            //nvalues(*this, proc_coMapAB, IRT_GQ, (int)ceil((double)sumMinWCETs[a]+sumMinWCETs[b])/min(apps->getPeriodConstraint(a), apps->getPeriodConstraint(b)));
+          }
+        }
+      }
+    }
+  }
+}
+
+/*
+for(size_t a=0; a<apps->n_SDFApps(); a++){  
+  for(size_t b=0; b<apps->n_SDFApps(); b++){
+    if(coMap[a*apps->n_SDFApps()+b]>=0){
+      cout << coMap[a*apps->n_SDFApps()+b] << " ";
+    }else{
+      cout << "- ";
+    }
+  }
+  cout << endl;
+}
+cout << endl;*/
+
+if(mapping->homogeneousPlatform()){
+  for(size_t a=0; a<apps->n_SDFApps(); a++){  
+    bool coMapA = false;
+    bool coMapPastA = false;
+    for(size_t b=0; b<apps->n_SDFApps(); b++){
+      if(coMap[a*apps->n_SDFApps()+b]>0){
+        if(a!=b) coMapA = true;
+      }
+    }
+    if(!coMapA){
+      for(size_t b=a+1; b<apps->n_SDFApps(); b++){
+        for(size_t c=0; c<a; c++){
+          if(coMap[b*apps->n_SDFApps()+c]>0){
+            if(c!=b) coMapPastA = true;
+          }
+        }
+      }
+      if(!coMapPastA){
+        //TODO: find a general form
+        if(a==1){
+          for(int ii=minA[a]; ii<=maxA[a]; ii++){
+            rel(*this, proc[ii]>=coMap[0]);
+          }
+        }else if(a==2){
+          vector<int> numProcs;
+          numProcs.push_back(coMap[0]+coMap[apps->n_SDFApps()+1]);
+          if(coMap[1]>0) numProcs.push_back(coMap[1]);
+          for(int ii=minA[a]; ii<=maxA[a]; ii++){
+            rel(*this, proc[ii]>=*min_element(numProcs.begin(),numProcs.end()));
+          }
+        }else if(a==3){
+          vector<int> numProcs;
+          numProcs.push_back(coMap[0]+coMap[apps->n_SDFApps()+1]+coMap[2*apps->n_SDFApps()+2]);
+          if(coMap[1]>0) numProcs.push_back(coMap[1]+coMap[2*apps->n_SDFApps()+2]);
+          if(coMap[2]>0) numProcs.push_back(coMap[2]+coMap[apps->n_SDFApps()+1]);
+          if(coMap[apps->n_SDFApps()+2]>0) numProcs.push_back(coMap[apps->n_SDFApps()+2]+coMap[0]);
+          int allUpToThree = (int)ceil(((double)sumMinWCETs[0]+sumMinWCETs[1]+sumMinWCETs[2])/min(apps->getPeriodConstraint(0), min(apps->getPeriodConstraint(1), apps->getPeriodConstraint(2))));
+          numProcs.push_back(allUpToThree);
+          for(int ii=minA[a]; ii<=maxA[a]; ii++){
+            rel(*this, proc[ii]>=*min_element(numProcs.begin(),numProcs.end()));
+          }
+          
+        }
+        
+      }
+    }
+  }
+}
+

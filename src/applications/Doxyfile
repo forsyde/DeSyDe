@@ -1,0 +1,7 @@
+PROJECT_NAME     = Applications
+INPUT            = sdfgraph.cpp sdfgraph.hpp
+WARNINGS         = YES
+TAGFILES         = qt.tag
+PERL_PATH        = /usr/local/bin/perl
+SEARCHENGINE     = NO
+SORT_MEMBER_DOCS = NO

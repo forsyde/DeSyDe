@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<designConstraints>
+	<constraint>
+		<entityName>a_sobel</entityName>
+		<period_constraint>-1</period_constraint>
+		<latency_constraint>-1</latency_constraint>
+	</constraint> 
+	<constraint>
+		<entityName>b_susan</entityName>
+		<period_constraint>-1</period_constraint>
+		<latency_constraint>-1</latency_constraint>
+	</constraint>
+	<constraint>
+		<entityName>c_rasta</entityName>
+		<period_constraint>-1</period_constraint>
+		<latency_constraint>-1</latency_constraint>
+	</constraint>
+	<constraint>
+		<entityName>d_jpegEnc1</entityName>
+		<period_constraint>-1</period_constraint>
+		<latency_constraint>-1</latency_constraint>
+	</constraint>
+</designConstraints>

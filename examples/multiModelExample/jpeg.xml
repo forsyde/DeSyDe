@@ -1,0 +1,1502 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sdf3 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" type="sdf" version="1.0"
+      xsi:noNamespaceSchemaLocation="http://www.es.ele.tue.nl/sdf3/xsd/sdf3-sdf.xsd">
+   <applicationGraph name="jpeg_encoder">
+      <sdf name="jpeg_encoder" type="g">
+         <actor name="jpeg_encoder_read_bitmap" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1_0" type="out" rate="1"/>
+            <port name="oport1_1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_rgb_block_collector" type="a">
+            <port name="iport1_1" type="in" rate="4"/>
+            <port name="oport1_1" type="out" rate="1"/>
+            <port name="oport1_2" type="out" rate="1"/>
+            <port name="oport1_3" type="out" rate="1"/>
+            <port name="oport1_4" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_1_color_conversion" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+            <port name="oport1_2" type="out" rate="1"/>
+            <port name="oport1_3" type="out" rate="1"/>
+            <port name="oport1_4" type="out" rate="1"/>
+            <port name="oport1_5" type="out" rate="1"/>
+            <port name="oport1_6" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_1_dct0" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_1_dct1" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_1_dct00" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_1_dct01" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_1_dct10" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_1_dct11" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_1_huffman_encode0" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_1_huffman_encode1" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_1_huffman_encode00" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_1_huffman_encode01" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_1_huffman_encode10" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_1_huffman_encode11" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_1_concatenate_steps" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="iport1_2" type="in" rate="1"/>
+            <port name="iport1_3" type="in" rate="1"/>
+            <port name="iport1_4" type="in" rate="1"/>
+            <port name="iport1_5" type="in" rate="1"/>
+            <port name="iport1_6" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_2_color_conversion" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+            <port name="oport1_2" type="out" rate="1"/>
+            <port name="oport1_3" type="out" rate="1"/>
+            <port name="oport1_4" type="out" rate="1"/>
+            <port name="oport1_5" type="out" rate="1"/>
+            <port name="oport1_6" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_2_dct0" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_2_dct1" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_2_dct00" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_2_dct01" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_2_dct10" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_2_dct11" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_2_huffman_encode0" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_2_huffman_encode1" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_2_huffman_encode00" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_2_huffman_encode01" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_2_huffman_encode10" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_2_huffman_encode11" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_2_concatenate_steps" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="iport1_2" type="in" rate="1"/>
+            <port name="iport1_3" type="in" rate="1"/>
+            <port name="iport1_4" type="in" rate="1"/>
+            <port name="iport1_5" type="in" rate="1"/>
+            <port name="iport1_6" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_3_color_conversion" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+            <port name="oport1_2" type="out" rate="1"/>
+            <port name="oport1_3" type="out" rate="1"/>
+            <port name="oport1_4" type="out" rate="1"/>
+            <port name="oport1_5" type="out" rate="1"/>
+            <port name="oport1_6" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_3_dct0" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_3_dct1" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_3_dct00" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_3_dct01" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_3_dct10" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_3_dct11" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_3_huffman_encode0" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_3_huffman_encode1" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_3_huffman_encode00" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_3_huffman_encode01" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_3_huffman_encode10" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_3_huffman_encode11" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_3_concatenate_steps" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="iport1_2" type="in" rate="1"/>
+            <port name="iport1_3" type="in" rate="1"/>
+            <port name="iport1_4" type="in" rate="1"/>
+            <port name="iport1_5" type="in" rate="1"/>
+            <port name="iport1_6" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_4_color_conversion" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+            <port name="oport1_2" type="out" rate="1"/>
+            <port name="oport1_3" type="out" rate="1"/>
+            <port name="oport1_4" type="out" rate="1"/>
+            <port name="oport1_5" type="out" rate="1"/>
+            <port name="oport1_6" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_4_dct0" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_4_dct1" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_4_dct00" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_4_dct01" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_4_dct10" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_4_dct11" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_4_huffman_encode0" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_4_huffman_encode1" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_4_huffman_encode00" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_4_huffman_encode01" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_4_huffman_encode10" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_4_huffman_encode11" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_block_processor_4_concatenate_steps" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="iport1_2" type="in" rate="1"/>
+            <port name="iport1_3" type="in" rate="1"/>
+            <port name="iport1_4" type="in" rate="1"/>
+            <port name="iport1_5" type="in" rate="1"/>
+            <port name="iport1_6" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="jpeg_encoder_merge_blocks" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="iport1_2" type="in" rate="1"/>
+            <port name="iport1_3" type="in" rate="1"/>
+            <port name="iport1_4" type="in" rate="1"/>
+         </actor>
+         <channel name="jpeg_encoder_read_bitmap_oport1_1_jpeg_encoder_read_bitmap_iport1_1"
+                  srcActor="jpeg_encoder_read_bitmap"
+                  srcPort="oport1_1_0"
+                  dstActor="jpeg_encoder_read_bitmap"
+                  dstPort="iport1_1"
+                  initialTokens="1"/>
+         <channel name="jpeg_encoder_read_bitmap_oport1_1_jpeg_encoder_rgb_block_collector_iport1_1"
+                  srcActor="jpeg_encoder_read_bitmap"
+                  srcPort="oport1_1_1"
+                  dstActor="jpeg_encoder_rgb_block_collector"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_rgb_block_collector_oport1_1_jpeg_encoder_block_processor_1_color_conversion_iport1_1"
+                  srcActor="jpeg_encoder_rgb_block_collector"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_1_color_conversion"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_rgb_block_collector_oport1_2_jpeg_encoder_block_processor_2_color_conversion_iport1_1"
+                  srcActor="jpeg_encoder_rgb_block_collector"
+                  srcPort="oport1_2"
+                  dstActor="jpeg_encoder_block_processor_2_color_conversion"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_rgb_block_collector_oport1_3_jpeg_encoder_block_processor_3_color_conversion_iport1_1"
+                  srcActor="jpeg_encoder_rgb_block_collector"
+                  srcPort="oport1_3"
+                  dstActor="jpeg_encoder_block_processor_3_color_conversion"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_rgb_block_collector_oport1_4_jpeg_encoder_block_processor_4_color_conversion_iport1_1"
+                  srcActor="jpeg_encoder_rgb_block_collector"
+                  srcPort="oport1_4"
+                  dstActor="jpeg_encoder_block_processor_4_color_conversion"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_1_color_conversion_oport1_1_jpeg_encoder_block_processor_1_dct0_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_1_color_conversion"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_1_dct0"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_1_color_conversion_oport1_2_jpeg_encoder_block_processor_1_dct1_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_1_color_conversion"
+                  srcPort="oport1_2"
+                  dstActor="jpeg_encoder_block_processor_1_dct1"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_1_color_conversion_oport1_3_jpeg_encoder_block_processor_1_dct00_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_1_color_conversion"
+                  srcPort="oport1_3"
+                  dstActor="jpeg_encoder_block_processor_1_dct00"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_1_color_conversion_oport1_4_jpeg_encoder_block_processor_1_dct01_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_1_color_conversion"
+                  srcPort="oport1_4"
+                  dstActor="jpeg_encoder_block_processor_1_dct01"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_1_color_conversion_oport1_5_jpeg_encoder_block_processor_1_dct10_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_1_color_conversion"
+                  srcPort="oport1_5"
+                  dstActor="jpeg_encoder_block_processor_1_dct10"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_1_color_conversion_oport1_6_jpeg_encoder_block_processor_1_dct11_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_1_color_conversion"
+                  srcPort="oport1_6"
+                  dstActor="jpeg_encoder_block_processor_1_dct11"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_1_dct0_oport1_1_jpeg_encoder_block_processor_1_huffman_encode0_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_1_dct0"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_1_huffman_encode0"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_1_dct1_oport1_1_jpeg_encoder_block_processor_1_huffman_encode1_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_1_dct1"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_1_huffman_encode1"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_1_dct00_oport1_1_jpeg_encoder_block_processor_1_huffman_encode00_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_1_dct00"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_1_huffman_encode00"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_1_dct01_oport1_1_jpeg_encoder_block_processor_1_huffman_encode01_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_1_dct01"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_1_huffman_encode01"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_1_dct10_oport1_1_jpeg_encoder_block_processor_1_huffman_encode10_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_1_dct10"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_1_huffman_encode10"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_1_dct11_oport1_1_jpeg_encoder_block_processor_1_huffman_encode11_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_1_dct11"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_1_huffman_encode11"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_1_huffman_encode0_oport1_1_jpeg_encoder_block_processor_1_concatenate_steps_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_1_huffman_encode0"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_1_concatenate_steps"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_1_huffman_encode1_oport1_1_jpeg_encoder_block_processor_1_concatenate_steps_iport1_2"
+                  srcActor="jpeg_encoder_block_processor_1_huffman_encode1"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_1_concatenate_steps"
+                  dstPort="iport1_2"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_1_huffman_encode00_oport1_1_jpeg_encoder_block_processor_1_concatenate_steps_iport1_3"
+                  srcActor="jpeg_encoder_block_processor_1_huffman_encode00"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_1_concatenate_steps"
+                  dstPort="iport1_3"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_1_huffman_encode01_oport1_1_jpeg_encoder_block_processor_1_concatenate_steps_iport1_4"
+                  srcActor="jpeg_encoder_block_processor_1_huffman_encode01"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_1_concatenate_steps"
+                  dstPort="iport1_4"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_1_huffman_encode10_oport1_1_jpeg_encoder_block_processor_1_concatenate_steps_iport1_5"
+                  srcActor="jpeg_encoder_block_processor_1_huffman_encode10"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_1_concatenate_steps"
+                  dstPort="iport1_5"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_1_huffman_encode11_oport1_1_jpeg_encoder_block_processor_1_concatenate_steps_iport1_6"
+                  srcActor="jpeg_encoder_block_processor_1_huffman_encode11"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_1_concatenate_steps"
+                  dstPort="iport1_6"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_1_concatenate_steps_oport1_1_jpeg_encoder_merge_blocks_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_1_concatenate_steps"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_merge_blocks"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_2_color_conversion_oport1_1_jpeg_encoder_block_processor_2_dct0_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_2_color_conversion"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_2_dct0"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_2_color_conversion_oport1_2_jpeg_encoder_block_processor_2_dct1_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_2_color_conversion"
+                  srcPort="oport1_2"
+                  dstActor="jpeg_encoder_block_processor_2_dct1"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_2_color_conversion_oport1_3_jpeg_encoder_block_processor_2_dct00_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_2_color_conversion"
+                  srcPort="oport1_3"
+                  dstActor="jpeg_encoder_block_processor_2_dct00"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_2_color_conversion_oport1_4_jpeg_encoder_block_processor_2_dct01_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_2_color_conversion"
+                  srcPort="oport1_4"
+                  dstActor="jpeg_encoder_block_processor_2_dct01"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_2_color_conversion_oport1_5_jpeg_encoder_block_processor_2_dct10_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_2_color_conversion"
+                  srcPort="oport1_5"
+                  dstActor="jpeg_encoder_block_processor_2_dct10"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_2_color_conversion_oport1_6_jpeg_encoder_block_processor_2_dct11_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_2_color_conversion"
+                  srcPort="oport1_6"
+                  dstActor="jpeg_encoder_block_processor_2_dct11"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_2_dct0_oport1_1_jpeg_encoder_block_processor_2_huffman_encode0_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_2_dct0"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_2_huffman_encode0"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_2_dct1_oport1_1_jpeg_encoder_block_processor_2_huffman_encode1_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_2_dct1"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_2_huffman_encode1"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_2_dct00_oport1_1_jpeg_encoder_block_processor_2_huffman_encode00_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_2_dct00"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_2_huffman_encode00"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_2_dct01_oport1_1_jpeg_encoder_block_processor_2_huffman_encode01_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_2_dct01"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_2_huffman_encode01"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_2_dct10_oport1_1_jpeg_encoder_block_processor_2_huffman_encode10_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_2_dct10"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_2_huffman_encode10"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_2_dct11_oport1_1_jpeg_encoder_block_processor_2_huffman_encode11_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_2_dct11"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_2_huffman_encode11"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_2_huffman_encode0_oport1_1_jpeg_encoder_block_processor_2_concatenate_steps_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_2_huffman_encode0"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_2_concatenate_steps"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_2_huffman_encode1_oport1_1_jpeg_encoder_block_processor_2_concatenate_steps_iport1_2"
+                  srcActor="jpeg_encoder_block_processor_2_huffman_encode1"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_2_concatenate_steps"
+                  dstPort="iport1_2"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_2_huffman_encode00_oport1_1_jpeg_encoder_block_processor_2_concatenate_steps_iport1_3"
+                  srcActor="jpeg_encoder_block_processor_2_huffman_encode00"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_2_concatenate_steps"
+                  dstPort="iport1_3"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_2_huffman_encode01_oport1_1_jpeg_encoder_block_processor_2_concatenate_steps_iport1_4"
+                  srcActor="jpeg_encoder_block_processor_2_huffman_encode01"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_2_concatenate_steps"
+                  dstPort="iport1_4"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_2_huffman_encode10_oport1_1_jpeg_encoder_block_processor_2_concatenate_steps_iport1_5"
+                  srcActor="jpeg_encoder_block_processor_2_huffman_encode10"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_2_concatenate_steps"
+                  dstPort="iport1_5"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_2_huffman_encode11_oport1_1_jpeg_encoder_block_processor_2_concatenate_steps_iport1_6"
+                  srcActor="jpeg_encoder_block_processor_2_huffman_encode11"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_2_concatenate_steps"
+                  dstPort="iport1_6"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_2_concatenate_steps_oport1_1_jpeg_encoder_merge_blocks_iport1_2"
+                  srcActor="jpeg_encoder_block_processor_2_concatenate_steps"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_merge_blocks"
+                  dstPort="iport1_2"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_3_color_conversion_oport1_1_jpeg_encoder_block_processor_3_dct0_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_3_color_conversion"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_3_dct0"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_3_color_conversion_oport1_2_jpeg_encoder_block_processor_3_dct1_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_3_color_conversion"
+                  srcPort="oport1_2"
+                  dstActor="jpeg_encoder_block_processor_3_dct1"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_3_color_conversion_oport1_3_jpeg_encoder_block_processor_3_dct00_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_3_color_conversion"
+                  srcPort="oport1_3"
+                  dstActor="jpeg_encoder_block_processor_3_dct00"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_3_color_conversion_oport1_4_jpeg_encoder_block_processor_3_dct01_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_3_color_conversion"
+                  srcPort="oport1_4"
+                  dstActor="jpeg_encoder_block_processor_3_dct01"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_3_color_conversion_oport1_5_jpeg_encoder_block_processor_3_dct10_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_3_color_conversion"
+                  srcPort="oport1_5"
+                  dstActor="jpeg_encoder_block_processor_3_dct10"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_3_color_conversion_oport1_6_jpeg_encoder_block_processor_3_dct11_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_3_color_conversion"
+                  srcPort="oport1_6"
+                  dstActor="jpeg_encoder_block_processor_3_dct11"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_3_dct0_oport1_1_jpeg_encoder_block_processor_3_huffman_encode0_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_3_dct0"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_3_huffman_encode0"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_3_dct1_oport1_1_jpeg_encoder_block_processor_3_huffman_encode1_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_3_dct1"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_3_huffman_encode1"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_3_dct00_oport1_1_jpeg_encoder_block_processor_3_huffman_encode00_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_3_dct00"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_3_huffman_encode00"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_3_dct01_oport1_1_jpeg_encoder_block_processor_3_huffman_encode01_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_3_dct01"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_3_huffman_encode01"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_3_dct10_oport1_1_jpeg_encoder_block_processor_3_huffman_encode10_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_3_dct10"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_3_huffman_encode10"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_3_dct11_oport1_1_jpeg_encoder_block_processor_3_huffman_encode11_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_3_dct11"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_3_huffman_encode11"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_3_huffman_encode0_oport1_1_jpeg_encoder_block_processor_3_concatenate_steps_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_3_huffman_encode0"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_3_concatenate_steps"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_3_huffman_encode1_oport1_1_jpeg_encoder_block_processor_3_concatenate_steps_iport1_2"
+                  srcActor="jpeg_encoder_block_processor_3_huffman_encode1"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_3_concatenate_steps"
+                  dstPort="iport1_2"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_3_huffman_encode00_oport1_1_jpeg_encoder_block_processor_3_concatenate_steps_iport1_3"
+                  srcActor="jpeg_encoder_block_processor_3_huffman_encode00"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_3_concatenate_steps"
+                  dstPort="iport1_3"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_3_huffman_encode01_oport1_1_jpeg_encoder_block_processor_3_concatenate_steps_iport1_4"
+                  srcActor="jpeg_encoder_block_processor_3_huffman_encode01"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_3_concatenate_steps"
+                  dstPort="iport1_4"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_3_huffman_encode10_oport1_1_jpeg_encoder_block_processor_3_concatenate_steps_iport1_5"
+                  srcActor="jpeg_encoder_block_processor_3_huffman_encode10"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_3_concatenate_steps"
+                  dstPort="iport1_5"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_3_huffman_encode11_oport1_1_jpeg_encoder_block_processor_3_concatenate_steps_iport1_6"
+                  srcActor="jpeg_encoder_block_processor_3_huffman_encode11"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_3_concatenate_steps"
+                  dstPort="iport1_6"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_3_concatenate_steps_oport1_1_jpeg_encoder_merge_blocks_iport1_3"
+                  srcActor="jpeg_encoder_block_processor_3_concatenate_steps"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_merge_blocks"
+                  dstPort="iport1_3"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_4_color_conversion_oport1_1_jpeg_encoder_block_processor_4_dct0_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_4_color_conversion"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_4_dct0"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_4_color_conversion_oport1_2_jpeg_encoder_block_processor_4_dct1_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_4_color_conversion"
+                  srcPort="oport1_2"
+                  dstActor="jpeg_encoder_block_processor_4_dct1"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_4_color_conversion_oport1_3_jpeg_encoder_block_processor_4_dct00_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_4_color_conversion"
+                  srcPort="oport1_3"
+                  dstActor="jpeg_encoder_block_processor_4_dct00"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_4_color_conversion_oport1_4_jpeg_encoder_block_processor_4_dct01_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_4_color_conversion"
+                  srcPort="oport1_4"
+                  dstActor="jpeg_encoder_block_processor_4_dct01"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_4_color_conversion_oport1_5_jpeg_encoder_block_processor_4_dct10_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_4_color_conversion"
+                  srcPort="oport1_5"
+                  dstActor="jpeg_encoder_block_processor_4_dct10"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_4_color_conversion_oport1_6_jpeg_encoder_block_processor_4_dct11_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_4_color_conversion"
+                  srcPort="oport1_6"
+                  dstActor="jpeg_encoder_block_processor_4_dct11"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_4_dct0_oport1_1_jpeg_encoder_block_processor_4_huffman_encode0_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_4_dct0"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_4_huffman_encode0"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_4_dct1_oport1_1_jpeg_encoder_block_processor_4_huffman_encode1_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_4_dct1"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_4_huffman_encode1"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_4_dct00_oport1_1_jpeg_encoder_block_processor_4_huffman_encode00_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_4_dct00"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_4_huffman_encode00"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_4_dct01_oport1_1_jpeg_encoder_block_processor_4_huffman_encode01_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_4_dct01"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_4_huffman_encode01"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_4_dct10_oport1_1_jpeg_encoder_block_processor_4_huffman_encode10_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_4_dct10"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_4_huffman_encode10"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_4_dct11_oport1_1_jpeg_encoder_block_processor_4_huffman_encode11_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_4_dct11"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_4_huffman_encode11"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_4_huffman_encode0_oport1_1_jpeg_encoder_block_processor_4_concatenate_steps_iport1_1"
+                  srcActor="jpeg_encoder_block_processor_4_huffman_encode0"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_4_concatenate_steps"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_4_huffman_encode1_oport1_1_jpeg_encoder_block_processor_4_concatenate_steps_iport1_2"
+                  srcActor="jpeg_encoder_block_processor_4_huffman_encode1"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_4_concatenate_steps"
+                  dstPort="iport1_2"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_4_huffman_encode00_oport1_1_jpeg_encoder_block_processor_4_concatenate_steps_iport1_3"
+                  srcActor="jpeg_encoder_block_processor_4_huffman_encode00"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_4_concatenate_steps"
+                  dstPort="iport1_3"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_4_huffman_encode01_oport1_1_jpeg_encoder_block_processor_4_concatenate_steps_iport1_4"
+                  srcActor="jpeg_encoder_block_processor_4_huffman_encode01"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_4_concatenate_steps"
+                  dstPort="iport1_4"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_4_huffman_encode10_oport1_1_jpeg_encoder_block_processor_4_concatenate_steps_iport1_5"
+                  srcActor="jpeg_encoder_block_processor_4_huffman_encode10"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_4_concatenate_steps"
+                  dstPort="iport1_5"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_4_huffman_encode11_oport1_1_jpeg_encoder_block_processor_4_concatenate_steps_iport1_6"
+                  srcActor="jpeg_encoder_block_processor_4_huffman_encode11"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_block_processor_4_concatenate_steps"
+                  dstPort="iport1_6"
+                  initialTokens="0"/>
+         <channel name="jpeg_encoder_block_processor_4_concatenate_steps_oport1_1_jpeg_encoder_merge_blocks_iport1_4"
+                  srcActor="jpeg_encoder_block_processor_4_concatenate_steps"
+                  srcPort="oport1_1"
+                  dstActor="jpeg_encoder_merge_blocks"
+                  dstPort="iport1_4"
+                  initialTokens="0"/>
+      </sdf>
+      <sdfProperties>
+         <actorProperties actor="jpeg_encoder_read_bitmap">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_rgb_block_collector">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_1_color_conversion">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_1_dct0">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_1_dct1">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_1_dct00">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_1_dct01">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_1_dct10">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_1_dct11">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_1_huffman_encode0">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_1_huffman_encode1">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_1_huffman_encode00">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_1_huffman_encode01">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_1_huffman_encode10">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_1_huffman_encode11">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_1_concatenate_steps">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_2_color_conversion">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_2_dct0">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_2_dct1">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_2_dct00">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_2_dct01">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_2_dct10">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_2_dct11">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_2_huffman_encode0">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_2_huffman_encode1">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_2_huffman_encode00">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_2_huffman_encode01">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_2_huffman_encode10">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_2_huffman_encode11">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_2_concatenate_steps">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_3_color_conversion">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_3_dct0">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_3_dct1">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_3_dct00">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_3_dct01">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_3_dct10">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_3_dct11">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_3_huffman_encode0">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_3_huffman_encode1">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_3_huffman_encode00">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_3_huffman_encode01">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_3_huffman_encode10">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_3_huffman_encode11">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_3_concatenate_steps">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_4_color_conversion">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_4_dct0">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_4_dct1">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_4_dct00">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_4_dct01">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_4_dct10">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_4_dct11">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_4_huffman_encode0">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_4_huffman_encode1">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_4_huffman_encode00">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_4_huffman_encode01">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_4_huffman_encode10">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_4_huffman_encode11">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_block_processor_4_concatenate_steps">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="jpeg_encoder_merge_blocks">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <channelProperties channel="jpeg_encoder_read_bitmap_oport1_1_jpeg_encoder_read_bitmap_iport1_1">
+            <tokenSize sz="6240"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_read_bitmap_oport1_1_jpeg_encoder_rgb_block_collector_iport1_1">
+            <tokenSize sz="6240"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_rgb_block_collector_oport1_1_jpeg_encoder_block_processor_1_color_conversion_iport1_1">
+            <tokenSize sz="6240"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_rgb_block_collector_oport1_2_jpeg_encoder_block_processor_2_color_conversion_iport1_1">
+            <tokenSize sz="6240"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_rgb_block_collector_oport1_3_jpeg_encoder_block_processor_3_color_conversion_iport1_1">
+            <tokenSize sz="6240"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_rgb_block_collector_oport1_4_jpeg_encoder_block_processor_4_color_conversion_iport1_1">
+            <tokenSize sz="6240"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_1_color_conversion_oport1_1_jpeg_encoder_block_processor_1_dct0_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_1_color_conversion_oport1_2_jpeg_encoder_block_processor_1_dct1_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_1_color_conversion_oport1_3_jpeg_encoder_block_processor_1_dct00_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_1_color_conversion_oport1_4_jpeg_encoder_block_processor_1_dct01_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_1_color_conversion_oport1_5_jpeg_encoder_block_processor_1_dct10_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_1_color_conversion_oport1_6_jpeg_encoder_block_processor_1_dct11_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_1_dct0_oport1_1_jpeg_encoder_block_processor_1_huffman_encode0_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_1_dct1_oport1_1_jpeg_encoder_block_processor_1_huffman_encode1_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_1_dct00_oport1_1_jpeg_encoder_block_processor_1_huffman_encode00_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_1_dct01_oport1_1_jpeg_encoder_block_processor_1_huffman_encode01_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_1_dct10_oport1_1_jpeg_encoder_block_processor_1_huffman_encode10_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_1_dct11_oport1_1_jpeg_encoder_block_processor_1_huffman_encode11_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_1_huffman_encode0_oport1_1_jpeg_encoder_block_processor_1_concatenate_steps_iport1_1">
+            <tokenSize sz="384"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_1_huffman_encode1_oport1_1_jpeg_encoder_block_processor_1_concatenate_steps_iport1_2">
+            <tokenSize sz="384"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_1_huffman_encode00_oport1_1_jpeg_encoder_block_processor_1_concatenate_steps_iport1_3">
+            <tokenSize sz="384"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_1_huffman_encode01_oport1_1_jpeg_encoder_block_processor_1_concatenate_steps_iport1_4">
+            <tokenSize sz="384"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_1_huffman_encode10_oport1_1_jpeg_encoder_block_processor_1_concatenate_steps_iport1_5">
+            <tokenSize sz="384"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_1_huffman_encode11_oport1_1_jpeg_encoder_block_processor_1_concatenate_steps_iport1_6">
+            <tokenSize sz="384"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_1_concatenate_steps_oport1_1_jpeg_encoder_merge_blocks_iport1_1">
+            <tokenSize sz="1664"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_2_color_conversion_oport1_1_jpeg_encoder_block_processor_2_dct0_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_2_color_conversion_oport1_2_jpeg_encoder_block_processor_2_dct1_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_2_color_conversion_oport1_3_jpeg_encoder_block_processor_2_dct00_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_2_color_conversion_oport1_4_jpeg_encoder_block_processor_2_dct01_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_2_color_conversion_oport1_5_jpeg_encoder_block_processor_2_dct10_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_2_color_conversion_oport1_6_jpeg_encoder_block_processor_2_dct11_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_2_dct0_oport1_1_jpeg_encoder_block_processor_2_huffman_encode0_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_2_dct1_oport1_1_jpeg_encoder_block_processor_2_huffman_encode1_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_2_dct00_oport1_1_jpeg_encoder_block_processor_2_huffman_encode00_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_2_dct01_oport1_1_jpeg_encoder_block_processor_2_huffman_encode01_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_2_dct10_oport1_1_jpeg_encoder_block_processor_2_huffman_encode10_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_2_dct11_oport1_1_jpeg_encoder_block_processor_2_huffman_encode11_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_2_huffman_encode0_oport1_1_jpeg_encoder_block_processor_2_concatenate_steps_iport1_1">
+            <tokenSize sz="384"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_2_huffman_encode1_oport1_1_jpeg_encoder_block_processor_2_concatenate_steps_iport1_2">
+            <tokenSize sz="384"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_2_huffman_encode00_oport1_1_jpeg_encoder_block_processor_2_concatenate_steps_iport1_3">
+            <tokenSize sz="384"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_2_huffman_encode01_oport1_1_jpeg_encoder_block_processor_2_concatenate_steps_iport1_4">
+            <tokenSize sz="384"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_2_huffman_encode10_oport1_1_jpeg_encoder_block_processor_2_concatenate_steps_iport1_5">
+            <tokenSize sz="384"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_2_huffman_encode11_oport1_1_jpeg_encoder_block_processor_2_concatenate_steps_iport1_6">
+            <tokenSize sz="384"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_2_concatenate_steps_oport1_1_jpeg_encoder_merge_blocks_iport1_2">
+            <tokenSize sz="1664"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_3_color_conversion_oport1_1_jpeg_encoder_block_processor_3_dct0_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_3_color_conversion_oport1_2_jpeg_encoder_block_processor_3_dct1_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_3_color_conversion_oport1_3_jpeg_encoder_block_processor_3_dct00_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_3_color_conversion_oport1_4_jpeg_encoder_block_processor_3_dct01_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_3_color_conversion_oport1_5_jpeg_encoder_block_processor_3_dct10_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_3_color_conversion_oport1_6_jpeg_encoder_block_processor_3_dct11_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_3_dct0_oport1_1_jpeg_encoder_block_processor_3_huffman_encode0_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_3_dct1_oport1_1_jpeg_encoder_block_processor_3_huffman_encode1_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_3_dct00_oport1_1_jpeg_encoder_block_processor_3_huffman_encode00_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_3_dct01_oport1_1_jpeg_encoder_block_processor_3_huffman_encode01_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_3_dct10_oport1_1_jpeg_encoder_block_processor_3_huffman_encode10_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_3_dct11_oport1_1_jpeg_encoder_block_processor_3_huffman_encode11_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_3_huffman_encode0_oport1_1_jpeg_encoder_block_processor_3_concatenate_steps_iport1_1">
+            <tokenSize sz="384"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_3_huffman_encode1_oport1_1_jpeg_encoder_block_processor_3_concatenate_steps_iport1_2">
+            <tokenSize sz="384"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_3_huffman_encode00_oport1_1_jpeg_encoder_block_processor_3_concatenate_steps_iport1_3">
+            <tokenSize sz="384"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_3_huffman_encode01_oport1_1_jpeg_encoder_block_processor_3_concatenate_steps_iport1_4">
+            <tokenSize sz="384"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_3_huffman_encode10_oport1_1_jpeg_encoder_block_processor_3_concatenate_steps_iport1_5">
+            <tokenSize sz="384"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_3_huffman_encode11_oport1_1_jpeg_encoder_block_processor_3_concatenate_steps_iport1_6">
+            <tokenSize sz="384"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_3_concatenate_steps_oport1_1_jpeg_encoder_merge_blocks_iport1_3">
+            <tokenSize sz="1664"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_4_color_conversion_oport1_1_jpeg_encoder_block_processor_4_dct0_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_4_color_conversion_oport1_2_jpeg_encoder_block_processor_4_dct1_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_4_color_conversion_oport1_3_jpeg_encoder_block_processor_4_dct00_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_4_color_conversion_oport1_4_jpeg_encoder_block_processor_4_dct01_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_4_color_conversion_oport1_5_jpeg_encoder_block_processor_4_dct10_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_4_color_conversion_oport1_6_jpeg_encoder_block_processor_4_dct11_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_4_dct0_oport1_1_jpeg_encoder_block_processor_4_huffman_encode0_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_4_dct1_oport1_1_jpeg_encoder_block_processor_4_huffman_encode1_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_4_dct00_oport1_1_jpeg_encoder_block_processor_4_huffman_encode00_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_4_dct01_oport1_1_jpeg_encoder_block_processor_4_huffman_encode01_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_4_dct10_oport1_1_jpeg_encoder_block_processor_4_huffman_encode10_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_4_dct11_oport1_1_jpeg_encoder_block_processor_4_huffman_encode11_iport1_1">
+            <tokenSize sz="1152"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_4_huffman_encode0_oport1_1_jpeg_encoder_block_processor_4_concatenate_steps_iport1_1">
+            <tokenSize sz="384"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_4_huffman_encode1_oport1_1_jpeg_encoder_block_processor_4_concatenate_steps_iport1_2">
+            <tokenSize sz="384"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_4_huffman_encode00_oport1_1_jpeg_encoder_block_processor_4_concatenate_steps_iport1_3">
+            <tokenSize sz="384"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_4_huffman_encode01_oport1_1_jpeg_encoder_block_processor_4_concatenate_steps_iport1_4">
+            <tokenSize sz="384"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_4_huffman_encode10_oport1_1_jpeg_encoder_block_processor_4_concatenate_steps_iport1_5">
+            <tokenSize sz="384"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_4_huffman_encode11_oport1_1_jpeg_encoder_block_processor_4_concatenate_steps_iport1_6">
+            <tokenSize sz="384"/>
+         </channelProperties>
+         <channelProperties channel="jpeg_encoder_block_processor_4_concatenate_steps_oport1_1_jpeg_encoder_merge_blocks_iport1_4">
+            <tokenSize sz="1664"/>
+         </channelProperties>
+      </sdfProperties>
+   </applicationGraph>
+</sdf3>

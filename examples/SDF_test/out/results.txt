@@ -1,0 +1,9 @@
+---------------
+Found 0 possible mappings in 0 h, 0 min,0 s and 6 ms.
+---------------
+Search statistics: 
+  0 nodes visited (1 failed)
+  Tree depth: 0
+  0 propagators executed.
+---------------
+

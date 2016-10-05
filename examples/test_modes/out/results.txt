@@ -1,0 +1,68 @@
+---------------
+Found 236032 possible mappings in 0 h, 2 min,10 s and 258 ms.
+	(first solution after 0:0:0:1)
+---------------
+Search statistics: 
+  385 nodes visited (53 failed)
+  Tree depth: 18
+  71553 propagators executed.
+---------------
+
+First solution: 
+Latency: {16, 14}
+Period: {16, 8}
+
+Procs used: 3
+Proc_period: {8, 8, 16, [1..2147483646]}
+Proc utilization: {1000, 1000, 1000, 0}
+Sys utilization: 750
+ProcsUsed utilization: 1000
+
+proc mode: {2, 2, 2, 2}
+proc power: {12000, 12000, 12000, 0}
+sys power: 36000
+proc area: {12, 12, 12, 12}
+sys area: 48
+proc cost: {12, 12, 12, 12}
+sys cost: 48
+
+Proc: {2, 2, 2, 2, 1, 1, 0, 0}
+Next: {1, 2, 3, 10, 5, 9, 7, 8, 4, 0, 11, 6}
+
+TDMA slots: {0, 1, 0, 0}
+S-order: {1, 2, 8, 4, 5, 7, 3, 0, 9, 6}
+wcct_b: {0, 0, 0, 0, 1, 1}
+wcct_s: {0, 0, 0, 0, 1, 1}
+R-order: {1, 2, {6,8}, [7..8], 5, [6..7], 3, 0, 9, 4}
+wcct_r: {0, 0, 0, 0, 0, 0}
+---------------
+
+Last solution: 
+Latency: {16, 18}
+Period: {16, 8}
+
+Procs used: 3
+Proc_period: {[1..2147483646], 16, 8, 8}
+Proc utilization: {0, 1000, 1000, 1000}
+Sys utilization: 750
+ProcsUsed utilization: 1000
+
+proc mode: {2, 2, 2, 2}
+proc power: {0, 12000, 12000, 12000}
+sys power: 36000
+proc area: {12, 12, 12, 12}
+sys area: 48
+proc cost: {12, 12, 12, 12}
+sys cost: 48
+
+Proc: {1, 1, 1, 1, 2, 2, 3, 3}
+Next: {2, 3, 1, 9, 5, 10, 11, 6, 0, 4, 7, 8}
+
+TDMA slots: {0, 0, 4, 0}
+S-order: {2, 7, 1, 4, 5, 8, 0, 3, 9, 6}
+wcct_b: {0, 0, 0, 0, 1, 1}
+wcct_s: {0, 0, 0, 0, 1, 1}
+R-order: {2, [7..8], 1, [8..9], {7,9}, 4, 0, 3, 5, 6}
+wcct_r: {0, 0, 0, 0, 0, 0}
+---------------
+
