@@ -34,9 +34,13 @@ for(size_t j=0; j<platform->nodes(); j++){
 
 
 throughputSSE(*this, latency, period, iterations, iterationsCh,
-           sendbufferSz, recbufferSz, next, wcet.slice(0, 1, apps->n_SDFActors()), wcct_s, 
+           sendbufferSz, recbufferSz, next, wcet.slice(0, 1, apps->n_SDFActors()), wcct_s,
            wcct_b, sendNext, wcct_r, recNext,
            ch_src, ch_dst, ch_tok, appIndex);
+
+//throughputMCR(*this, latency, period, iterations, iterationsCh,
+//           sendbufferSz, recbufferSz, next, wcet.slice(0, 1, apps->n_SDFActors()), wcct_s,
+//           wcct_b, sendNext, wcct_r, recNext, ch_src, ch_dst, ch_tok, appIndex);
 
 for(size_t a=0; a<apps->n_SDFApps(); a++){
   if(apps->getPeriodConstraint(a) > 0){
