@@ -28,7 +28,7 @@
 # MODULE PATH AND FILES
 #=======================
 
-CPP_FILES := throughputSSE.cpp throughputMCM.cpp
+CPP_FILES := throughputSSE.cpp throughputMCR.cpp
 
 
 

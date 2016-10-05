@@ -38,7 +38,7 @@
 #include "../system/mapping.hpp"
 #include "../systemDesign/designDecisions.hpp"
 #include "../throughput/throughputSSE.hpp"
-#include "../throughput/throughputMCM.hpp"
+#include "../throughput/throughputMCR.hpp"
 #include "schedulability.hpp"
 #include "../settings/dse_settings.hpp"
 
