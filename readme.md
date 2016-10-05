@@ -1,6 +1,6 @@
 # DeSyDe
 
-DeSyde is a desing space exploration tool developed at KTH (ForSyDe research group).
+DeSyDe is a desing space exploration tool developed at KTH (ForSyDe research group).
 
 
 # Publication
