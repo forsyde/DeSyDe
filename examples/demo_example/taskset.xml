@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <taskset>
 	<periodicTask>
-		<number>2</number>
+		<number>0</number>
 		<type>one</type>
 		<period>100</period>
 		<deadline>100</deadline>

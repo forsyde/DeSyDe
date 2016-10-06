@@ -751,7 +751,7 @@ void ThroughputMCR::debug_constructMSAG() {
                         cout << "  and firstActor = " << firstActor << endl;
 
                         cout << "  and receivingActors = ";
-                        for(unsigned s = 0; s < next.size(); s++){
+                        for(int s = 0; s < next.size(); s++){
                             cout << "next[" << s << "] = " << next[s] << endl;
                         }
                         for(unsigned s = 0; s < receivingActors.size(); s++){
@@ -1351,8 +1351,8 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
     if(printDebug)
         cout << "\tThroughputMCR::propagate()" << endl;
 
-    auto _start = std::chrono::high_resolution_clock::now(); //timer
-    int time; //runtime of period calculation
+    //auto _start = std::chrono::high_resolution_clock::now(); //timer
+    //int time; //runtime of period calculation
 
     //check which application graphs are mapped to same processor (= combined into the same MSAG)
     unordered_map<int, set<int>> coMappedApps;
@@ -1377,7 +1377,7 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
     }
     if(coMappedApps.size() > 0){
         for(auto it = coMappedApps.begin(); it != coMappedApps.end(); it++){
-            int app = it->first;
+            //int app = it->first;
             set<int> t_apps = it->second;
             while(!t_apps.empty()){
                 unordered_map<int, set<int>>::iterator iy = coMappedApps.find(*t_apps.begin());
