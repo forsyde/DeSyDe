@@ -9,12 +9,18 @@
 #include <chrono>
 #include <sstream>
 #include <fstream>
+#include <boost/graph/graphviz.hpp>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/howard_cycle_ratio.hpp>
 
 
 using namespace Gecode;
 using namespace Int;
 using namespace std;
-
+//using namespace boost;
+//
+//typedef adjacency_list<listS, listS, directedS, property<vertex_index_t, int>,
+//        property<edge_weight_t, int, property<edge_weight2_t, int> > > boost_msag;
 
 
 class ThroughputMCR : public Propagator {
