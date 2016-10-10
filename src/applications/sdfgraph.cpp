@@ -66,9 +66,7 @@ void SDFGraph::buildDictionaries() {
     _d->channel[dst_act][dst_prt] = ch_name;
     _d->chan_con[ch_name] = {src_act, src_prt, dst_act, dst_prt};
     string size_query = "///sdfProperties/channelProperties[@channel=\'" + ch_name + "\']/tokenSize/@sz";
-    cout << size_query << endl;
     auto tokenSizeValue = xml.xpathStrings(size_query.c_str());
-    cout << "channel " << ch_name << ": " << tools::toString(tokenSizeValue) << endl;
     // TODO: if token sizes or channel sizes are not found, they are replaced with 0;
     _d->chan_sz[ch_name] = (tokenSizeValue.size() > 0) ? atoi(tokenSizeValue[0].c_str()) : 0;
     _d->init_tok[ch_name] = xml.hasProp(chans[i], "initialTokens") ? atoi(xml.getProp(chans[i], "initialTokens").c_str()) : 0;

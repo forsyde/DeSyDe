@@ -175,7 +175,6 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, DSESettings* dseSettings)
                 }
             }
         }
-        cout << "throughput\n";
 #include "throughput.constraints"
 
         for(size_t i = 0; i < channels.size(); i++){

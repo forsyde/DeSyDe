@@ -7,7 +7,7 @@ if(platform->getInterconnectType() == TDMA_BUS){
     int dst_ch1 = channels[ki]->destination;
     int tok_ch1 = channels[ki]->initTokens;
     
-    cout << "channel (" << src_ch1 << " -> " << dst_ch1 << "): " << tok_ch1 << " inital tokens" << endl;
+    //cout << "channel (" << src_ch1 << " -> " << dst_ch1 << "): " << tok_ch1 << " inital tokens" << endl;
 
     //receiving doesn't take any time on TDMA bus (buffer in receiving node's local memory)
     rel(*this, wcct_r[ki]==0); 
@@ -28,20 +28,20 @@ if(platform->getInterconnectType() == TDMA_BUS){
     //Does element exist in a reified version?
     IntVarArgs bt_sj(*this, platform->nodes(), 0, Int::Limits::max);
     IntVarArgs tt_sj(*this, platform->nodes(), 0, Int::Limits::max);
-    cout << "   Blocking: ";
+    //cout << "   Blocking: ";
     IntArgs wcbts(mapping->wcBlockingTimes()); //blocking
-    for(int i=0; i<wcbts.size(); i++){
-            cout << wcbts[i] << " ";
+    //for(int i=0; i<wcbts.size(); i++){
+            //cout << wcbts[i] << " ";
 
-    }
-    cout << endl;
-    cout << "   Transfer: ";
+    //}
+    //cout << endl;
+    //cout << "   Transfer: ";
     IntArgs wctts(mapping->wcTransferTimes(ki)); //transfer
-    for(int i=0; i<wctts.size(); i++){
-        cout << wctts[i] << " ";
+    //for(int i=0; i<wctts.size(); i++){
+        //cout << wctts[i] << " ";
 
-    }
-    cout << endl;
+    //}
+    //cout << endl;
     for(size_t j=0; j<platform->nodes(); j++){
       element(*this, wcbts, tdmaAlloc[j], bt_sj[j]);
       element(*this, wctts, tdmaAlloc[j], tt_sj[j]);

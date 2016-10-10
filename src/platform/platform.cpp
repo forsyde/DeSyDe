@@ -84,7 +84,7 @@ const vector<int> Platform::maxCommTimes(int tokSize) const{
 const vector<int> Platform::maxBlockingTimes() const{
   double slotLength = (double)interconnect.roundLength/interconnect.tdmaSlots;
 
-  cout << "TMDA slot length = " << slotLength << endl;
+  //cout << "TMDA slot length = " << slotLength << endl;
 
   std::vector<int> blockingTimes;
   blockingTimes.push_back(0); //for tdma_alloc=0, blockingTime = 0 (used in CP model)
@@ -103,10 +103,10 @@ const vector<int> Platform::maxTransferTimes(int tokSize) const{
   double slotsNeeded = ((double)tokSize/interconnect.dataPerSlot);
   double activeSendingTime = slotsNeeded * slotLength;
 
-  cout << "token size = " << tokSize << endl;
-  cout << "TMDA slot length = " << slotLength << endl;
-  cout << "TMDA slots needed = " << slotsNeeded << endl;
-  cout << "active transfer time = " << activeSendingTime << endl;
+//  cout << "token size = " << tokSize << endl;
+//  cout << "TMDA slot length = " << slotLength << endl;
+//  cout << "TMDA slots needed = " << slotsNeeded << endl;
+//  cout << "active transfer time = " << activeSendingTime << endl;
 
   std::vector<int> transferTimes;
   transferTimes.push_back(0); //for tdma_alloc=0, transerTime = -1 (used in CP model)
