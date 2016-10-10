@@ -8,7 +8,7 @@ Platform::Platform(size_t p_nodes, int p_cycle, size_t p_memSize, int p_buffer, 
                                vector<int>(1,p_memSize), vector<int>(1,10),
                                vector<int>(1,10),vector<int>(1,1),p_buffer));
   }
-    
+
   interconnect = Interconnect(p_type, p_dps, p_tdma, p_roundLength, p_nodes, 1);
 }
 
@@ -38,7 +38,7 @@ size_t Platform::nodes() const {
 }
 
 InterconnectType Platform::getInterconnectType() const{
-  return interconnect.type;  
+  return interconnect.type;
 }
 
 int Platform::tdmaSlots() const{
@@ -55,7 +55,7 @@ int Platform::dataPerRound() const{
 
 double Platform::speedUp(int node, int mode) const {
   return compNodes[node]->cycle_length[mode];
-}  
+}
 
 //maximum communication time (=blocking+sending) on the TDM bus for a token of size tokSize
 //for different TDM slot allocations (index of vector = number of slots
@@ -84,6 +84,8 @@ const vector<int> Platform::maxCommTimes(int tokSize) const{
 const vector<int> Platform::maxBlockingTimes() const{
   double slotLength = (double)interconnect.roundLength/interconnect.tdmaSlots;
 
+  cout << "TMDA slot length = " << slotLength << endl;
+
   std::vector<int> blockingTimes;
   blockingTimes.push_back(0); //for tdma_alloc=0, blockingTime = 0 (used in CP model)
   for (auto i=1; i<=interconnect.tdmaSlots; i++){ //max blocking depends on allocated TDM slots
@@ -93,13 +95,18 @@ const vector<int> Platform::maxBlockingTimes() const{
   return blockingTimes;
 }
 
-//maximum transer time on the TDM bus for a token of size tokSize
+//maximum transfer time on the TDM bus for a token of size tokSize
 //for different TDM slot allocations (index of vector = number of slots
 //for use with the element constraint in the model
 const vector<int> Platform::maxTransferTimes(int tokSize) const{
   double slotLength = (double)interconnect.roundLength/interconnect.tdmaSlots;
   double slotsNeeded = ((double)tokSize/interconnect.dataPerSlot);
   double activeSendingTime = slotsNeeded * slotLength;
+
+  cout << "token size = " << tokSize << endl;
+  cout << "TMDA slot length = " << slotLength << endl;
+  cout << "TMDA slots needed = " << slotsNeeded << endl;
+  cout << "active transfer time = " << activeSendingTime << endl;
 
   std::vector<int> transferTimes;
   transferTimes.push_back(0); //for tdma_alloc=0, transerTime = -1 (used in CP model)
@@ -124,16 +131,16 @@ size_t Platform::getModes(int node) const{
 size_t Platform::getMaxModes() const
 {
   size_t max_mode = 0;
-  for (size_t k = 0; k < nodes(); k++) 
+  for (size_t k = 0; k < nodes(); k++)
     {
       if(getModes(k) > max_mode)
         max_mode = getModes(k);
     }
-  return max_mode;  
+  return max_mode;
 }
 
 vector<int> Platform::getMemorySize(int node) const{
-  return compNodes[node]->memorySize;  
+  return compNodes[node]->memorySize;
 }
 
 vector<int> Platform::getPowerCons(int node) const{
@@ -156,7 +163,7 @@ bool Platform::isFixed() const{
   for (size_t j = 0; j < nodes(); j++){
     if(compNodes[j]->n_types > 1) return false;
   }
-  
+
   return true;
 }
 
@@ -173,16 +180,18 @@ bool Platform::homogeneousNodes(int node0, int node1) const{
 
 
 bool Platform::homogeneousModeNodes(int node0, int node1) const{
-  if(compNodes[node0]->n_types != compNodes[node1]->n_types)
-    return false;
-    
+  if(compNodes[node0]->n_types != compNodes[node1]->n_types){
+      return false;
+  }
+
   for (auto m=0; m<compNodes[node0]->n_types; m++){
     if(compNodes[node0]->cycle_length[m] != compNodes[node1]->cycle_length[m] ||
        compNodes[node0]->memorySize[m] != compNodes[node1]->memorySize[m] ||
        compNodes[node0]->powerCons[m] != compNodes[node1]->powerCons[m] ||
        compNodes[node0]->areaCost[m] != compNodes[node1]->areaCost[m] ||
-       compNodes[node0]->monetaryCost[m] != compNodes[node1]->monetaryCost[m])
-      return false;
+       compNodes[node0]->monetaryCost[m] != compNodes[node1]->monetaryCost[m]){
+        return false;
+    }
   }
   return true;
 }
@@ -214,7 +223,7 @@ std::ostream& operator<< (std::ostream &out, const Platform &p)
     {
       out << "PE[" << i << "]: " << *p.compNodes[i] << endl;
     }
- 
+
   return out;
-         
+
 }
