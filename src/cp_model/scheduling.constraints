@@ -120,6 +120,8 @@
   if(platform->nodes()>1){
     //...with emtpy processors
     for(size_t j=0; j<platform->nodes(); j++){
+      rel(*this, next[apps->n_SDFActors()+j]<=apps->n_SDFActors() || next[apps->n_SDFActors()+j]>apps->n_SDFActors()+j, ICL_DOM);
+//      cout << "next["<<apps->n_SDFActors()+j<<"]<="<<apps->n_SDFActors() <<"||"<<" next["<<apps->n_SDFActors()+j<<"]>"<<apps->n_SDFActors()+j<<endl;
       //...with emtpy processors
       rel(*this, (nSDFAsOnProc[(j+1)%platform->nodes()]==0) == (next[apps->n_SDFActors()+j]==apps->n_SDFActors()+((j+1)%platform->nodes())));
       rel(*this, (nSDFAsOnProc[(j+1)%platform->nodes()]>0) >> (next[apps->n_SDFActors()+j]<apps->n_SDFActors()));
