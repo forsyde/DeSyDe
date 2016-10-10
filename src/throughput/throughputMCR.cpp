@@ -1354,66 +1354,72 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
     //auto _start = std::chrono::high_resolution_clock::now(); //timer
     //int time; //runtime of period calculation
 
-    //check which application graphs are mapped to same processor (= combined into the same MSAG)
-    unordered_map<int, set<int>> coMappedApps;
-    vector<set<int>> result;
-    for(int i = 0; i < n_actors; i++){
-        if(next[i].assigned() && next[i].val() < n_actors){ //next[i] is decided and points to an application actor
-            int actor = i;
-            int nextActor = next[i].val();
-            if(getApp(actor) != getApp(nextActor)){ //from different applications
-                unordered_map<int, set<int>>::const_iterator it =
-                        coMappedApps.find(getApp(actor));
-                if(it != coMappedApps.end()){ //i already has an entry in the map
-                    coMappedApps.at(getApp(actor)).insert(getApp(nextActor));
-                }else{ //no entry for ch_src[i] yet
-                    set<int> coApp;
-                    coApp.insert(getApp(nextActor));
-                    coMappedApps.insert(
-                            pair<int, set<int>>(getApp(actor), coApp));
+    if(apps.size() > 1){
+        //check which application graphs are mapped to same processor (= combined into the same MSAG)
+        unordered_map<int, set<int>> coMappedApps;
+        vector<set<int>> result;
+        for(int i = 0; i < n_actors; i++){
+            if(next[i].assigned() && next[i].val() < n_actors){ //next[i] is decided and points to an application actor
+                int actor = i;
+                int nextActor = next[i].val();
+                if(getApp(actor) != getApp(nextActor)){ //from different applications
+                    unordered_map<int, set<int>>::const_iterator it =
+                            coMappedApps.find(getApp(actor));
+                    if(it != coMappedApps.end()){ //i already has an entry in the map
+                        coMappedApps.at(getApp(actor)).insert(getApp(nextActor));
+                    }else{ //no entry for ch_src[i] yet
+                        set<int> coApp;
+                        coApp.insert(getApp(nextActor));
+                        coMappedApps.insert(
+                                pair<int, set<int>>(getApp(actor), coApp));
+                    }
                 }
             }
         }
-    }
-    if(coMappedApps.size() > 0){
-        for(auto it = coMappedApps.begin(); it != coMappedApps.end(); it++){
-            //int app = it->first;
-            set<int> t_apps = it->second;
-            while(!t_apps.empty()){
-                unordered_map<int, set<int>>::iterator iy = coMappedApps.find(*t_apps.begin());
-                if(iy != coMappedApps.end()){ // has an entry in the map
-                    it->second.insert(iy->second.begin(), iy->second.end());
-                    t_apps.insert(iy->second.begin(), iy->second.end());
-                    iy->second.clear();
+        if(coMappedApps.size() > 0){
+            for(auto it = coMappedApps.begin(); it != coMappedApps.end(); it++){
+                //int app = it->first;
+                set<int> t_apps = it->second;
+                while(!t_apps.empty()){
+                    unordered_map<int, set<int>>::iterator iy = coMappedApps.find(*t_apps.begin());
+                    if(iy != coMappedApps.end()){ // has an entry in the map
+                        it->second.insert(iy->second.begin(), iy->second.end());
+                        t_apps.insert(iy->second.begin(), iy->second.end());
+                        iy->second.clear();
+                    }
+
+                    t_apps.erase(t_apps.begin());
                 }
 
-                t_apps.erase(t_apps.begin());
+            }
+            for(auto it = coMappedApps.begin(); it != coMappedApps.end(); it++){
+                if(it->second.size() > 0){
+                    set<int> res = it->second;
+                    res.insert(it->first);
+                    result.push_back(res);
+                }
             }
 
         }
-        for(auto it = coMappedApps.begin(); it != coMappedApps.end(); it++){
-            if(it->second.size() > 0){
-                set<int> res = it->second;
-                res.insert(it->first);
-                result.push_back(res);
-            }
+    }else{//only a single application
+        constructMSAG();
+        if(next.assigned() && wcet.assigned()){
+            printThroughputGraphAsDot(".");
         }
-
     }
 
 
-    constructMSAG();
+    //constructMSAG();
 
     //debug_constructMSAG();
 
     //printThroughputGraphAsDot(".");
     //getchar();
 
-    //printThroughputGraph();
-    if(next.assigned() && wcet.assigned()){
-        printThroughputGraphAsDot(".");
-        getchar();
-    }
+//    if(next.assigned() && wcet.assigned()){
+//        printThroughputGraphAsDot(".");
+//        getchar();
+//    }
 
     /*  if(printDebug){
      cout << "initial state for SSE: " << endl;
@@ -1545,13 +1551,13 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
          //GECODE_ME_CHECK(latency[i].eq(home,wc_latency[i][0]));
          GECODE_ME_CHECK(period[i].eq(home,wc_period[i]));
          }else*/if(!all_assigned && !all_ch_local){
-            if(wc_latency[i].size() == 1)
-                GECODE_ME_CHECK(latency[i].gq(home, wc_latency[i][0]));
-            GECODE_ME_CHECK(period[i].gq(home, wc_period[i]));
+//            if(wc_latency[i].size() == 1)
+//                GECODE_ME_CHECK(latency[i].gq(home, wc_latency[i][0]));
+//            GECODE_ME_CHECK(period[i].gq(home, wc_period[i]));
         }else if(all_assigned){
-            if(wc_latency[i].size() == 1)
-                GECODE_ME_CHECK(latency[i].eq(home, wc_latency[i][0]));
-            GECODE_ME_CHECK(period[i].eq(home, wc_period[i]));
+            //if(wc_latency[i].size() == 1)
+//                GECODE_ME_CHECK(latency[i].eq(home, wc_latency[i][0]));
+//            GECODE_ME_CHECK(period[i].eq(home, wc_period[i]));
         }
     }
     /*
@@ -2330,9 +2336,9 @@ void ThroughputMCR::printThroughputGraphAsDot(const string &dir) const {
 
     cout << "  Printed dot graph file " << outputFile << endl;
 
-    string cmd = "cat " + outputFile + " | dot -Tpdf > " + outputFile + ".pdf";
-    cout << "  " << cmd << endl;
-    system(cmd.c_str());
+//    string cmd = "cat " + outputFile + " | dot -Tpdf > " + outputFile + ".pdf";
+//    cout << "  " << cmd << endl;
+//    system(cmd.c_str());
 
 }
 

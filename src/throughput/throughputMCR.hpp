@@ -18,9 +18,9 @@ using namespace Gecode;
 using namespace Int;
 using namespace std;
 //using namespace boost;
-//
-//typedef adjacency_list<listS, listS, directedS, property<vertex_index_t, int>,
-//        property<edge_weight_t, int, property<edge_weight2_t, int> > > boost_msag;
+
+typedef boost::adjacency_list<boost::listS, boost::listS, boost::directedS, boost::property<boost::vertex_index_t, int>,
+        boost::property<boost::edge_weight_t, int, boost::property<boost::edge_weight2_t, int> > > boost_msag;
 
 
 class ThroughputMCR : public Propagator {
@@ -76,6 +76,8 @@ protected:
   
   //for construction of the mapping and scheduling aware graph
   unordered_map<int,vector<SuccessorNode>> msaGraph;
+  //MSAG representation for boost
+  boost_msag b_msag;
   //for mapping from msag send/rec actors to appG-channels
   vector<int> channelMapping;
   //receivingActors: for storing/finding the first receiving actor for each dst
