@@ -49,8 +49,10 @@ public:
     Execution(CPModelTemplate* _model, DSESettings* _settings) :
             model(_model), settings(_settings) {
         geSearchOptions.threads = 0.0;
-        Search::TimeStop stop(settings->getTimeout());
-        geSearchOptions.stop = &stop;
+        if(settings->getTimeout()>0){
+            Search::TimeStop stop(settings->getTimeout());
+            geSearchOptions.stop = &stop;
+        }
     }
     ;
     /**
@@ -338,13 +340,30 @@ private:
                 }
             }
             t_endAll = runTimer::now();
-            printSolution(e, s);
+            //printSolution(e, s);
             delete s;
+
+            if(nodes%1000==0){
+                cout << ".";
+                if(nodes%20000==0)
+                    cout.flush();
+                if(nodes%100000==0)
+                    cout << endl;
+            }
+
         }
+        cout << endl;
         auto durAll = runTimer::now() - t_start;
         auto durAll_s =
                 std::chrono::duration_cast<std::chrono::seconds>(durAll).count();
-        out << "===== search ended after: " << durAll_s << " s" << " =====\n"
+        auto durAll_ms =
+                std::chrono::duration_cast<std::chrono::milliseconds>(durAll).count();
+        out << "===== search ended after: " << durAll_s << " s (" << durAll_ms << " ms)";
+        if(e->stopped()){
+            out << " due to time-out!";
+        }
+        out <<  " =====\n"
+                << nodes << " solutions found\n"
                 << "search nodes: " << e->statistics().node << ", fail: "
                 << e->statistics().fail << ", propagate: "
                 << e->statistics().propagate << ", depth: "
