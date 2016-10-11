@@ -38,7 +38,8 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, DSESettings* dseSettings)
     debug_stream << "\n==========\ndebug log:\n..........\n";
     vector<SDFChannel*> channels = apps->getChannels();
 
-    cout << "Creating Model..." << "  Platform with " << platform->nodes() << " nodes is ";
+    cout << "Creating Model..." << endl;
+    cout << "  Platform with " << platform->nodes() << " nodes is ";
     if(!mapping->homogeneousPlatform())
         cout << "not ";
     cout << "homogeneous." << endl;
@@ -220,7 +221,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, DSESettings* dseSettings)
         for(unsigned a = 0; a < ids.size(); a++){
             if(apps->getPeriodConstraint(ids[a]) > 0 && !settings->doOptimize()){
                 vector<int> branchProc = mapping->sortedByWCETs(ids[a]);
-                cout << "     app" << ids[a] << " [";
+                cout << "      " << apps->getGraphName(ids[a]) << " [";
                 for(int i = minA[ids[a]]; i <= maxA[ids[a]]; i++){
                     procBranchOrderSAT << proc[i];
                     //procBranchOrderSAT << rank[i];
@@ -233,7 +234,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, DSESettings* dseSettings)
         for(size_t a = 0; a < ids.size(); a++){
             if(apps->getPeriodConstraint(ids[a]) > 0 && settings->doOptimize()){
                 vector<int> branchProc = mapping->sortedByWCETs(ids[a]);
-                cout << "     app" << ids[ids[a]] << " [";
+                cout << "      " << apps->getGraphName(ids[ids[a]]) << " [";
                 for(int i = minA[ids[a]]; i <= maxA[ids[a]]; i++){
                     procBranchOrderOPT << proc[i];
                     //procBranchOrderOPT << rank[i];
@@ -245,7 +246,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, DSESettings* dseSettings)
         for(size_t a = 0; a < apps->n_SDFApps(); a++){
             if(apps->getPeriodConstraint(a) < 0 && settings->doOptimize()){
                 vector<int> branchProc = mapping->sortedByWCETs(a);
-                cout << "     app" << a << " [";
+                cout << "      " << apps->getGraphName(a) << " [";
                 for(int i = minA[a]; i <= maxA[a]; i++){
                     procBranchOrderOPT << proc[i];
                     //procBranchOrderOPT << rank[i];
@@ -257,7 +258,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, DSESettings* dseSettings)
         cout << "    procBranchOrderOther: " << endl;
         for(unsigned a = 0; a < apps->n_SDFApps(); a++){
             if(apps->getPeriodConstraint(a) <= 0 && !settings->doOptimize()){
-                cout << "     app" << a << " [";
+                cout << "      " << apps->getGraphName(a) << " [";
                 for(int i = minA[a]; i <= maxA[a]; i++){
                     procBranchOrderOther << proc[i];
                     //procBranchOrderOther << rank[i];
@@ -266,6 +267,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, DSESettings* dseSettings)
                 cout << "]" << endl;
             }
         }
+        cout << endl;
         //branch(*this, next, INT_VAR_NONE(), INT_VAL_MIN());
 
         if(!heaviestFirst && (procBranchOrderSAT.size() > 0 || procBranchOrderOPT.size() > 0)){

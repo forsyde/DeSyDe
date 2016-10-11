@@ -57,7 +57,7 @@
       element(*this, wcets_procs, proc[ii], wcet[ii]);
     }
   }
-	cout << "memory consumption constraint \n";
+
   //memory consumption of actors for code, depending on mapping
   IntVarArgs memConsCode(*this, apps->n_programEntities(), 0, Int::Limits::max);
   for(size_t ii=0; ii<apps->n_programEntities(); ii++){

@@ -341,8 +341,8 @@ void SDFGraph::transformFromHSDF() {
                     //TODO: this identification could be done using the channel names
                     //      same name = increase rates, different name = concatenate names & add token sizes
                     if(c->tokenSize == (*it)->tokenSize){
-                        c->prod++;
-                        c->cons++;
+                        c->prod += (*it)->prod;
+                        c->cons += (*it)->cons;
                         c->messageSize = c->prod * c->tokenSize;
                     }else{ //different token size
                         c->tokenSize += (*it)->tokenSize;
@@ -486,8 +486,8 @@ string SDFGraph::getString() const {
     str += "\n    - cost : " + tools::toString(c->cost);
     str += "\n    - oldIds : " + tools::toString(c->oldIds);
   }
-  str += "\n* path matrix :\n";
 #ifdef DEBUG
+  str += "\n* path matrix :\n";
   str += printPathMatrix();
 #endif
   return str;
