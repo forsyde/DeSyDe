@@ -49,7 +49,7 @@ ThroughputMCR::ThroughputMCR(Space& home, ViewArray<IntView> p_latency,
      sendingNext.subscribe(home, *this, Int::PC_INT_VAL);
      receivingNext.subscribe(home, *this, Int::PC_INT_VAL);*/
 
-    printDebug = true;
+    printDebug = false;
 
     n_actors = p_wcet.size();
     n_channels = p_ch_src.size();
@@ -77,6 +77,7 @@ size_t ThroughputMCR::dispose(Space& home) {
      sendingNext.cancel(home, *this, Int::PC_INT_VAL);
      receivingNext.cancel(home, *this, Int::PC_INT_VAL);*/
 
+    b_msag.~adj_list_impl();
     msaGraph.~unordered_map<int, vector<SuccessorNode>>();
     channelMapping.~vector<int>();
     receivingActors.~vector<int>();
@@ -156,6 +157,7 @@ void ThroughputMCR::debug_constructMSAG() {
         }
     }
 
+    b_msag.clear();
     msaGraph.clear();
     ch_state.clear();
     actor_delay.clear();
@@ -858,7 +860,7 @@ void ThroughputMCR::constructMSAG() {
             succB.channel = i;
 
             n_msagChannels++;
-            if(printDebug){
+            if(true){
                 unordered_map<int, vector<SuccessorNode>>::const_iterator it =
                         msaGraph.find(ch_src[i]);
                 if(it != msaGraph.end()){    //i already has an entry in the map
@@ -872,9 +874,9 @@ void ThroughputMCR::constructMSAG() {
                 }
             }
             //add ch_src[i]->block_actor to state of SSE
-            ch_state[ch_src[i] * n_msagActors + block_actor] = succB.max_tok;
-            actor_delay[ch_src[i]] = wcet[ch_src[i]].min();
-            actor_delay[block_actor] = sendingLatency[i].min();
+//            ch_state[ch_src[i] * n_msagActors + block_actor] = succB.max_tok;
+//            actor_delay[ch_src[i]] = wcet[ch_src[i]].min();
+//            actor_delay[block_actor] = sendingLatency[i].min();
 
             //add ch_src[i] as successor of the block actor, with buffer size as tokens
             SuccessorNode srcCh;
@@ -886,7 +888,7 @@ void ThroughputMCR::constructMSAG() {
             srcCh.max_tok = sendbufferSz[i].max();
 
             n_msagChannels++;
-            if(printDebug){
+            if(true){
                 unordered_map<int, vector<SuccessorNode>>::const_iterator it =
                         msaGraph.find(block_actor);
                 if(it != msaGraph.end()){    //i already has an entry in the map
@@ -900,9 +902,9 @@ void ThroughputMCR::constructMSAG() {
                 }
             }
             //add block_actor->ch_src[i] to state of SSE
-            ch_state[block_actor * n_msagActors + ch_src[i]] = srcCh.max_tok;
-            actor_delay[block_actor] = sendingLatency[i].min();
-            actor_delay[ch_src[i]] = wcet[ch_src[i]].min();
+//            ch_state[block_actor * n_msagActors + ch_src[i]] = srcCh.max_tok;
+//            actor_delay[block_actor] = sendingLatency[i].min();
+//            actor_delay[ch_src[i]] = wcet[ch_src[i]].min();
 //###
             //add the send actor as a successor of the block actor
             SuccessorNode succS;
@@ -913,7 +915,7 @@ void ThroughputMCR::constructMSAG() {
             succS.channel = i;
 
             n_msagChannels++;
-            if(printDebug){
+            if(true){
                 unordered_map<int, vector<SuccessorNode>>::const_iterator it =
                         msaGraph.find(block_actor);
                 if(it != msaGraph.end()){    //i already has an entry in the map
@@ -927,9 +929,9 @@ void ThroughputMCR::constructMSAG() {
                 }
             }
             //add block_actor->send_actor to state of SSE
-            ch_state[block_actor * n_msagActors + send_actor] = succS.max_tok;
-            actor_delay[block_actor] = sendingLatency[i].min();
-            actor_delay[send_actor] = sendingTime[i].min();
+//            ch_state[block_actor * n_msagActors + send_actor] = succS.max_tok;
+//            actor_delay[block_actor] = sendingLatency[i].min();
+//            actor_delay[send_actor] = sendingTime[i].min();
 
             //add the block actor as successor of the send actor, with one token (serialization)
             SuccessorNode succBS;
@@ -940,7 +942,7 @@ void ThroughputMCR::constructMSAG() {
             succBS.channel = i;
 
             n_msagChannels++;
-            if(printDebug){
+            if(true){
                 unordered_map<int, vector<SuccessorNode>>::const_iterator it =
                         msaGraph.find(send_actor);
                 if(it != msaGraph.end()){ //send actor already has an entry in the map
@@ -954,9 +956,9 @@ void ThroughputMCR::constructMSAG() {
                 }
             }
             //add send_actor -> block_actor to state of SSE
-            ch_state[send_actor * n_msagActors + block_actor] = succBS.max_tok;
-            actor_delay[send_actor] = sendingTime[i].min();
-            actor_delay[block_actor] = sendingLatency[i].min();
+//            ch_state[send_actor * n_msagActors + block_actor] = succBS.max_tok;
+//            actor_delay[send_actor] = sendingTime[i].min();
+//            actor_delay[block_actor] = sendingLatency[i].min();
 //###
             //add receiving actor as successor of the send actor, with potential initial tokens
             SuccessorNode dstCh;
@@ -968,7 +970,7 @@ void ThroughputMCR::constructMSAG() {
             dstCh.recOrder = receivingNext[i].min();
 
             n_msagChannels++;
-            if(printDebug){
+            if(true){
                 unordered_map<int, vector<SuccessorNode>>::const_iterator it =
                         msaGraph.find(send_actor);
                 if(it != msaGraph.end()){    //i already has an entry in the map
@@ -982,9 +984,9 @@ void ThroughputMCR::constructMSAG() {
                 }
             }
             //add send_actor->rec_actor to state of SSE
-            ch_state[send_actor * n_msagActors + rec_actor] = dstCh.max_tok;
-            actor_delay[send_actor] = sendingTime[i].min();
-            actor_delay[rec_actor] = receivingTime[i].min();
+//            ch_state[send_actor * n_msagActors + rec_actor] = dstCh.max_tok;
+//            actor_delay[send_actor] = sendingTime[i].min();
+//            actor_delay[rec_actor] = receivingTime[i].min();
 
             //save the receiving actors for each actor (for next order)
             if(receivingActors[ch_dst[i]] == -1){ //first rec_actor for the dst
@@ -1019,7 +1021,7 @@ void ThroughputMCR::constructMSAG() {
             succRec.channel = i;
 
             n_msagChannels++;
-            if(printDebug){
+            if(true){
                 unordered_map<int, vector<SuccessorNode>>::const_iterator it =
                         msaGraph.find(rec_actor);
                 if(it != msaGraph.end()){ //i already has an entry in the map
@@ -1033,9 +1035,9 @@ void ThroughputMCR::constructMSAG() {
                 }
             }
             //add rec_actor->send_actor to state of SSE
-            ch_state[rec_actor * n_msagActors + send_actor] = succRec.max_tok;
-            actor_delay[rec_actor] = receivingTime[i].min();
-            actor_delay[send_actor] = sendingTime[i].min();
+//            ch_state[rec_actor * n_msagActors + send_actor] = succRec.max_tok;
+//            actor_delay[rec_actor] = receivingTime[i].min();
+//            actor_delay[send_actor] = sendingTime[i].min();
 
             channel_count += 3;
         }else if(sendingTime[i].min() == 0){ //Step 1b: add all edges from G to the MSAG
@@ -1051,7 +1053,7 @@ void ThroughputMCR::constructMSAG() {
                 dst.channel = i;
 
                 n_msagChannels++;
-                if(printDebug){
+                if(true){
                     unordered_map<int, vector<SuccessorNode>>::const_iterator it =
                             msaGraph.find(ch_src[i]);
                     if(it != msaGraph.end()){ //i already has an entry in the map
@@ -1065,9 +1067,9 @@ void ThroughputMCR::constructMSAG() {
                     }
                 }
                 //add ch_src[i]->ch_dst[i] to state of SSE
-                ch_state[ch_src[i] * n_msagActors + ch_dst[i]] = tok[i];
-                actor_delay[ch_src[i]] = wcet[ch_src[i]].min();
-                actor_delay[ch_dst[i]] = wcet[ch_dst[i]].min();
+//                ch_state[ch_src[i] * n_msagActors + ch_dst[i]] = tok[i];
+//                actor_delay[ch_src[i]] = wcet[ch_src[i]].min();
+//                actor_delay[ch_dst[i]] = wcet[ch_dst[i]].min();
             }
         }
     }
@@ -1139,7 +1141,7 @@ void ThroughputMCR::constructMSAG() {
                 succBS.channel = nextCh;
 
                 n_msagChannels++;
-                if(printDebug){
+                if(true){
                     unordered_map<int, vector<SuccessorNode>>::const_iterator it =
                             msaGraph.find(i + n_actors);
                     if(it != msaGraph.end()){ //send actor already has an entry in the map
@@ -1153,11 +1155,11 @@ void ThroughputMCR::constructMSAG() {
                     }
                 }
                 //add i -> block_actor to state of SSE
-                ch_state[(i + n_actors) * n_msagActors + block_actor] =
-                        succBS.max_tok;
-                actor_delay[i + n_actors] =
-                        sendingTime[channelMapping[i]].min();
-                actor_delay[block_actor] = sendingLatency[nextCh].min();
+//                ch_state[(i + n_actors) * n_msagActors + block_actor] =
+//                        succBS.max_tok;
+//                actor_delay[i + n_actors] =
+//                        sendingTime[channelMapping[i]].min();
+//                actor_delay[block_actor] = sendingLatency[nextCh].min();
             }
         }
     }
@@ -1212,7 +1214,7 @@ void ThroughputMCR::constructMSAG() {
         //cout << " ( "<< succRec.successor_key <<")" << endl;
 
         n_msagChannels++;
-        if(printDebug){
+        if(true){
             unordered_map<int, vector<SuccessorNode>>::const_iterator it =
                     msaGraph.find(i + n_actors);
             if(it != msaGraph.end()){ //send actor already has an entry in the map
@@ -1226,10 +1228,10 @@ void ThroughputMCR::constructMSAG() {
             }
         }
         //add i -> block_actor to state of SSE
-        ch_state[(i + n_actors) * n_msagActors + succRec.successor_key] =
-                succRec.max_tok;
-        actor_delay[i + n_actors] = receivingTime[channelMapping[i]].min();
-        actor_delay[succRec.successor_key] = succRec.delay;
+//        ch_state[(i + n_actors) * n_msagActors + succRec.successor_key] =
+//                succRec.max_tok;
+//        actor_delay[i + n_actors] = receivingTime[channelMapping[i]].min();
+//        actor_delay[succRec.successor_key] = succRec.delay;
     }
 
     for(int i = 0; i < n_actors; i++){
@@ -1259,7 +1261,7 @@ void ThroughputMCR::constructMSAG() {
             }
 
             n_msagChannels++;
-            if(printDebug){
+            if(true){
                 unordered_map<int, vector<SuccessorNode>>::const_iterator it =
                         msaGraph.find(i);
                 if(it != msaGraph.end()){ //i already has an entry in the map
@@ -1272,9 +1274,9 @@ void ThroughputMCR::constructMSAG() {
                 }
             }
             //add i->nextA to state of SSE
-            ch_state[i * n_msagActors + nextA.successor_key] = nextA.max_tok;
-            actor_delay[i] = wcet[i].min();
-            actor_delay[nextA.successor_key] = nextA.delay;
+//            ch_state[i * n_msagActors + nextA.successor_key] = nextA.max_tok;
+//            actor_delay[i] = wcet[i].min();
+//            actor_delay[nextA.successor_key] = nextA.delay;
 
         }else if(next[i].assigned() && next[i].val() >= n_actors){ //next[i]>=n_actors
         //Step 3: add cycle-closing edge on each proc
@@ -1308,7 +1310,7 @@ void ThroughputMCR::constructMSAG() {
                 }
 
                 n_msagChannels++;
-                if(printDebug){
+                if(true){
                     unordered_map<int, vector<SuccessorNode>>::const_iterator it =
                             msaGraph.find(i);
                     if(it != msaGraph.end()){ //i already has an entry in the map
@@ -1321,10 +1323,10 @@ void ThroughputMCR::constructMSAG() {
                     }
                 }
                 //add i->ch_first to state of SSE
-                ch_state[i * n_msagActors + first.successor_key] =
-                        first.max_tok;
-                actor_delay[i] = wcet[i].min();
-                actor_delay[first.successor_key] = first.delay;
+//                ch_state[i * n_msagActors + first.successor_key] =
+//                        first.max_tok;
+//                actor_delay[i] = wcet[i].min();
+//                actor_delay[first.successor_key] = first.delay;
             }
         }
     }
@@ -1403,8 +1405,72 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
         }
     }else{//only a single application
         constructMSAG();
-        if(next.assigned() && wcet.assigned()){
-            printThroughputGraphAsDot(".");
+        using namespace boost;
+        int max_cr; /// maximum cycle ratio
+        typedef std::vector<graph_traits<boost_msag>::edge_descriptor> t_critCycl;
+        t_critCycl cc; ///critical cycle
+
+        graph_traits<boost_msag>::vertex_descriptor src, dst;
+        graph_traits<boost_msag>::edge_descriptor _e;
+
+        property_map<boost_msag, vertex_index_t>::type vim = get(vertex_index, b_msag);
+        property_map<boost_msag, edge_weight_t>::type ew1 = get(edge_weight, b_msag);
+        property_map<boost_msag, edge_weight2_t>::type ew2 = get(edge_weight2, b_msag);
+
+        bool found;
+        for(int n=0; n<n_msagActors; n++){
+            add_vertex(n,b_msag);
+            //add self-edges
+            src = vertex(n, b_msag);
+            tie(_e, found) = add_edge(src, src, b_msag);
+            if(n<n_actors){
+                put(edge_weight, b_msag, _e, wcet[n].min());
+            }//else{}: communication actors are added in next step
+            put(edge_weight2, b_msag, _e, 1);
+        }
+
+        //get channels from msag
+        for(auto it = msaGraph.begin(); it != msaGraph.end(); ++it){
+            int src_id = it->first;
+            src = vertex(src_id, b_msag);
+            vector<SuccessorNode> succs = (vector<SuccessorNode> ) (it->second);
+            for(auto itV = succs.begin(); itV != succs.end(); ++itV){
+              int dst_id = ((SuccessorNode) (*itV)).successor_key;
+              dst = vertex(dst_id, b_msag);
+              tie(_e, found) = add_edge(src, dst, b_msag);
+              put(edge_weight, b_msag, _e, ((SuccessorNode) (*itV)).delay);
+              put(edge_weight2, b_msag, _e, ((SuccessorNode) (*itV)).max_tok);
+              if(src_id>n_actors){
+                  put(edge_weight, b_msag, _e, ((SuccessorNode) (*itV)).delay);
+              }
+
+            }
+        }
+        //do MCR analysis
+        max_cr = maximum_cycle_ratio(b_msag, vim, ew1, ew2, &cc);
+        wc_period[0] = max_cr;
+
+        if(printDebug){
+            if(next.assigned() && wcet.assigned()){
+                string graphName = "boost_msag";
+                ofstream out;
+                string outputFile = ".";
+                outputFile += (outputFile.back() == '/') ?
+                              (graphName + ".dot") : ("/" + graphName + ".dot");
+                out.open(outputFile.c_str());
+                write_graphviz(out, b_msag);
+                out.close();
+                printThroughputGraphAsDot(".");
+            }
+
+
+            cout << "Maximum cycle ratio is " << max_cr << endl;
+            cout << "Critical cycle:\n";
+            for(t_critCycl::iterator itr = cc.begin(); itr != cc.end(); ++itr){
+                cout << "(" << vim[source(*itr, b_msag)] << ","
+                        << vim[target(*itr, b_msag)] << ") ";
+            }
+            cout << endl;
         }
     }
 
@@ -1553,11 +1619,11 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
          }else*/if(!all_assigned && !all_ch_local){
 //            if(wc_latency[i].size() == 1)
 //                GECODE_ME_CHECK(latency[i].gq(home, wc_latency[i][0]));
-//            GECODE_ME_CHECK(period[i].gq(home, wc_period[i]));
+            GECODE_ME_CHECK(period[i].gq(home, wc_period[i]));
         }else if(all_assigned){
             //if(wc_latency[i].size() == 1)
 //                GECODE_ME_CHECK(latency[i].eq(home, wc_latency[i][0]));
-//            GECODE_ME_CHECK(period[i].eq(home, wc_period[i]));
+            GECODE_ME_CHECK(period[i].eq(home, wc_period[i]));
         }
     }
     /*
@@ -1771,6 +1837,7 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
      }
      */
 
+    b_msag.clear();
     msaGraph.clear();
     channelMapping.clear();
     receivingActors.clear();
