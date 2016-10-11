@@ -89,10 +89,23 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, DSESettings* dseSettings)
     }
     cout << endl;
 
+    cout << "Design Constraints: " << endl;
     for(size_t a = 0; a < apps->n_SDFApps(); a++){
-        cout << "   SDF " << apps->getGraphName(a) << ":\n \t period const: " << apps->getPeriodConstraint(a) << "\n \t latency const: "
-                << apps->getLatencyConstraint(a) << endl;
+        cout << "   SDF " << apps->getGraphName(a) << ":\n \t period const: ";
+        if(apps->getPeriodConstraint(a)!=-1){
+            cout<< apps->getPeriodConstraint(a);
+        }else{
+            cout << "none";
+        }
+        cout << "\n \t latency const: ";
+        if(apps->getLatencyConstraint(a)!=-1){
+            cout<< apps->getLatencyConstraint(a);
+        }else{
+            cout << "none";
+        }
+        cout << endl;
     }
+    cout << endl;
 
     if(apps->n_programEntities() <= 0){
         cout << "No program entities found !!!" << endl;
