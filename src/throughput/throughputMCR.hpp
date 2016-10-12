@@ -18,9 +18,10 @@ using namespace Gecode;
 using namespace Int;
 using namespace std;
 //using namespace boost;
+namespace b = boost;
 
-typedef boost::adjacency_list<boost::listS, boost::listS, boost::directedS, boost::property<boost::vertex_index_t, int>,
-        boost::property<boost::edge_weight_t, int, boost::property<boost::edge_weight2_t, int> > > boost_msag;
+typedef b::adjacency_list<b::listS, b::listS, b::directedS, b::property<b::vertex_index_t, int>,
+        b::property<b::edge_weight_t, int, b::property<b::edge_weight2_t, int> > > boost_msag;
 
 
 class ThroughputMCR : public Propagator {
@@ -52,14 +53,6 @@ protected:
   ViewArray<IntView> sendingNext; //current sending schedule for channels
   ViewArray<IntView> receivingTime; //current receiving time for channels (atm 0)
   ViewArray<IntView> receivingNext; //current receiving schedule (Note: sending schedule is included/respected in sending latency)
-  ViewArray<IntView> timedSched_start; //time-based schedule for transient phase, start times
-  ViewArray<IntView> timedSched_end; //time-based schedule for transient phase, end times
-  ViewArray<IntView> timedSched_IC_start; //time-based schedule for transient phase, start times for interconnect
-  ViewArray<IntView> timedSched_IC_end; //time-based schedule for transient phase, end times for interconnect
-  ViewArray<IntView> periodicSched_start; //time-based schedule for periodic phase, start times
-  ViewArray<IntView> periodicSched_end; //time-based schedule for periodic phase, start times
-  ViewArray<IntView> periodicSched_IC_start; //time-based schedule for periodic phase, start times for interconnect
-  ViewArray<IntView> periodicSched_IC_end; //time-based schedule for periodic phase, end times for interconnect
   IntArgs ch_src; //source actors for all channels 
   IntArgs ch_dst; //destination actors for all channels
   IntArgs tok; //initial token distribution of application graph
@@ -82,9 +75,6 @@ protected:
   vector<int> channelMapping;
   //receivingActors: for storing/finding the first receiving actor for each dst
   vector<int> receivingActors;
-  //to represent the state of state space exploration
-  vector<int> ch_state; //tokens on channels of msag
-  vector<int> actor_delay; //actor wcets of msag
 
   //MCR results
   vector<vector<int>> wc_latency; 
@@ -102,22 +92,17 @@ protected:
   vector<int> min_rec_buffer; //min buffer size of all appG-channels
   vector<int> max_rec_buffer; //max buffer size of all appG-channels
 
-
   //for evaluation purposes
-  int calls;
-  int total_time;
   bool printDebug;
   
-  //builds the intial msaGraph & SSE-matrices
-  void debug_constructMSAG();
+  //builds the msaGraph based on the current state of the solution
   void constructMSAG();
   int getBlockActor(int ch_id) const;
   int getSendActor(int ch_id) const;
   int getRecActor(int ch_id) const;
   int getApp(int msagActor_id) const;
-  void printThroughputGraph();
+  void printThroughputGraph() const;
   void printThroughputGraphAsDot(const string &dir) const;
-  void printSchedule(string type, int length);
 
 
 public:
@@ -134,14 +119,6 @@ ThroughputMCR(Space& home, ViewArray<IntView> p_latency,
                          ViewArray<IntView> p_sendingNext, 
                          ViewArray<IntView> p_receivingTime,  
                          ViewArray<IntView> p_receivingNext,
-                         ViewArray<IntView> p_timedSched_start, 
-                         ViewArray<IntView> p_timedSched_end, 
-                         ViewArray<IntView> p_timedSched_IC_start,
-                         ViewArray<IntView> p_timedSched_IC_end, 
-                         ViewArray<IntView> p_periodicSched_start,
-                         ViewArray<IntView> p_periodicSched_end, 
-                         ViewArray<IntView> p_periodicSched_IC_start,
-                         ViewArray<IntView> p_periodicSched_IC_end, 
                          IntArgs p_ch_src, 
                          IntArgs p_ch_dst,
                          IntArgs p_tok, 
@@ -162,14 +139,6 @@ static ExecStatus post(Space& home, ViewArray<IntView> p_latency,
                        ViewArray<IntView> p_sendingNext, 
                        ViewArray<IntView> p_receivingTime,  
                        ViewArray<IntView> p_receivingNext,
-                       ViewArray<IntView> p_timedSched_start, 
-                       ViewArray<IntView> p_timedSched_end, 
-                       ViewArray<IntView> p_timedSched_IC_start,
-                       ViewArray<IntView> p_timedSched_IC_end, 
-                       ViewArray<IntView> p_periodicSched_start,
-                       ViewArray<IntView> p_periodicSched_end, 
-                       ViewArray<IntView> p_periodicSched_IC_start,
-                       ViewArray<IntView> p_periodicSched_IC_end, 
                        IntArgs p_ch_src, 
                        IntArgs p_ch_dst,
                        IntArgs p_tok, 
@@ -179,11 +148,8 @@ static ExecStatus post(Space& home, ViewArray<IntView> p_latency,
   (void) new (home) ThroughputMCR(home, p_latency, p_period, p_iterations, p_iterationsCh, 
                                   p_sendbufferSz, p_recbufferSz, p_next,
                                   p_wcet, p_sendingTime, p_sendingLatency, p_sendingNext,
-                                  p_receivingTime, p_receivingNext, p_timedSched_start, 
-                                  p_timedSched_end, p_timedSched_IC_start, p_timedSched_IC_end, 
-                                  p_periodicSched_start, p_periodicSched_end, 
-                                  p_periodicSched_IC_start, p_periodicSched_IC_end, 
-                                  p_ch_src, p_ch_dst, p_tok, p_apps, p_minIndices, p_maxIndices);
+                                  p_receivingTime, p_receivingNext,p_ch_src, p_ch_dst,
+                                  p_tok, p_apps, p_minIndices, p_maxIndices);
   return ES_OK;
 }
 
@@ -200,33 +166,6 @@ virtual ExecStatus propagate(Space& home, const ModEventDelta&);
 
 };
 
-//throughput constraint with propagation on time-based schedule
-extern void throughputMCR(Space& home, const IntVar latency,
-                             const IntVar period,
-                             const IntVarArgs& iterations, //min/max
-                             const IntVarArgs& iterationsCh, //min/max
-                             const IntVarArgs& sendbufferSz,
-                             const IntVarArgs& recbufferSz, 
-                             const IntVarArgs& next,  
-                             const IntVarArgs& wcet,
-                             const IntVarArgs& sendingTime,
-                             const IntVarArgs& sendingLatency,
-                             const IntVarArgs& sendingNext,
-                             const IntVarArgs& receivingTime,
-                             const IntVarArgs& receivingNext,
-                             const IntVarArgs& timedSched_start, 
-                             const IntVarArgs& timedSched_end, 
-                             const IntVarArgs& timedSched_IC_start, 
-                             const IntVarArgs& timedSched_IC_end, 
-                             const IntVarArgs& periodicSched_start, 
-                             const IntVarArgs& periodicSched_end,
-                             const IntVarArgs& periodicSched_IC_start,
-                             const IntVarArgs& periodicSched_IC_end,
-                             const IntArgs& ch_src,
-                             const IntArgs& ch_dst, 
-                             const IntArgs& tok, 
-                             const IntArgs& minIndices, 
-                             const IntArgs& maxIndices);
 
 //throughput constraint for one app without propagation on time-based schedule
 extern void throughputMCR(Space& home, const IntVar latency,
