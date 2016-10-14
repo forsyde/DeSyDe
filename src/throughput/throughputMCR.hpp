@@ -1,6 +1,9 @@
 #ifndef __THROUGHPUTMCR__
 #define __THROUGHPUTMCR__
 
+
+#include "../tools/tools.hpp"
+
 #include <gecode/int.hh>
 #include <vector>
 #include <algorithm>
@@ -71,6 +74,8 @@ protected:
   unordered_map<int,vector<SuccessorNode>> msaGraph;
   //MSAG representation for boost
   boost_msag b_msag;
+  //MSAG representation for boost
+  vector<boost_msag*> b_msags;
   //for mapping from msag send/rec actors to appG-channels
   vector<int> channelMapping;
   //receivingActors: for storing/finding the first receiving actor for each dst
@@ -97,6 +102,9 @@ protected:
   
   //builds the msaGraph based on the current state of the solution
   void constructMSAG();
+  //builds the msaGraph based on the current state of the solution
+  //the coMapped vector specifies for each application, which MSAG it is part of
+  void constructMSAG(vector<int> &msagMap);
   int getBlockActor(int ch_id) const;
   int getSendActor(int ch_id) const;
   int getRecActor(int ch_id) const;
