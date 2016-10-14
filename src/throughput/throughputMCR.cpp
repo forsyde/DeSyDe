@@ -27,7 +27,7 @@ ThroughputMCR::ThroughputMCR(Space& home, ViewArray<IntView> p_latency, ViewArra
      sendingNext.subscribe(home, *this, Int::PC_INT_VAL);
      receivingNext.subscribe(home, *this, Int::PC_INT_VAL);*/
 
-    printDebug = true;
+    printDebug = false;
 
     n_actors = p_wcet.size();
     n_channels = p_ch_src.size();
@@ -328,7 +328,7 @@ void ThroughputMCR::constructMSAG() {
             //add the send actor as a successor node of the receiving actor, with rec. buffer size - initial tokens
             SuccessorNode succRec;
             succRec.successor_key = send_actor;
-            succRec.delay = sendingLatency[i].min() + sendingTime[i].min(); //TODO: why adding these here??
+            succRec.delay = sendingTime[i].min();
             succRec.min_tok = recbufferSz[i].min() - tok[i];
             succRec.max_tok = recbufferSz[i].max() - tok[i];
             succRec.channel = i;
@@ -521,7 +521,7 @@ void ThroughputMCR::constructMSAG() {
         src = b::vertex(i + n_actors, b_msag);
         dst = b::vertex(nextCh == -1 ? ch_dst[channelMapping[i]] : getRecActor(nextCh), b_msag);
         b::tie(_e, found) = b::add_edge(src, dst, b_msag);
-        b::put(b::edge_weight, b_msag, _e, -1 ? wcet[ch_dst[channelMapping[i]]].min() : receivingTime[nextCh].min());
+        b::put(b::edge_weight, b_msag, _e, nextCh == -1 ? wcet[ch_dst[channelMapping[i]]].min() : receivingTime[nextCh].min());
         b::put(b::edge_weight2, b_msag, _e, 0);
 
         n_msagChannels++;
@@ -706,55 +706,6 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
         typedef std::vector<graph_traits<boost_msag>::edge_descriptor> t_critCycl;
         t_critCycl cc; ///critical cycle
 
-//        graph_traits<boost_msag>::vertex_descriptor src, dst;
-//        graph_traits<boost_msag>::edge_descriptor _e;
-
-//        bool found;
-//        for(int n = 0; n < n_msagActors; n++){
-//            add_vertex(n, b_msag);
-//            //add self-edges
-//            src = vertex(n, b_msag);
-//            tie(_e, found) = add_edge(src, src, b_msag);
-//            if(n < n_actors){
-//                put(edge_weight, b_msag, _e, wcet[n].min());
-//            } //else{}: communication actors are added in next step
-//            put(edge_weight2, b_msag, _e, 1);
-//        }
-//
-//        //get channels from msag
-//        for(auto it = msaGraph.begin(); it != msaGraph.end(); ++it){
-//            int src_id = it->first;
-//            src = vertex(src_id, b_msag);
-//            vector<SuccessorNode> succs = (vector<SuccessorNode> ) (it->second);
-//            for(auto itV = succs.begin(); itV != succs.end(); ++itV){
-//                int dst_id = ((SuccessorNode) (*itV)).successor_key;
-//                dst = vertex(dst_id, b_msag);
-//                tie(_e, found) = add_edge(src, dst, b_msag);
-//                put(edge_weight, b_msag, _e, ((SuccessorNode) (*itV)).delay);
-//                put(edge_weight2, b_msag, _e, ((SuccessorNode) (*itV)).max_tok);
-//                if(src_id > n_actors){ //TODO: fix this to be _e = (src, src)
-//                    put(edge_weight, b_msag, _e, ((SuccessorNode) (*itV)).delay);
-//                }
-//
-//            }
-//        }
-
-        cout << "Vertices number: " << num_vertices(b_msag)  << " vs. " << n_msagActors << endl;
-        cout << "Edges number: " << num_edges(b_msag) << " vs. " << n_msagChannels << endl;
-//
-//        if(num_vertices(b_msag) != n_msagActors || num_edges(b_msag) != n_msagChannels+n_msagActors){
-//            string graphName = "boost_msag";
-//            ofstream out;
-//            string outputFile = ".";
-//            outputFile += (outputFile.back() == '/') ? (graphName + ".dot") : ("/" + graphName + ".dot");
-//            out.open(outputFile.c_str());
-//            write_graphviz(out, b_msag);
-//            out.close();
-//            printThroughputGraphAsDot(".");
-//
-//            getchar();
-//        }
-
         property_map<boost_msag, vertex_index_t>::type vim = get(vertex_index, b_msag);
         property_map<boost_msag, edge_weight_t>::type ew1 = get(edge_weight, b_msag);
         property_map<boost_msag, edge_weight2_t>::type ew2 = get(edge_weight2, b_msag);
@@ -771,6 +722,7 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
                 out.open(outputFile.c_str());
                 write_graphviz(out, b_msag);
                 out.close();
+                printThroughputGraph();
                 printThroughputGraphAsDot(".");
             }
 
@@ -1146,8 +1098,8 @@ void ThroughputMCR::printThroughputGraph() const {
                 }
                 cout << "[" << ((SuccessorNode) (*itV)).successor_key << "]; ";
             }
-            //cout << ((SuccessorNode)(*itV)).delay << "; ";
-            cout << ((SuccessorNode) (*itV)).min_tok << "; ";
+            cout << ((SuccessorNode)(*itV)).delay << "; ";
+            //cout << ((SuccessorNode) (*itV)).min_tok << "; ";
             cout << ((SuccessorNode) (*itV)).max_tok << ")";
         }
         cout << endl;

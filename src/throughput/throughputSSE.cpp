@@ -948,7 +948,7 @@ void ThroughputSSE::constructMSAG(){
       //add the send actor as a successor node of the receiving actor, with rec. buffer size - initial tokens
       SuccessorNode succRec;
       succRec.successor_key = send_actor;
-      succRec.delay = sendingLatency[i].min() + sendingTime[i].min();
+      succRec.delay = sendingTime[i].min();
       succRec.min_tok = recbufferSz[i].min()-tok[i]; 
       succRec.max_tok = recbufferSz[i].max()-tok[i];  
       succRec.channel = i; 
