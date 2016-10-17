@@ -1,4 +1,5 @@
 #include "throughputMCR.hpp"
+#include "../tools/stringtools.hpp"
 
 using namespace Gecode;
 using namespace Int;
@@ -1273,184 +1274,227 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
   }
 }
 
+
+void checkApp(int app, unordered_map<int, set<int>>& coMappedApps, vector<int>& uncheckedApps, set<int>& res) {
+  res.insert(app);
+  uncheckedApps[app] = 0;
+  for (auto& appl : coMappedApps[app]) checkApp(appl, coMappedApps, uncheckedApps, res);
+}
+
 ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
-    if(printDebug)
-        cout << "\tThroughputMCR::propagate()" << endl;
+  if (printDebug)
+    cout << "\tThroughputMCR::propagate()" << endl;
 
-    //auto _start = std::chrono::high_resolution_clock::now(); //timer
-    //int time; //runtime of period calculation
+  //auto _start = std::chrono::high_resolution_clock::now(); //timer
+  //int time; //runtime of period calculation
 
-    vector<int> msagMap(apps.size(), 0);
+  vector<int> msagMap(apps.size(), 0);
 
-        cout << apps.size() << " applications." << endl;
+  cout << apps.size() << " applications." << endl;
 
-        if(apps.size() > 1){
-            //check which application graphs are mapped to same processor (= combined into the same MSAG)
-            vector<set<int>> result;
-            unordered_map<int, set<int>> coMappedApps;
-            vector<bool> checkedApps(apps.size(), false);
-            for(int a=0; a<apps.size(); a++){
-                coMappedApps.insert(pair<int, set<int>>(a, set<int>()));
-            }
-            for(int i = 0; i < n_actors; i++){
-                if(next[i].assigned() && next[i].val() < n_actors){ //next[i] is decided and points to an application actor
-                    int actor = i;
-                    int nextActor = next[i].val();
-                    if(getApp(actor) != getApp(nextActor)){ //from different applications
-                        unordered_map<int, set<int>>::const_iterator it = coMappedApps.find(getApp(actor));
-                        if(it != coMappedApps.end()){ //i already has an entry in the map
-                            coMappedApps.at(getApp(actor)).insert(getApp(nextActor));
-                        }else{ //no entry for ch_src[i] yet
-                            set<int> coApp;
-                            coApp.insert(getApp(nextActor));
-                            coMappedApps.insert(pair<int, set<int>>(getApp(actor), coApp));
-                        }
-                        it = coMappedApps.find(getApp(nextActor));
-                        if(it != coMappedApps.end()){ //i already has an entry in the map
-                            coMappedApps.at(getApp(nextActor)).insert(getApp(actor));
-                        }else{ //no entry for ch_src[i] yet
-                            set<int> coApp;
-                            coApp.insert(getApp(actor));
-                            coMappedApps.insert(pair<int, set<int>>(getApp(nextActor), coApp));
-                        }
-                    }
-                }
-            }
-            cout << coMappedApps.size() << " entries in coMappedApps" << endl;
-            if(coMappedApps.size() > 0){
-
-                for(auto it = coMappedApps.begin(); it != coMappedApps.end(); it++){
-                    cout << "App " << it-> first  << " is ";
-                    if(it->second.empty()) cout << "not ";
-                    cout << "co-mapped with ";
-                    if(it->second.empty()) cout << "any other application " << endl;
-                    else cout << endl << "    ";
-                    for(auto iy = it->second.begin(); iy != it->second.end(); iy++){
-                        cout << *iy;
-                    }
-                    cout << endl;
-
-                    if(it->second.empty() && !checkedApps[it->first]){
-                        set<int> res;
-                        res.insert(it->first);
-                        result.push_back(res);
-                        checkedApps[it->first]=true;
-                    }else if(!checkedApps[it->first]){
-                        set<int> t_apps = it->second;
-                        checkedApps[it->first]=true;
-
-                    }
-
-                    //int app = it->first;
-    //                while(!t_apps.empty()){
-    //                    unordered_map<int, set<int>>::iterator iy = coMappedApps.find(*t_apps.begin());
-    //                    if(iy != coMappedApps.end() && iy->second.size()>0){ // has an entry in the map
-    //                        it->second.insert(iy->second.begin(), iy->second.end());
-    //                        t_apps.insert(iy->second.begin(), iy->second.end());
-    //                        iy->second.clear();
-    //                        t_apps.erase(t_apps.begin());
-    //                    }
-    //
-    //                }
-
-                }
-                for(auto it = coMappedApps.begin(); it != coMappedApps.end(); it++){
-                    if(it->second.size() > 0){
-                        set<int> res = it->second;
-                        res.insert(it->first);
-                        result.push_back(res);
-                    }
-                }
-                cout << result.size() << " resulting graphs." << endl;
-            }else{
-                for(size_t i=0; i<wc_period.size(); i++){
-                    set<int> res;
-                    res.insert(i);
-                    result.push_back(res);
-                }
-            }
-            cout << "~~~" << endl;
-            for(size_t i=0; i<result.size(); i++){
-                b_msags.push_back(new boost_msag());
-                for (std::set<int>::iterator it=result[i].begin(); it!=result[i].end(); ++it){
-                    std::cout << ' ' << *it;
-                    msagMap[*it] = i;
-                }
-                  std::cout << '\n';
-            }
-            cout << "~~~" << endl;
-            constructMSAG(msagMap);
-
-            for(size_t i=0; i<b_msags.size(); i++){
-                cout << "Graph " << i << endl;
-              cout << "  Vertices number: " << num_vertices(*b_msags[i]) << endl;
-              cout << "  Edges number: " << num_edges(*b_msags[i]) << endl;
-            }
-
-            cout << "+~+~+~" << endl;
-            if(printDebug){
-                //if(next.assigned() && wcet.assigned()){
-                cout << "trying to print " << b_msags.size() << " boost-msags." << endl;
-                    for(size_t t=0; t<b_msags.size(); t++){
-                        string graphName = "boost_msag"+to_string(t);
-                        ofstream out;
-                        string outputFile = ".";
-                        outputFile += (outputFile.back() == '/') ? (graphName + ".dot") : ("/" + graphName + ".dot");
-                        out.open(outputFile.c_str());
-                        write_graphviz(out, *b_msags[t]);
-                        out.close();
-                    }
-                    printThroughputGraphAsDot(".");
-                //}
-            }
-
-    }else{ //only a single application
-        constructMSAG();
-        using namespace boost;
-        int max_cr; /// maximum cycle ratio
-        typedef std::vector<graph_traits<boost_msag>::edge_descriptor> t_critCycl;
-        t_critCycl cc; ///critical cycle
-
-        property_map<boost_msag, vertex_index_t>::type vim = get(vertex_index, b_msag);
-        property_map<boost_msag, edge_weight_t>::type ew1 = get(edge_weight, b_msag);
-        property_map<boost_msag, edge_weight2_t>::type ew2 = get(edge_weight2, b_msag);
-        //do MCR analysis
-        max_cr = maximum_cycle_ratio(b_msag, vim, ew1, ew2, &cc);
-        wc_period[0] = max_cr;
-
-        if(printDebug){
-            if(next.assigned() && wcet.assigned()){
-                string graphName = "boost_msag";
-                ofstream out;
-                string outputFile = ".";
-                outputFile += (outputFile.back() == '/') ? (graphName + ".dot") : ("/" + graphName + ".dot");
-                out.open(outputFile.c_str());
-                write_graphviz(out, b_msag);
-                out.close();
-                printThroughputGraphAsDot(".");
-            }
-
-            cout << "Maximum cycle ratio is " << max_cr << endl;
-            cout << "Critical cycle:\n";
-            for(t_critCycl::iterator itr = cc.begin(); itr != cc.end(); ++itr){
-                cout << "(" << vim[source(*itr, b_msag)] << "," << vim[target(*itr, b_msag)] << ") ";
-            }
-            cout << endl;
+  if (apps.size() > 1) {
+    //check which application graphs are mapped to same processor (= combined into the same MSAG)
+    vector<set<int>> result;
+    unordered_map<int, set<int>> coMappedApps;
+    vector<int> uncheckedApps(apps.size(), 1);
+    for (int a = 0; a < apps.size(); a++) {
+      coMappedApps.insert(pair<int, set<int>>(a, set<int>()));
+    }
+    for (int i = 0; i < n_actors; i++) {
+      if (next[i].assigned() && next[i].val() < n_actors) { //next[i] is decided and points to an application actor
+        int actor = i;
+        int nextActor = next[i].val();
+        if (getApp(actor) != getApp(nextActor)) { //from different applications
+          unordered_map<int, set<int>>::const_iterator it = coMappedApps.find(getApp(actor));
+          if (it != coMappedApps.end()) { //i already has an entry in the map
+            coMappedApps.at(getApp(actor)).insert(getApp(nextActor));
+          } else { //no entry for ch_src[i] yet
+            set<int> coApp;
+            coApp.insert(getApp(nextActor));
+            coMappedApps.insert(pair<int, set<int>>(getApp(actor), coApp));
+          }
+          it = coMappedApps.find(getApp(nextActor));
+          if (it != coMappedApps.end()) { //i already has an entry in the map
+            coMappedApps.at(getApp(nextActor)).insert(getApp(actor));
+          } else { //no entry for ch_src[i] yet
+            set<int> coApp;
+            coApp.insert(getApp(actor));
+            coMappedApps.insert(pair<int, set<int>>(getApp(nextActor), coApp));
+          }
         }
+      }
+    }
+    cout << coMappedApps.size() << " entries in coMappedApps" << endl;
+    if (coMappedApps.size() > 0) {
+
+      cout << "unchecked apps:" << tools::toString(uncheckedApps) << endl;
+
+      int sum_unchecked = 0;
+      for (int x : uncheckedApps) sum_unchecked += x;
+      while (sum_unchecked) {
+
+        for (auto& mapp : coMappedApps) {
+          cout << "App " << mapp.first << " is" << (mapp.second.empty() ? " not " : " ") << "co-mapped with ";
+          cout << (mapp.second.empty() ? string(" any other app") : tools::toString(mapp.second)) << endl;
+
+          if (uncheckedApps[mapp.first]) {
+            set<int> res;
+            result.push_back(res);
+            checkApp(mapp.first, coMappedApps, uncheckedApps, result.back());
+          }
+        }
+
+        sum_unchecked = 0;
+        for (int x : uncheckedApps) sum_unchecked += x;
+
+
+      }
+
+      /*for (auto it = coMappedApps.begin(); it != coMappedApps.end(); it++) {
+        cout << "App " << it->first << " is ";
+        if (it->second.empty())
+          cout << "not ";
+        cout << "co-mapped with ";
+        if (it->second.empty())
+          cout << "any other application " << endl;
+        else
+          cout << endl << "    ";
+        for (auto iy = it->second.begin(); iy != it->second.end(); iy++) {
+          cout << *iy;
+        }
+        cout << endl;
+
+        if (it->second.empty() && !checkedApps[it->first]) {
+          set<int> res;
+          res.insert(it->first);
+          result.push_back(res);
+          checkedApps[it->first] = true;
+        } else if (!checkedApps[it->first]) {
+          set<int> t_apps = it->second;
+          checkedApps[it->first] = true;
+
+        }
+
+        //int app = it->first;
+        //                while(!t_apps.empty()){
+        //                    unordered_map<int, set<int>>::iterator iy = coMappedApps.find(*t_apps.begin());
+        //                    if(iy != coMappedApps.end() && iy->second.size()>0){ // has an entry in the map
+        //                        it->second.insert(iy->second.begin(), iy->second.end());
+        //                        t_apps.insert(iy->second.begin(), iy->second.end());
+        //                        iy->second.clear();
+        //                        t_apps.erase(t_apps.begin());
+        //                    }
+        //
+        //                }
+
+      }
+      for (auto it = coMappedApps.begin(); it != coMappedApps.end(); it++) {
+        if (it->second.size() > 0) {
+          set<int> res = it->second;
+          res.insert(it->first);
+          result.push_back(res);
+        }
+      }
+      cout << result.size() << " resulting graphs." << endl;*/
+    } else {
+      for (size_t i = 0; i < wc_period.size(); i++) {
+        set<int> res;
+        res.insert(i);
+        result.push_back(res);
+      }
+    }
+    cout << "~~~" << endl;
+    for (size_t i = 0; i < result.size(); i++) {
+      b_msags.push_back(new boost_msag());
+      for (std::set<int>::iterator it = result[i].begin();
+          it != result[i].end(); ++it) {
+        std::cout << ' ' << *it;
+        msagMap[*it] = i;
+      }
+      std::cout << '\n';
+    }
+    cout << "~~~" << endl;
+    constructMSAG(msagMap);
+
+    for (size_t i = 0; i < b_msags.size(); i++) {
+      cout << "Graph " << i << endl;
+      cout << "  Vertices number: " << num_vertices(*b_msags[i]) << endl;
+      cout << "  Edges number: " << num_edges(*b_msags[i]) << endl;
     }
 
-    //constructMSAG();
+    cout << "+~+~+~" << endl;
+    if (printDebug) {
+      //if(next.assigned() && wcet.assigned()){
+      cout << "trying to print " << b_msags.size() << " boost-msags." << endl;
+      for (size_t t = 0; t < b_msags.size(); t++) {
+        string graphName = "boost_msag" + to_string(t);
+        ofstream out;
+        string outputFile = ".";
+        outputFile +=
+            (outputFile.back() == '/') ?
+                (graphName + ".dot") : ("/" + graphName + ".dot");
+        out.open(outputFile.c_str());
+        write_graphviz(out, *b_msags[t]);
+        out.close();
+      }
+      printThroughputGraphAsDot(".");
+      //}
+    }
+
+  } else { //only a single application
+    constructMSAG();
+    using namespace boost;
+    int max_cr; /// maximum cycle ratio
+    typedef std::vector<graph_traits<boost_msag>::edge_descriptor> t_critCycl;
+    t_critCycl cc; ///critical cycle
+
+    property_map<boost_msag, vertex_index_t>::type vim = get(vertex_index,
+        b_msag);
+    property_map<boost_msag, edge_weight_t>::type ew1 = get(edge_weight,
+        b_msag);
+    property_map<boost_msag, edge_weight2_t>::type ew2 = get(edge_weight2,
+        b_msag);
+    //do MCR analysis
+    max_cr = maximum_cycle_ratio(b_msag, vim, ew1, ew2, &cc);
+    wc_period[0] = max_cr;
+
+    if (printDebug) {
+      if (next.assigned() && wcet.assigned()) {
+        string graphName = "boost_msag";
+        ofstream out;
+        string outputFile = ".";
+        outputFile +=
+            (outputFile.back() == '/') ?
+                (graphName + ".dot") : ("/" + graphName + ".dot");
+        out.open(outputFile.c_str());
+        write_graphviz(out, b_msag);
+        out.close();
+        printThroughputGraphAsDot(".");
+      }
+
+      cout << "Maximum cycle ratio is " << max_cr << endl;
+      cout << "Critical cycle:\n";
+      for (t_critCycl::iterator itr = cc.begin(); itr != cc.end(); ++itr) {
+        cout << "(" << vim[source(*itr, b_msag)] << ","
+            << vim[target(*itr, b_msag)] << ") ";
+      }
+      cout << endl;
+    }
+  }
+
+  //constructMSAG();
 
 //    if(next.assigned() && wcet.assigned()){
 //        printThroughputGraphAsDot(".");
 //        getchar();
 //    }
 
-    bool all_assigned = next.assigned() && wcet.assigned() && sendingTime.assigned() && sendingLatency.assigned() && sendingNext.assigned()
-            && receivingTime.assigned(); //&&
-            //receivingNext.assigned() &&
-            //sendbufferSz.assigned() &&
-            //recbufferSz.assigned();
+  bool all_assigned = next.assigned() && wcet.assigned()
+      && sendingTime.assigned() && sendingLatency.assigned()
+      && sendingNext.assigned() && receivingTime.assigned(); //&&
+      //receivingNext.assigned() &&
+      //sendbufferSz.assigned() &&
+      //recbufferSz.assigned();
 //cout << "next.assigned(): " << next.assigned() << endl;
 //cout << "wcet.assigned(): " << wcet.assigned() << endl;
 //cout << "sendingTime.assigned(): " << sendingTime.assigned() << endl;
@@ -1461,75 +1505,77 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
 
 //cout << "all_assigned: " << all_assigned << " with period = " << wc_period << endl;
 
-    bool all_ch_local = true;
-    for(int i = 0; i < n_channels; i++){
-        if(!sendingTime[i].assigned() || sendingTime[i].min() > 0){
-            all_ch_local = false;
-        }
+  bool all_ch_local = true;
+  for (int i = 0; i < n_channels; i++) {
+    if (!sendingTime[i].assigned() || sendingTime[i].min() > 0) {
+      all_ch_local = false;
     }
+  }
 
-    //propagate latency and period (bounds)
-    for(int i = 0; i < apps.size(); i++){
-        /*if(!all_assigned && all_ch_local && wcet.assigned() && next.assigned()){
-         //GECODE_ME_CHECK(latency[i].eq(home,wc_latency[i][0]));
-         GECODE_ME_CHECK(period[i].eq(home,wc_period[i]));
-         }else*/
-        if(!all_assigned && !all_ch_local){
+  //propagate latency and period (bounds)
+  for (int i = 0; i < apps.size(); i++) {
+    /*if(!all_assigned && all_ch_local && wcet.assigned() && next.assigned()){
+     //GECODE_ME_CHECK(latency[i].eq(home,wc_latency[i][0]));
+     GECODE_ME_CHECK(period[i].eq(home,wc_period[i]));
+     }else*/
+    if (!all_assigned && !all_ch_local) {
 //          GECODE_ME_CHECK(latency[i].gq(home, wc_latency[i][0]));
-            //GECODE_ME_CHECK(period[i].gq(home, wc_period[i]));
-        }else if(all_assigned){
+      //GECODE_ME_CHECK(period[i].gq(home, wc_period[i]));
+    } else if (all_assigned) {
 //          GECODE_ME_CHECK(latency[i].eq(home, wc_latency[i][0]));
-            //GECODE_ME_CHECK(period[i].eq(home, wc_period[i]));
-        }
+      //GECODE_ME_CHECK(period[i].eq(home, wc_period[i]));
     }
-    /*
-     //propagate bounds on iterations of entities and channels in time-based schedule
-     for(int i=0; i<n_actors; i++){
-     //if(next.assigned())GECODE_ME_CHECK(iterations[i].gq(home,min_iterations[i]));
-     //if(all_assigned)GECODE_ME_CHECK(iterations[i].gq(home,min_iterations[i]));
-     if(all_assigned)GECODE_ME_CHECK(iterations[i].lq(home,max_iterations[i])); //upper bound can increase from "no mapping" until "fixed mapping" (due to added communication delays)
-     }
-     for(int i=n_actors; i<n_msagActors; i++){
-     //for now, only consider the sending part for each channel
-     if((i-n_actors)%2==0){
-     //if(next.assigned())GECODE_ME_CHECK(iterationsCh[channelMapping[i]].gq(home,min_iterations[i]));
-     //if(all_assigned)GECODE_ME_CHECK(iterationsCh[channelMapping[i]].gq(home,min_iterations[i]));
-     if(all_assigned)GECODE_ME_CHECK(iterationsCh[channelMapping[i]].lq(home,max_iterations[i])); //upper bound can increase from "no mapping" until "fixed mapping" (due to added communication delays)
-     }
-     }*/
+  }
+  /*
+   //propagate bounds on iterations of entities and channels in time-based schedule
+   for(int i=0; i<n_actors; i++){
+   //if(next.assigned())GECODE_ME_CHECK(iterations[i].gq(home,min_iterations[i]));
+   //if(all_assigned)GECODE_ME_CHECK(iterations[i].gq(home,min_iterations[i]));
+   if(all_assigned)GECODE_ME_CHECK(iterations[i].lq(home,max_iterations[i])); //upper bound can increase from "no mapping" until "fixed mapping" (due to added communication delays)
+   }
+   for(int i=n_actors; i<n_msagActors; i++){
+   //for now, only consider the sending part for each channel
+   if((i-n_actors)%2==0){
+   //if(next.assigned())GECODE_ME_CHECK(iterationsCh[channelMapping[i]].gq(home,min_iterations[i]));
+   //if(all_assigned)GECODE_ME_CHECK(iterationsCh[channelMapping[i]].gq(home,min_iterations[i]));
+   if(all_assigned)GECODE_ME_CHECK(iterationsCh[channelMapping[i]].lq(home,max_iterations[i])); //upper bound can increase from "no mapping" until "fixed mapping" (due to added communication delays)
+   }
+   }*/
 
-    b_msag.clear();
-    for(size_t t=0; t<b_msags.size(); t++){
-        //b_msags[t]->clear();
-        delete b_msags[t];
-    }
-    b_msags.clear();
-    msaGraph.clear();
-    channelMapping.clear();
-    receivingActors.clear();
+  b_msag.clear();
+  for (size_t t = 0; t < b_msags.size(); t++) {
+    //b_msags[t]->clear();
+    delete b_msags[t];
+  }
+  b_msags.clear();
+  msaGraph.clear();
+  channelMapping.clear();
+  receivingActors.clear();
 
-    max_start.clear();
-    max_end.clear();
-    min_start.clear();
-    min_end.clear();
-    start_pp.clear();
-    end_pp.clear();
-    min_iterations.clear();
-    max_iterations.clear();
-    min_send_buffer.clear();
-    max_send_buffer.clear();
-    min_rec_buffer.clear();
-    max_rec_buffer.clear();
+  max_start.clear();
+  max_end.clear();
+  min_start.clear();
+  min_end.clear();
+  start_pp.clear();
+  end_pp.clear();
+  min_iterations.clear();
+  max_iterations.clear();
+  min_send_buffer.clear();
+  max_send_buffer.clear();
+  min_rec_buffer.clear();
+  max_rec_buffer.clear();
 
-    if(next.assigned() && wcet.assigned() && sendingTime.assigned() && sendingLatency.assigned() && receivingTime.assigned() && receivingNext.assigned()
-            && sendbufferSz.assigned() && recbufferSz.assigned())
-        return home.ES_SUBSUMED(*this);
+  if (next.assigned() && wcet.assigned() && sendingTime.assigned()
+      && sendingLatency.assigned() && receivingTime.assigned()
+      && receivingNext.assigned() && sendbufferSz.assigned()
+      && recbufferSz.assigned())
+    return home.ES_SUBSUMED(*this);
 
-    if(all_ch_local && wcet.assigned() && next.assigned()){
-        return home.ES_SUBSUMED(*this);
-    }
+  if (all_ch_local && wcet.assigned() && next.assigned()) {
+    return home.ES_SUBSUMED(*this);
+  }
 
-    return ES_FIX;
+  return ES_FIX;
 }
 
 /* next: |#actors|
