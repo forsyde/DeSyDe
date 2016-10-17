@@ -23,8 +23,18 @@ using namespace std;
 //using namespace boost;
 namespace b = boost;
 
-typedef b::adjacency_list<b::listS, b::listS, b::directedS, b::property<b::vertex_index_t, int>,
-        b::property<b::edge_weight_t, int, b::property<b::edge_weight2_t, int> > > boost_msag;
+//! alias for actor ID property (check BGL documentation)
+//<http://www.boost.org/doc/libs/1_53_0/libs/graph/doc/using_adjacency_list.html#sec:adjacency-list-properties>
+enum vertex_actorid_t { vertex_actorid };
+namespace boost {
+  BOOST_INSTALL_PROPERTY(vertex, actorid);
+}
+
+using actor_prop = b::property<vertex_actorid_t, int>;
+using chan_prop  = b::property<b::edge_weight_t, int, b::property<b::edge_weight2_t, int> >;
+using boost_msag = b::adjacency_list<b::vecS, b::vecS, b::directedS, actor_prop, chan_prop>;
+
+
 
 
 class ThroughputMCR : public Propagator {

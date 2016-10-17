@@ -52,7 +52,7 @@ size_t ThroughputMCR::dispose(Space& home) {
      sendingNext.cancel(home, *this, Int::PC_INT_VAL);
      receivingNext.cancel(home, *this, Int::PC_INT_VAL);*/
 
-    b_msag.~adj_list_impl();
+    //b_msag.~adj_list_impl();
     b_msags.~vector<boost_msag*>();
     msaGraph.~unordered_map<int, vector<SuccessorNode>>();
     channelMapping.~vector<int>();
@@ -649,567 +649,628 @@ void ThroughputMCR::constructMSAG() {
     }
 }
 
+struct G {
+  typedef typename b::property_map<boost_msag, vertex_actorid_t>::const_type IdMap;
+  map<int, b::graph_traits<boost_msag>::vertex_descriptor> vertices;
+
+  void addVertex(int id, b::graph_traits<boost_msag>::vertex_descriptor vertex){
+    vertices[id] = vertex;
+  }
+  int getId(b::graph_traits<boost_msag>::vertex_descriptor vertex, const boost_msag& graph) {
+    IdMap  id = b::get(vertex_actorid, graph);
+    auto id_ = b::get(id, vertex);
+    return id_;
+  }
+  b::graph_traits<boost_msag>::vertex_descriptor getVertex(int id) {
+    return vertices[id];
+  }
+};
+
 void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
-    if(printDebug)
-        cout << "\tThroughputMCR::constructMSAG(vector<int> &msagMap)" << endl;
 
-    msaGraph.clear();
-    receivingActors.clear();
-    channelMapping.clear();
-    receivingActors.insert(receivingActors.begin(), n_actors, -1); //pre-fill with -1
-    //to identify for each msag-actor, which msag it belongs to
-    vector<int> msagId;
 
-    //first, figure out how many actors there will be in the MSAG
-    n_msagActors = n_actors;
-    for(int i = 0; i < sendingTime.size(); i++){
-        if(sendingTime[i].min() > 0){ //=> channel on interconnect
-            n_msagActors += 3; //one blocking, one sending and one receiving actor
-            //store mapping between block/send/rec_actor and channel i
-            channelMapping.push_back(i); //[block_actor] = i;
-            channelMapping.push_back(i); //[send_actor] = i;
-            channelMapping.push_back(i); //[rec_actor] = i;
+  if (printDebug)
+    cout << "\tThroughputMCR::constructMSAG(vector<int> &msagMap)" << endl;
+
+  msaGraph.clear();
+  receivingActors.clear();
+  channelMapping.clear();
+  receivingActors.insert(receivingActors.begin(), n_actors, -1); //pre-fill with -1
+  //to identify for each msag-actor, which msag it belongs to
+  vector<int> msagId;
+
+  //first, figure out how many actors there will be in the MSAG
+  n_msagActors = n_actors;
+  for (int i = 0; i < sendingTime.size(); i++) {
+    if (sendingTime[i].min() > 0) { //=> channel on interconnect
+      n_msagActors += 3; //one blocking, one sending and one receiving actor
+      //store mapping between block/send/rec_actor and channel i
+      channelMapping.push_back(i); //[block_actor] = i;
+      channelMapping.push_back(i); //[send_actor] = i;
+      channelMapping.push_back(i); //[rec_actor] = i;
+    }
+  }
+
+  for (int i = 0; i < n_msagActors; i++) {
+    msagId.push_back(msagMap[getApp(i)]);
+  }
+
+  b::graph_traits<boost_msag>::vertex_descriptor src, dst;
+  b::graph_traits<boost_msag>::edge_descriptor _e;
+  G g;
+
+  //add all actors as vertices, and self-loops
+  bool found;
+  for (int n = 0; n < n_msagActors; n++) {
+    boost_msag& curr_graph = *b_msags[msagId[n]];
+
+    cout << n << " is part of msag " << msagId[n] << " ... ";
+
+    src = add_vertex(curr_graph);
+    b::put(vertex_actorid, curr_graph, src, n);
+    g.addVertex(n,src);
+    //add self-edges
+    tie(_e, found) = add_edge(src, src, curr_graph);
+    cout << "vertex = " << src << "(id:" << g.getId(src, curr_graph) << "); found: " << found << endl;
+    if (n < n_actors) {
+      b::put(b::edge_weight, curr_graph, _e, wcet[n].min());
+    } //else{}: delay for communication actors are added further down
+    b::put(b::edge_weight2, curr_graph, _e, 1);
+  }
+  //next: add edges to boost-msag
+
+  for (size_t t = 0; t < b_msags.size(); t++) {
+    string graphName = "1_boost_msag" + to_string(t);
+    ofstream out;
+    string outputFile = ".";
+    outputFile +=
+        (outputFile.back() == '/') ?
+            (graphName + ".dot") : ("/" + graphName + ".dot");
+    out.open(outputFile.c_str());
+    write_graphviz(out, *b_msags[t]);
+    out.close();
+  }
+
+  channel_count = 0;
+  n_msagChannels = 0; //to count the number of channels in the MSAG
+
+  //building the throughput analysis graph
+  /* Step 1a: check sendingTime-array for all messages and add block-, send- & receive-"actors" with back-edges (buffering)
+   Step 1b: check for dependencies in application graph that are not covered in 1a
+   Step 2: check for decided forward-path in next-array
+   Step 3: close execution cycles with back-edges found in next-array (next[i], i>=n_actors)
+   */
+  for (int i = 0; i < sendingTime.size(); i++) {
+    if (sendingTime[i].min() > 0) { //Step1a: => channel on interconnect
+
+      int block_actor = n_actors + channel_count;
+      int send_actor = block_actor + 1;
+      int rec_actor = send_actor + 1;
+      //add the block actor as a successor of ch_src[i]
+      SuccessorNode succB;
+      succB.successor_key = block_actor;
+      succB.delay = sendingLatency[i].min();
+      succB.min_tok = 0;
+      succB.max_tok = 0;
+      succB.channel = i;
+
+      //add to boost-msag
+      boost_msag& curr_graph = *b_msags[msagId[ch_src[i]]];
+      src = g.getVertex(ch_src[i]);    //b::vertex(ch_src[i], *b_msags[msagId[ch_src[i]]]);
+      dst = g.getVertex(block_actor);  //b::vertex(block_actor, *b_msags[msagId[ch_src[i]]]);
+      b::tie(_e, found) = b::add_edge(src, dst, curr_graph);
+      b::put(b::edge_weight,  curr_graph, _e, sendingLatency[i].min());
+      b::put(b::edge_weight2, curr_graph, _e, 0);
+      //delay-weight for self-loop on block-actor:
+      curr_graph = *b_msags[msagId[block_actor]];
+      tie(_e, found) = edge(dst, dst, curr_graph);
+      b::put(b::edge_weight, curr_graph, _e, sendingLatency[i].min());
+
+      n_msagChannels++;
+      if (printDebug) {
+        unordered_map<int, vector<SuccessorNode>>::const_iterator it =
+            msaGraph.find(ch_src[i]);
+        if (it != msaGraph.end()) {    //i already has an entry in the map
+          msaGraph.at(ch_src[i]).push_back(succB);
+        } else {      //no entry for ch_src[i] yet
+          vector<SuccessorNode> succBv;
+          succBv.push_back(succB);
+          msaGraph.insert(pair<int, vector<SuccessorNode>>(ch_src[i], succBv));
         }
-    }
+      }
 
-    for(int i=0; i<n_msagActors; i++){
-        msagId.push_back(msagMap[getApp(i)]);
-    }
+      //add ch_src[i] as successor of the block actor, with buffer size as tokens
+      SuccessorNode srcCh;
+      srcCh.successor_key = ch_src[i];
+      srcCh.delay = wcet[ch_src[i]].assigned() ? wcet[ch_src[i]].val() : wcet[ch_src[i]].min();
+      srcCh.min_tok = sendbufferSz[i].min();
+      srcCh.max_tok = sendbufferSz[i].max();
 
-    b::graph_traits<boost_msag>::vertex_descriptor src, dst;
-    b::graph_traits<boost_msag>::edge_descriptor _e;
+      //add to boost-msag
+      boost_msag& curr_graph1 = *b_msags[msagId[block_actor]];
+      src = g.getVertex(block_actor);  //b::vertex(block_actor, *b_msags[msagId[block_actor]]);
+      dst = g.getVertex(ch_src[i]);    //b::vertex(ch_src[i], *b_msags[msagId[block_actor]]);
+      b::tie(_e, found) = b::add_edge(src, dst, *b_msags[msagId[block_actor]]);
+      b::put(b::edge_weight, curr_graph1, _e, wcet[ch_src[i]].min());
+      b::put(b::edge_weight2, curr_graph1, _e, sendbufferSz[i].max());
 
-
-    //add all actors as vertices, and self-loops
-    bool found;
-    for(int n = 0; n < n_msagActors; n++){
-
-        cout << n << " is part of msag " << msagId[n] << endl;
-
-        add_vertex(n, *b_msags[msagId[n]]);
-        //add self-edges
-        src = vertex(n, *b_msags[msagId[n]]);
-        tie(_e, found) = add_edge(src, src, *b_msags[msagId[n]]);
-        cout << "n = " << n << "; found: " << found << endl;
-        if(n < n_actors){
-            b::put(b::edge_weight, *b_msags[msagId[n]], _e, wcet[n].min());
-        } //else{}: delay for communication actors are added further down
-        b::put(b::edge_weight2, *b_msags[msagId[n]], _e, 1);
-    }
-    //next: add edges to boost-msag
-
-    for(size_t t=0; t<b_msags.size(); t++){
-        string graphName = "1_boost_msag"+to_string(t);
-        ofstream out;
-        string outputFile = ".";
-        outputFile += (outputFile.back() == '/') ? (graphName + ".dot") : ("/" + graphName + ".dot");
-        out.open(outputFile.c_str());
-        write_graphviz(out, *b_msags[t]);
-        out.close();
-    }
-
-    channel_count = 0;
-    n_msagChannels = 0; //to count the number of channels in the MSAG
-
-    //building the throughput analysis graph
-    /* Step 1a: check sendingTime-array for all messages and add block-, send- & receive-"actors" with back-edges (buffering)
-     Step 1b: check for dependencies in application graph that are not covered in 1a
-     Step 2: check for decided forward-path in next-array
-     Step 3: close execution cycles with back-edges found in next-array (next[i], i>=n_actors)
-     */
-    for(int i = 0; i < sendingTime.size(); i++){
-        if(sendingTime[i].min() > 0){ //Step1a: => channel on interconnect
-
-            int block_actor = n_actors + channel_count;
-            int send_actor = block_actor + 1;
-            int rec_actor = send_actor + 1;
-            //add the block actor as a successor of ch_src[i]
-            SuccessorNode succB;
-            succB.successor_key = block_actor;
-            succB.delay = sendingLatency[i].min();
-            succB.min_tok = 0;
-            succB.max_tok = 0;
-            succB.channel = i;
-
-            //add to boost-msag
-            src = b::vertex(ch_src[i], *b_msags[msagId[ch_src[i]]]);
-            dst = b::vertex(block_actor, *b_msags[msagId[ch_src[i]]]);
-            b::tie(_e, found) = b::add_edge(src, dst, *b_msags[msagId[ch_src[i]]]);
-            b::put(b::edge_weight, *b_msags[msagId[ch_src[i]]], _e, sendingLatency[i].min());
-            b::put(b::edge_weight2, *b_msags[msagId[ch_src[i]]], _e, 0);
-            //delay-weight for self-loop on block-actor:
-            tie(_e, found) = edge(dst, dst, *b_msags[msagId[block_actor]]);
-            b::put(b::edge_weight, *b_msags[msagId[block_actor]], _e, sendingLatency[i].min());
-
-            n_msagChannels++;
-            if(printDebug){
-                unordered_map<int, vector<SuccessorNode>>::const_iterator it = msaGraph.find(ch_src[i]);
-                if(it != msaGraph.end()){    //i already has an entry in the map
-                    msaGraph.at(ch_src[i]).push_back(succB);
-                }else{      //no entry for ch_src[i] yet
-                    vector<SuccessorNode> succBv;
-                    succBv.push_back(succB);
-                    msaGraph.insert(pair<int, vector<SuccessorNode>>(ch_src[i], succBv));
-                }
-            }
-
-            //add ch_src[i] as successor of the block actor, with buffer size as tokens
-            SuccessorNode srcCh;
-            srcCh.successor_key = ch_src[i];
-            srcCh.delay = wcet[ch_src[i]].assigned() ? wcet[ch_src[i]].val() : wcet[ch_src[i]].min();
-            srcCh.min_tok = sendbufferSz[i].min();
-            srcCh.max_tok = sendbufferSz[i].max();
-
-            //add to boost-msag
-            src = b::vertex(block_actor, *b_msags[msagId[block_actor]]);
-            dst = b::vertex(ch_src[i], *b_msags[msagId[block_actor]]);
-            b::tie(_e, found) = b::add_edge(src, dst, *b_msags[msagId[block_actor]]);
-            b::put(b::edge_weight, *b_msags[msagId[block_actor]], _e, wcet[ch_src[i]].min());
-            b::put(b::edge_weight2, *b_msags[msagId[block_actor]], _e, sendbufferSz[i].max());
-
-            n_msagChannels++;
-            if(printDebug){
-                unordered_map<int, vector<SuccessorNode>>::const_iterator it = msaGraph.find(block_actor);
-                if(it != msaGraph.end()){    //i already has an entry in the map
-                    msaGraph.at(block_actor).push_back(srcCh);
-                }else{      //no entry for block_actor yet
-                    vector<SuccessorNode> srcChv;
-                    srcChv.push_back(srcCh);
-                    msaGraph.insert(pair<int, vector<SuccessorNode>>(block_actor, srcChv));
-                }
-            }
+      n_msagChannels++;
+      if (printDebug) {
+        unordered_map<int, vector<SuccessorNode>>::const_iterator it =  msaGraph.find(block_actor);
+        if (it != msaGraph.end()) {    //i already has an entry in the map
+          msaGraph.at(block_actor).push_back(srcCh);
+        } else {      //no entry for block_actor yet
+          vector<SuccessorNode> srcChv;
+          srcChv.push_back(srcCh);
+          msaGraph.insert(pair<int, vector<SuccessorNode>>(block_actor, srcChv));
+        }
+      }
 //###
-            //add the send actor as a successor of the block actor
-            SuccessorNode succS;
-            succS.successor_key = send_actor;
-            succS.delay = sendingTime[i].min();
-            succS.min_tok = 0;
-            succS.max_tok = 0;
-            succS.channel = i;
+      //add the send actor as a successor of the block actor
+      SuccessorNode succS;
+      succS.successor_key = send_actor;
+      succS.delay = sendingTime[i].min();
+      succS.min_tok = 0;
+      succS.max_tok = 0;
+      succS.channel = i;
 
-            //add to boost-msag
-            src = b::vertex(block_actor, *b_msags[msagId[block_actor]]);
-            dst = b::vertex(send_actor, *b_msags[msagId[block_actor]]);
-            b::tie(_e, found) = b::add_edge(src, dst, *b_msags[msagId[block_actor]]);
-            b::put(b::edge_weight, *b_msags[msagId[block_actor]], _e, sendingTime[i].min());
-            b::put(b::edge_weight2, *b_msags[msagId[block_actor]], _e, 0);
-            //delay-weight for self-loop on send-actor:
-            tie(_e, found) = edge(dst, dst, *b_msags[msagId[block_actor]]);
-            b::put(b::edge_weight, *b_msags[msagId[block_actor]], _e, sendingTime[i].min());
+      //add to boost-msag
+      boost_msag& curr_graph2 = *b_msags[msagId[block_actor]];
+      src = g.getVertex(block_actor);  //b::vertex(block_actor, *b_msags[msagId[block_actor]]);
+      dst = g.getVertex(send_actor);   //b::vertex(send_actor, *b_msags[msagId[block_actor]]);
+      b::tie(_e, found) = b::add_edge(src, dst, curr_graph2);
+      b::put(b::edge_weight,  curr_graph2, _e, sendingTime[i].min());
+      b::put(b::edge_weight2, curr_graph2, _e, 0);
+      //delay-weight for self-loop on send-actor:
+      tie(_e, found) = edge(dst, dst, curr_graph2);
+      b::put(b::edge_weight, curr_graph2, _e, sendingTime[i].min());
 
-            n_msagChannels++;
-            if(printDebug){
-                unordered_map<int, vector<SuccessorNode>>::const_iterator it = msaGraph.find(block_actor);
-                if(it != msaGraph.end()){    //i already has an entry in the map
-                    msaGraph.at(block_actor).push_back(succS);
-                }else{      //no entry for block_actor yet
-                    vector<SuccessorNode> succSv;
-                    succSv.push_back(succS);
-                    msaGraph.insert(pair<int, vector<SuccessorNode>>(block_actor, succSv));
-                }
-            }
-
-            //add the block actor as successor of the send actor, with one token (serialization)
-            SuccessorNode succBS;
-            succBS.successor_key = block_actor;
-            succBS.delay = sendingLatency[i].min();
-            succBS.min_tok = 1;
-            succBS.max_tok = 1;
-            succBS.channel = i;
-
-            //add to boost-msag
-            src = b::vertex(send_actor, *b_msags[msagId[send_actor]]);
-            dst = b::vertex(block_actor, *b_msags[msagId[send_actor]]);
-            b::tie(_e, found) = b::add_edge(src, dst, *b_msags[msagId[send_actor]]);
-            b::put(b::edge_weight, *b_msags[msagId[send_actor]], _e, sendingLatency[i].min());
-            b::put(b::edge_weight2, *b_msags[msagId[send_actor]], _e, 1);
-
-            n_msagChannels++;
-            if(printDebug){
-                unordered_map<int, vector<SuccessorNode>>::const_iterator it = msaGraph.find(send_actor);
-                if(it != msaGraph.end()){ //send actor already has an entry in the map
-                    msaGraph.at(send_actor).push_back(succBS);
-                }else{      //no entry for send_actor yet
-                    vector<SuccessorNode> succBSv;
-                    succBSv.push_back(succBS);
-                    msaGraph.insert(pair<int, vector<SuccessorNode>>(send_actor, succBSv));
-                }
-            }
-
-            //add receiving actor as successor of the send actor, with potential initial tokens
-            SuccessorNode dstCh;
-            dstCh.successor_key = rec_actor;
-            dstCh.delay = receivingTime[i].min();
-            dstCh.min_tok = tok[i];
-            dstCh.max_tok = tok[i];
-            dstCh.channel = i;
-            dstCh.recOrder = receivingNext[i].min();
-
-
-            //add to boost-msag
-            src = b::vertex(send_actor, *b_msags[msagId[send_actor]]);
-            dst = b::vertex(rec_actor, *b_msags[msagId[send_actor]]);
-            b::tie(_e, found) = b::add_edge(src, dst, *b_msags[msagId[send_actor]]);
-            b::put(b::edge_weight, *b_msags[msagId[send_actor]], _e, receivingTime[i].min());
-            b::put(b::edge_weight2, *b_msags[msagId[send_actor]], _e, tok[i]);
-            //delay-weight for self-loop on rec-actor:
-            tie(_e, found) = edge(dst, dst, *b_msags[msagId[send_actor]]);
-            b::put(b::edge_weight, *b_msags[msagId[send_actor]], _e, receivingTime[i].min());
-
-            n_msagChannels++;
-            if(printDebug){
-                unordered_map<int, vector<SuccessorNode>>::const_iterator it = msaGraph.find(send_actor);
-                if(it != msaGraph.end()){    //i already has an entry in the map
-                    msaGraph.at(send_actor).push_back(dstCh);
-                }else{      //no entry for i yet
-                    vector<SuccessorNode> dstChv;
-                    dstChv.push_back(dstCh);
-                    msaGraph.insert(pair<int, vector<SuccessorNode>>(send_actor, dstChv));
-                }
-            }
-
-            //save the receiving actors for each actor (for next order)
-            if(receivingActors[ch_dst[i]] == -1){ //first rec_actor for the dst
-                receivingActors[ch_dst[i]] = rec_actor;
-            }else{
-                int curRec_actor_ch = channelMapping[receivingActors[ch_dst[i]] - n_actors];
-                if(receivingNext[curRec_actor_ch].assigned()){
-                    if(receivingNext[curRec_actor_ch].val() < n_channels){
-                        if(ch_dst[receivingNext[curRec_actor_ch].val()] != ch_dst[i]){ //last rec_actor for this dst
-                            receivingActors[ch_dst[i]] = rec_actor;
-                        } //else
-                    }else{ //last rec_actor for this dst
-                        receivingActors[ch_dst[i]] = rec_actor;
-                    }
-                }
-                if(receivingNext[channelMapping[rec_actor - n_actors]].assigned()){
-                    if(receivingNext[channelMapping[rec_actor - n_actors]].val() == receivingActors[ch_dst[i]]){
-                        receivingActors[ch_dst[i]] = rec_actor;
-                    }
-                }
-            }
-
-            //add the send actor as a successor node of the receiving actor, with rec. buffer size - initial tokens
-            SuccessorNode succRec;
-            succRec.successor_key = send_actor;
-            succRec.delay = sendingTime[i].min();
-            succRec.min_tok = recbufferSz[i].min() - tok[i];
-            succRec.max_tok = recbufferSz[i].max() - tok[i];
-            succRec.channel = i;
-
-            //add to boost-msag
-            src = b::vertex(rec_actor, *b_msags[msagId[rec_actor]]);
-            dst = b::vertex(send_actor, *b_msags[msagId[rec_actor]]);
-            b::tie(_e, found) = b::add_edge(src, dst, *b_msags[msagId[rec_actor]]);
-            b::put(b::edge_weight, *b_msags[msagId[rec_actor]], _e, sendingTime[i].min());
-            b::put(b::edge_weight2, *b_msags[msagId[rec_actor]], _e, recbufferSz[i].max() - tok[i]);
-
-            n_msagChannels++;
-            if(printDebug){
-                unordered_map<int, vector<SuccessorNode>>::const_iterator it = msaGraph.find(rec_actor);
-                if(it != msaGraph.end()){ //i already has an entry in the map
-                    msaGraph.at(rec_actor).push_back(succRec);
-                }else{ //no entry for i yet
-                    vector<SuccessorNode> succRecv;
-                    succRecv.push_back(succRec);
-                    msaGraph.insert(pair<int, vector<SuccessorNode>>(rec_actor, succRecv));
-                }
-            }
-
-            channel_count += 3;
-        }else if(sendingTime[i].min() == 0){ //Step 1b: add all edges from G to the MSAG
-            if(!sendingTime[i].assigned() || (sendingTime[i].assigned() && tok[i] > 0) || (sendingTime[i].assigned() && !next[ch_src[i]].assigned())){
-                //ch_src[i] -> ch_dst[i]: add channel destination as successor node of the channel source
-                SuccessorNode _dst;
-                _dst.successor_key = ch_dst[i];
-                _dst.delay = wcet[ch_dst[i]].min();
-                _dst.min_tok = tok[i];
-                _dst.max_tok = tok[i];
-                _dst.channel = i;
-
-                //add to boost-msag
-                src = b::vertex(ch_src[i], *b_msags[msagId[ch_src[i]]]);
-                dst = b::vertex(ch_dst[i], *b_msags[msagId[ch_src[i]]]);
-                b::tie(_e, found) = b::add_edge(src, dst, *b_msags[msagId[ch_src[i]]]);
-                b::put(b::edge_weight, *b_msags[msagId[ch_src[i]]], _e, wcet[ch_dst[i]].min());
-                b::put(b::edge_weight2, *b_msags[msagId[ch_src[i]]], _e, tok[i]);
-
-                n_msagChannels++;
-                if(printDebug){
-                    unordered_map<int, vector<SuccessorNode>>::const_iterator it = msaGraph.find(ch_src[i]);
-                    if(it != msaGraph.end()){ //i already has an entry in the map
-                        msaGraph.at(ch_src[i]).push_back(_dst);
-                    }else{ //no entry for i yet
-                        vector<SuccessorNode> dstv;
-                        dstv.push_back(_dst);
-                        msaGraph.insert(pair<int, vector<SuccessorNode>>(ch_src[i], dstv));
-                    }
-                }
-            }
+      n_msagChannels++;
+      if (printDebug) {
+        unordered_map<int, vector<SuccessorNode>>::const_iterator it =
+            msaGraph.find(block_actor);
+        if (it != msaGraph.end()) {    //i already has an entry in the map
+          msaGraph.at(block_actor).push_back(succS);
+        } else {      //no entry for block_actor yet
+          vector<SuccessorNode> succSv;
+          succSv.push_back(succS);
+          msaGraph.insert(
+              pair<int, vector<SuccessorNode>>(block_actor, succSv));
         }
-    }
-    /*
-     for(unsigned int i=0; i<receivingActors.size(); i++){
-     cout << receivingActors[i] << " ";
-     }
-     cout << endl;*/
+      }
 
-    /*
-     cout << "channelMapping.size() = " << channelMapping.size() << endl;
-     for(unsigned int i=0; i<channelMapping.size(); i+=3){
-     cout << channelMapping[i] << " ";
-     }
-     cout << endl;*/
+      //add the block actor as successor of the send actor, with one token (serialization)
+      SuccessorNode succBS;
+      succBS.successor_key = block_actor;
+      succBS.delay = sendingLatency[i].min();
+      succBS.min_tok = 1;
+      succBS.max_tok = 1;
+      succBS.channel = i;
 
-    //put sendNext relations into the MSAG
-    for(unsigned int i = 1; i < channelMapping.size(); i += 3){ //for all sending actors
-        bool continues = true;
-        bool nextFound = false;
-        int nextCh;
-        int x = channelMapping[i];
-        int tokens = 0; //is channel to add a cycle-closing back-edge?
-        while(!nextFound && continues){
-            if(sendingNext[x].assigned()){
-                nextCh = sendingNext[x].val();
-                if(nextCh >= n_channels){ //end of chain found
-                    if(nextCh > n_channels){
-                        nextCh = n_channels + ((nextCh - n_channels - 1) % n_procs);
-                    }else{
-                        nextCh = n_channels + n_procs - 1;
-                    }
-                    tokens = 1;
-                    if(sendingNext[nextCh].assigned()){
-                        nextCh = sendingNext[nextCh].val();
-                        if(sendingTime[nextCh].min() > 0){
-                            nextFound = true;
-                        }else{
-                            x = nextCh;
-                        }
-                    }else{
-                        continues = false;
-                    }
-                }else{ //not end of chain (nextCh < n_channels)
-                    if(sendingTime[nextCh].min() > 0){
-                        nextFound = true;
-                        if(tokens != 1)
-                            tokens = 0;
-                    }else{
-                        x = nextCh; //nextCh is not on interconnect. Continue with nextSend[nextCh].
-                    }
-                }
-            }else{
-                continues = false;
-            }
+      //add to boost-msag
+      boost_msag& curr_graph3 = *b_msags[msagId[send_actor]];
+      src = g.getVertex(send_actor);   //b::vertex(send_actor, *b_msags[msagId[send_actor]]);
+      dst = g.getVertex(block_actor);  //b::vertex(block_actor, *b_msags[msagId[send_actor]]);
+      b::tie(_e, found) = b::add_edge(src, dst, *b_msags[msagId[send_actor]]);
+      b::put(b::edge_weight,  curr_graph3, _e,sendingLatency[i].min());
+      b::put(b::edge_weight2, curr_graph3, _e, 1);
+
+      n_msagChannels++;
+      if (printDebug) {
+        unordered_map<int, vector<SuccessorNode>>::const_iterator it =
+            msaGraph.find(send_actor);
+        if (it != msaGraph.end()) { //send actor already has an entry in the map
+          msaGraph.at(send_actor).push_back(succBS);
+        } else {      //no entry for send_actor yet
+          vector<SuccessorNode> succBSv;
+          succBSv.push_back(succBS);
+          msaGraph.insert(
+              pair<int, vector<SuccessorNode>>(send_actor, succBSv));
         }
-        if(nextFound){
-            //add send_actor of channel i -> block_actor of nextCh
-            if(channelMapping[i] != nextCh){ //if found successor is not the channel's own block_actor (then it is already in the graph)
-                int block_actor = getBlockActor(nextCh);
+      }
 
-                //cout << "Next channel (send_actor of channel " << i << "): " << nextCh << endl;
+      //add receiving actor as successor of the send actor, with potential initial tokens
+      SuccessorNode dstCh;
+      dstCh.successor_key = rec_actor;
+      dstCh.delay = receivingTime[i].min();
+      dstCh.min_tok = tok[i];
+      dstCh.max_tok = tok[i];
+      dstCh.channel = i;
+      dstCh.recOrder = receivingNext[i].min();
 
-                SuccessorNode succBS;
-                succBS.successor_key = block_actor;
-                succBS.delay = sendingLatency[nextCh].min();
-                succBS.min_tok = tokens;
-                succBS.max_tok = tokens;
-                succBS.channel = nextCh;
+      //add to boost-msag
+      boost_msag& curr_graph4 = *b_msags[msagId[send_actor]];
+      src = g.getVertex(send_actor);   //b::vertex(send_actor, *b_msags[msagId[send_actor]]);
+      dst = g.getVertex(rec_actor);    //b::vertex(rec_actor, *b_msags[msagId[send_actor]]);
+      b::tie(_e, found) = b::add_edge(src, dst, curr_graph4);
+      b::put(b::edge_weight, curr_graph4, _e, receivingTime[i].min());
+      b::put(b::edge_weight2, curr_graph4, _e, tok[i]);
+      //delay-weight for self-loop on rec-actor:
+      tie(_e, found) = edge(dst, dst, curr_graph4);
+      b::put(b::edge_weight, curr_graph4, _e, receivingTime[i].min());
 
-                //add to boost-msag
-                src = b::vertex(i + n_actors, *b_msags[msagId[block_actor]]);
-                dst = b::vertex(block_actor, *b_msags[msagId[block_actor]]);
-                b::tie(_e, found) = b::add_edge(src, dst, *b_msags[msagId[block_actor]]);
-                b::put(b::edge_weight, *b_msags[msagId[block_actor]], _e, sendingLatency[nextCh].min());
-                b::put(b::edge_weight2, *b_msags[msagId[block_actor]], _e, tokens);
-
-                n_msagChannels++;
-                if(printDebug){
-                    unordered_map<int, vector<SuccessorNode>>::const_iterator it = msaGraph.find(i + n_actors);
-                    if(it != msaGraph.end()){ //send actor already has an entry in the map
-                        msaGraph.at(i + n_actors).push_back(succBS);
-                    }else{ //no entry for send_actor i yet
-                        vector<SuccessorNode> succBSv;
-                        succBSv.push_back(succBS);
-                        msaGraph.insert(pair<int, vector<SuccessorNode>>(i + n_actors, succBSv));
-                    }
-                }
-            }
+      n_msagChannels++;
+      if (printDebug) {
+        unordered_map<int, vector<SuccessorNode>>::const_iterator it =
+            msaGraph.find(send_actor);
+        if (it != msaGraph.end()) {    //i already has an entry in the map
+          msaGraph.at(send_actor).push_back(dstCh);
+        } else {      //no entry for i yet
+          vector<SuccessorNode> dstChv;
+          dstChv.push_back(dstCh);
+          msaGraph.insert(pair<int, vector<SuccessorNode>>(send_actor, dstChv));
         }
-    }
+      }
 
-    //put recNext relations into the MSAG
-    for(unsigned int i = 2; i < channelMapping.size(); i += 3){ //for all receiving actors
-        bool nextFound = false;
-        int nextCh;
-        int x = channelMapping[i];
-
-        //cout << "looking for recNext, channel " << i << endl;
-
-        while(!nextFound){
-            if(receivingNext[x].assigned()){
-                nextCh = receivingNext[x].val();
-                if(nextCh >= n_channels){ //end of chain found
-                    nextCh = -1; //nextCh = ch_dst[channelMapping[i]];
-                    nextFound = true;
-                }else{ //not end of chain (nextCh < n_channels)
-                    if(ch_dst[nextCh] != ch_dst[channelMapping[i]]){ //next rec actor belongs to other dst
-                        nextCh = -1; //nextCh = ch_dst[channelMapping[i]];
-                        nextFound = true;
-                    }else{ //same dst
-                        if(sendingTime[nextCh].min() > 0){
-                            nextFound = true;
-                        }else{
-                            x = nextCh; //nextCh is not on interconnect. Continue with nextSend[nextCh].
-                        }
-                    }
-                }
-            }else{
-                nextCh = -1; //nextCh = ch_dst[channelMapping[i]];
-                nextFound = true;
-            }
+      //save the receiving actors for each actor (for next order)
+      if (receivingActors[ch_dst[i]] == -1) { //first rec_actor for the dst
+        receivingActors[ch_dst[i]] = rec_actor;
+      } else {
+        int curRec_actor_ch = channelMapping[receivingActors[ch_dst[i]]
+            - n_actors];
+        if (receivingNext[curRec_actor_ch].assigned()) {
+          if (receivingNext[curRec_actor_ch].val() < n_channels) {
+            if (ch_dst[receivingNext[curRec_actor_ch].val()] != ch_dst[i]) { //last rec_actor for this dst
+              receivingActors[ch_dst[i]] = rec_actor;
+            } //else
+          } else { //last rec_actor for this dst
+            receivingActors[ch_dst[i]] = rec_actor;
+          }
         }
+        if (receivingNext[channelMapping[rec_actor - n_actors]].assigned()) {
+          if (receivingNext[channelMapping[rec_actor - n_actors]].val()
+              == receivingActors[ch_dst[i]]) {
+            receivingActors[ch_dst[i]] = rec_actor;
+          }
+        }
+      }
 
-        //cout << "  found " << nextCh;
+      //add the send actor as a successor node of the receiving actor, with rec. buffer size - initial tokens
+      SuccessorNode succRec;
+      succRec.successor_key = send_actor;
+      succRec.delay = sendingTime[i].min();
+      succRec.min_tok = recbufferSz[i].min() - tok[i];
+      succRec.max_tok = recbufferSz[i].max() - tok[i];
+      succRec.channel = i;
 
-        SuccessorNode succRec;
-        succRec.successor_key = nextCh == -1 ? ch_dst[channelMapping[i]] : getRecActor(nextCh);
-        succRec.delay = nextCh == -1 ? wcet[ch_dst[channelMapping[i]]].min() : receivingTime[nextCh].min();
-        succRec.min_tok = 0;
-        succRec.max_tok = 0;
-        if(nextCh != -1)
-            succRec.channel = nextCh;
+      //add to boost-msag
+      boost_msag& curr_graph5 = *b_msags[msagId[rec_actor]];
+      src = g.getVertex(rec_actor);   //b::vertex(rec_actor, *b_msags[msagId[rec_actor]]);
+      dst = g.getVertex(send_actor);   //b::vertex(send_actor, *b_msags[msagId[rec_actor]]);
+      b::tie(_e, found) = b::add_edge(src, dst, curr_graph5);
+      b::put(b::edge_weight,  curr_graph5, _e, sendingTime[i].min());
+      b::put(b::edge_weight2, curr_graph5, _e, recbufferSz[i].max() - tok[i]);
 
-        //cout << " ( "<< succRec.successor_key <<")" << endl;
+      n_msagChannels++;
+      if (printDebug) {
+        unordered_map<int, vector<SuccessorNode>>::const_iterator it =
+            msaGraph.find(rec_actor);
+        if (it != msaGraph.end()) { //i already has an entry in the map
+          msaGraph.at(rec_actor).push_back(succRec);
+        } else { //no entry for i yet
+          vector<SuccessorNode> succRecv;
+          succRecv.push_back(succRec);
+          msaGraph.insert(
+              pair<int, vector<SuccessorNode>>(rec_actor, succRecv));
+        }
+      }
+
+      channel_count += 3;
+    } else if (sendingTime[i].min() == 0) { //Step 1b: add all edges from G to the MSAG
+      if (!sendingTime[i].assigned()
+          || (sendingTime[i].assigned() && tok[i] > 0)
+          || (sendingTime[i].assigned() && !next[ch_src[i]].assigned())) {
+        //ch_src[i] -> ch_dst[i]: add channel destination as successor node of the channel source
+        SuccessorNode _dst;
+        _dst.successor_key = ch_dst[i];
+        _dst.delay = wcet[ch_dst[i]].min();
+        _dst.min_tok = tok[i];
+        _dst.max_tok = tok[i];
+        _dst.channel = i;
 
         //add to boost-msag
-        int tmp = i + n_actors;
-        src = b::vertex(tmp, *b_msags[msagId[tmp]]);
-        dst = b::vertex(nextCh == -1 ? ch_dst[channelMapping[i]] : getRecActor(nextCh), *b_msags[msagId[tmp]]);
-        b::tie(_e, found) = b::add_edge(src, dst, *b_msags[msagId[tmp]]);
-        b::put(b::edge_weight, *b_msags[msagId[tmp]], _e, nextCh == -1 ? wcet[ch_dst[channelMapping[i]]].min() : receivingTime[nextCh].min());
-        b::put(b::edge_weight2, *b_msags[msagId[tmp]], _e, 0);
+        boost_msag& curr_graph5 = *b_msags[msagId[ch_src[i]]];
+        src = g.getVertex(ch_src[i]);   //b::vertex(ch_src[i], *b_msags[msagId[ch_src[i]]]);
+        dst = g.getVertex(ch_dst[i]);   //b::vertex(ch_dst[i], *b_msags[msagId[ch_src[i]]]);
+        b::tie(_e, found) = b::add_edge(src, dst, curr_graph5);
+        b::put(b::edge_weight,  curr_graph5, _e, wcet[ch_dst[i]].min());
+        b::put(b::edge_weight2, curr_graph5, _e, tok[i]);
 
         n_msagChannels++;
-        if(printDebug){
-            unordered_map<int, vector<SuccessorNode>>::const_iterator it = msaGraph.find(i + n_actors);
-            if(it != msaGraph.end()){ //send actor already has an entry in the map
-                msaGraph.at(i + n_actors).push_back(succRec);
-            }else{ //no entry for send_actor i yet
-                vector<SuccessorNode> succRecv;
-                succRecv.push_back(succRec);
-                msaGraph.insert(pair<int, vector<SuccessorNode>>(i + n_actors, succRecv));
-            }
+        if (printDebug) {
+          unordered_map<int, vector<SuccessorNode>>::const_iterator it =
+              msaGraph.find(ch_src[i]);
+          if (it != msaGraph.end()) { //i already has an entry in the map
+            msaGraph.at(ch_src[i]).push_back(_dst);
+          } else { //no entry for i yet
+            vector<SuccessorNode> dstv;
+            dstv.push_back(_dst);
+            msaGraph.insert(pair<int, vector<SuccessorNode>>(ch_src[i], dstv));
+          }
         }
+      }
     }
+  }
+  /*
+   for(unsigned int i=0; i<receivingActors.size(); i++){
+   cout << receivingActors[i] << " ";
+   }
+   cout << endl;*/
 
-    for(int i = 0; i < n_actors; i++){
-        //Step 2
-        if(next[i].assigned() && next[i].val() < n_actors){ //if next[i] is decided, the forward edge goes from i to next[i]
-            int nextActor = next[i].val();
+  /*
+   cout << "channelMapping.size() = " << channelMapping.size() << endl;
+   for(unsigned int i=0; i<channelMapping.size(); i+=3){
+   cout << channelMapping[i] << " ";
+   }
+   cout << endl;*/
 
-            //check whether nextActor has preceding rec_actor
-            SuccessorNode nextA;
-            if(receivingActors[nextActor] == -1){
-                //add edge i -> nextActor
-                nextA.successor_key = nextActor;
-                nextA.delay = wcet[nextActor].min();
-                nextA.min_tok = 0;
-                nextA.max_tok = 0;
-
-                //add to boost-msag
-                src = b::vertex(i, *b_msags[msagId[i]]);
-                dst = b::vertex(nextActor, *b_msags[msagId[i]]);
-                b::tie(_e, found) = b::add_edge(src, dst, *b_msags[msagId[i]]);
-                b::put(b::edge_weight, *b_msags[msagId[i]], _e, wcet[nextActor].min());
-                b::put(b::edge_weight2, *b_msags[msagId[i]], _e, 0);
-            }else{
-                //add edge i -> receivingActor[nextActor]
-                nextA.successor_key = receivingActors[nextActor];
-                nextA.delay = receivingTime[channelMapping[receivingActors[nextActor] - n_actors]].min();
-                nextA.min_tok = 0;
-                nextA.max_tok = 0;
-                nextA.channel = channelMapping[receivingActors[nextActor] - n_actors];
-
-                //add to boost-msag
-                src = b::vertex(i, *b_msags[msagId[i]]);
-                dst = b::vertex(receivingActors[nextActor], *b_msags[msagId[i]]);
-                b::tie(_e, found) = b::add_edge(src, dst, *b_msags[msagId[i]]);
-                b::put(b::edge_weight, *b_msags[msagId[i]], _e, receivingTime[channelMapping[receivingActors[nextActor] - n_actors]].min());
-                b::put(b::edge_weight2, *b_msags[msagId[i]], _e, 0);
+  //put sendNext relations into the MSAG
+  for (unsigned int i = 1; i < channelMapping.size(); i += 3) { //for all sending actors
+    bool continues = true;
+    bool nextFound = false;
+    int nextCh;
+    int x = channelMapping[i];
+    int tokens = 0; //is channel to add a cycle-closing back-edge?
+    while (!nextFound && continues) {
+      if (sendingNext[x].assigned()) {
+        nextCh = sendingNext[x].val();
+        if (nextCh >= n_channels) { //end of chain found
+          if (nextCh > n_channels) {
+            nextCh = n_channels + ((nextCh - n_channels - 1) % n_procs);
+          } else {
+            nextCh = n_channels + n_procs - 1;
+          }
+          tokens = 1;
+          if (sendingNext[nextCh].assigned()) {
+            nextCh = sendingNext[nextCh].val();
+            if (sendingTime[nextCh].min() > 0) {
+              nextFound = true;
+            } else {
+              x = nextCh;
             }
-
-            n_msagChannels++;
-            if(printDebug){
-                unordered_map<int, vector<SuccessorNode>>::const_iterator it = msaGraph.find(i);
-                if(it != msaGraph.end()){ //i already has an entry in the map
-                    msaGraph.at(i).push_back(nextA);
-                }else{ //no entry for i yet
-                    vector<SuccessorNode> nextAv;
-                    nextAv.push_back(nextA);
-                    msaGraph.insert(pair<int, vector<SuccessorNode>>(i, nextAv));
-                }
-            }
-
-        }else if(next[i].assigned() && next[i].val() >= n_actors){ //next[i]>=n_actors
-        //Step 3: add cycle-closing edge on each proc
-            int firstActor = next[i].val();
-            if(firstActor > n_actors){
-                firstActor = n_actors + ((firstActor - n_actors - 1) % n_procs);
-            }else{
-                firstActor = n_actors + n_procs - 1;
-            }
-            if(next[firstActor].assigned()){
-                firstActor = next[firstActor].val();
-
-                //check whether firstActor has preceding rec_actor
-                SuccessorNode first;
-                if(receivingActors[firstActor] == -1){
-                    //add edge i -> firstActor
-                    first.successor_key = firstActor;
-                    first.delay = wcet[firstActor].min();
-                    first.min_tok = 1;
-                    first.max_tok = 1;
-
-                    //add to boost-msag
-                    src = b::vertex(i, *b_msags[msagId[i]]);
-                    dst = b::vertex(firstActor, *b_msags[msagId[i]]);
-                    b::tie(_e, found) = b::add_edge(src, dst, *b_msags[msagId[i]]);
-                    b::put(b::edge_weight, *b_msags[msagId[i]], _e, wcet[firstActor].min());
-                    b::put(b::edge_weight2, *b_msags[msagId[i]], _e, 1);
-                }else{
-                    //add edge i -> receivingActor[firstActor]
-                    first.successor_key = receivingActors[firstActor];
-                    first.delay = receivingTime[channelMapping[receivingActors[firstActor] - n_actors]].min();
-                    first.min_tok = 1;
-                    first.max_tok = 1;
-                    first.channel = channelMapping[receivingActors[firstActor] - n_actors];
-
-                    //add to boost-msag
-                    src = b::vertex(i, *b_msags[msagId[i]]);
-                    dst = b::vertex(receivingActors[firstActor], *b_msags[msagId[i]]);
-                    b::tie(_e, found) = b::add_edge(src, dst, *b_msags[msagId[i]]);
-                    b::put(b::edge_weight, *b_msags[msagId[i]], _e, receivingTime[channelMapping[receivingActors[firstActor] - n_actors]].min());
-                    b::put(b::edge_weight2, *b_msags[msagId[i]], _e, 1);
-                }
-
-                n_msagChannels++;
-                if(printDebug){
-                    unordered_map<int, vector<SuccessorNode>>::const_iterator it = msaGraph.find(i);
-                    if(it != msaGraph.end()){ //i already has an entry in the map
-                        msaGraph.at(i).push_back(first);
-                    }else{    //no entry for i yet
-                        vector<SuccessorNode> firstv;
-                        firstv.push_back(first);
-                        msaGraph.insert(pair<int, vector<SuccessorNode>>(i, firstv));
-                    }
-                }
-            }
+          } else {
+            continues = false;
+          }
+        } else { //not end of chain (nextCh < n_channels)
+          if (sendingTime[nextCh].min() > 0) {
+            nextFound = true;
+            if (tokens != 1)
+              tokens = 0;
+          } else {
+            x = nextCh; //nextCh is not on interconnect. Continue with nextSend[nextCh].
+          }
         }
+      } else {
+        continues = false;
+      }
+    }
+    if (nextFound) {
+      //add send_actor of channel i -> block_actor of nextCh
+      if (channelMapping[i] != nextCh) { //if found successor is not the channel's own block_actor (then it is already in the graph)
+        int block_actor = getBlockActor(nextCh);
+
+        //cout << "Next channel (send_actor of channel " << i << "): " << nextCh << endl;
+
+        SuccessorNode succBS;
+        succBS.successor_key = block_actor;
+        succBS.delay = sendingLatency[nextCh].min();
+        succBS.min_tok = tokens;
+        succBS.max_tok = tokens;
+        succBS.channel = nextCh;
+
+        //add to boost-msag
+        boost_msag& curr_graph6 = *b_msags[msagId[block_actor]];
+        src = g.getVertex(i + n_actors);   //b::vertex(i + n_actors, *b_msags[msagId[block_actor]]);
+        dst = g.getVertex(block_actor);    //b::vertex(block_actor, *b_msags[msagId[block_actor]]);
+        b::tie(_e, found) = b::add_edge(src, dst,  curr_graph6);
+        b::put(b::edge_weight,  curr_graph6, _e, sendingLatency[nextCh].min());
+        b::put(b::edge_weight2, curr_graph6, _e, tokens);
+
+        n_msagChannels++;
+        if (printDebug) {
+          unordered_map<int, vector<SuccessorNode>>::const_iterator it =
+              msaGraph.find(i + n_actors);
+          if (it != msaGraph.end()) { //send actor already has an entry in the map
+            msaGraph.at(i + n_actors).push_back(succBS);
+          } else { //no entry for send_actor i yet
+            vector<SuccessorNode> succBSv;
+            succBSv.push_back(succBS);
+            msaGraph.insert(
+                pair<int, vector<SuccessorNode>>(i + n_actors, succBSv));
+          }
+        }
+      }
+    }
+  }
+
+  //put recNext relations into the MSAG
+  for (unsigned int i = 2; i < channelMapping.size(); i += 3) { //for all receiving actors
+    bool nextFound = false;
+    int nextCh;
+    int x = channelMapping[i];
+
+    //cout << "looking for recNext, channel " << i << endl;
+
+    while (!nextFound) {
+      if (receivingNext[x].assigned()) {
+        nextCh = receivingNext[x].val();
+        if (nextCh >= n_channels) { //end of chain found
+          nextCh = -1; //nextCh = ch_dst[channelMapping[i]];
+          nextFound = true;
+        } else { //not end of chain (nextCh < n_channels)
+          if (ch_dst[nextCh] != ch_dst[channelMapping[i]]) { //next rec actor belongs to other dst
+            nextCh = -1; //nextCh = ch_dst[channelMapping[i]];
+            nextFound = true;
+          } else { //same dst
+            if (sendingTime[nextCh].min() > 0) {
+              nextFound = true;
+            } else {
+              x = nextCh; //nextCh is not on interconnect. Continue with nextSend[nextCh].
+            }
+          }
+        }
+      } else {
+        nextCh = -1; //nextCh = ch_dst[channelMapping[i]];
+        nextFound = true;
+      }
     }
 
-    if(printDebug){
-        //printThroughputGraphAsDot(".");
+    //cout << "  found " << nextCh;
+
+    SuccessorNode succRec;
+    succRec.successor_key =
+        nextCh == -1 ? ch_dst[channelMapping[i]] : getRecActor(nextCh);
+    succRec.delay =
+        nextCh == -1 ?
+            wcet[ch_dst[channelMapping[i]]].min() : receivingTime[nextCh].min();
+    succRec.min_tok = 0;
+    succRec.max_tok = 0;
+    if (nextCh != -1)
+      succRec.channel = nextCh;
+
+    //cout << " ( "<< succRec.successor_key <<")" << endl;
+
+    //add to boost-msag
+    int tmp = i + n_actors;
+    boost_msag& curr_graph7 = *b_msags[msagId[tmp]];
+    src = g.getVertex(tmp);            //b::vertex(tmp, *b_msags[msagId[tmp]]);
+    dst = g.getVertex(nextCh == -1 ? ch_dst[channelMapping[i]] : getRecActor(nextCh));   //b::vertex(nextCh == -1 ? ch_dst[channelMapping[i]] : getRecActor(nextCh),*b_msags[msagId[tmp]]);
+    b::tie(_e, found) = b::add_edge(src, dst, curr_graph7);
+    b::put(b::edge_weight,  curr_graph7, _e,nextCh == -1 ?wcet[ch_dst[channelMapping[i]]].min() : receivingTime[nextCh].min());
+    b::put(b::edge_weight2, curr_graph7, _e, 0);
+
+    n_msagChannels++;
+    if (printDebug) {
+      unordered_map<int, vector<SuccessorNode>>::const_iterator it =
+          msaGraph.find(i + n_actors);
+      if (it != msaGraph.end()) { //send actor already has an entry in the map
+        msaGraph.at(i + n_actors).push_back(succRec);
+      } else { //no entry for send_actor i yet
+        vector<SuccessorNode> succRecv;
+        succRecv.push_back(succRec);
+        msaGraph.insert(
+            pair<int, vector<SuccessorNode>>(i + n_actors, succRecv));
+      }
     }
+  }
+
+  for (int i = 0; i < n_actors; i++) {
+    //Step 2
+    if (next[i].assigned() && next[i].val() < n_actors) { //if next[i] is decided, the forward edge goes from i to next[i]
+      int nextActor = next[i].val();
+
+      //check whether nextActor has preceding rec_actor
+      SuccessorNode nextA;
+      if (receivingActors[nextActor] == -1) {
+        //add edge i -> nextActor
+        nextA.successor_key = nextActor;
+        nextA.delay = wcet[nextActor].min();
+        nextA.min_tok = 0;
+        nextA.max_tok = 0;
+
+        //add to boost-msag
+        boost_msag& curr_graph8 = *b_msags[msagId[i]];
+        src = g.getVertex(i);         //b::vertex(i, *b_msags[msagId[i]]);
+        dst = g.getVertex(nextActor); //b::vertex(nextActor, *b_msags[msagId[i]]);
+        b::tie(_e, found) = b::add_edge(src, dst, curr_graph8);
+        b::put(b::edge_weight,  curr_graph8, _e, wcet[nextActor].min());
+        b::put(b::edge_weight2, curr_graph8, _e, 0);
+      } else {
+        //add edge i -> receivingActor[nextActor]
+        nextA.successor_key = receivingActors[nextActor];
+        nextA.delay = receivingTime[channelMapping[receivingActors[nextActor]
+            - n_actors]].min();
+        nextA.min_tok = 0;
+        nextA.max_tok = 0;
+        nextA.channel = channelMapping[receivingActors[nextActor] - n_actors];
+
+        //add to boost-msag
+        boost_msag& curr_graph9 = *b_msags[msagId[i]];
+        src = g.getVertex(i);                          //b::vertex(i, *b_msags[msagId[i]]);
+        dst = g.getVertex(receivingActors[nextActor]); //b::vertex(receivingActors[nextActor], *b_msags[msagId[i]]);
+        b::tie(_e, found) = b::add_edge(src, dst, curr_graph9);
+        b::put(b::edge_weight,  curr_graph9, _e, receivingTime[channelMapping[receivingActors[nextActor] - n_actors]].min());
+        b::put(b::edge_weight2, curr_graph9, _e, 0);
+      }
+
+      n_msagChannels++;
+      if (printDebug) {
+        unordered_map<int, vector<SuccessorNode>>::const_iterator it =
+            msaGraph.find(i);
+        if (it != msaGraph.end()) { //i already has an entry in the map
+          msaGraph.at(i).push_back(nextA);
+        } else { //no entry for i yet
+          vector<SuccessorNode> nextAv;
+          nextAv.push_back(nextA);
+          msaGraph.insert(pair<int, vector<SuccessorNode>>(i, nextAv));
+        }
+      }
+
+    } else if (next[i].assigned() && next[i].val() >= n_actors) { //next[i]>=n_actors
+    //Step 3: add cycle-closing edge on each proc
+      int firstActor = next[i].val();
+      if (firstActor > n_actors) {
+        firstActor = n_actors + ((firstActor - n_actors - 1) % n_procs);
+      } else {
+        firstActor = n_actors + n_procs - 1;
+      }
+      if (next[firstActor].assigned()) {
+        firstActor = next[firstActor].val();
+
+        //check whether firstActor has preceding rec_actor
+        SuccessorNode first;
+        if (receivingActors[firstActor] == -1) {
+          //add edge i -> firstActor
+          first.successor_key = firstActor;
+          first.delay = wcet[firstActor].min();
+          first.min_tok = 1;
+          first.max_tok = 1;
+
+          //add to boost-msag
+          boost_msag& curr_graph10 = *b_msags[msagId[i]];
+          src = g.getVertex(i);          //b::vertex(i, *b_msags[msagId[i]]);
+          dst = g.getVertex(firstActor); //b::vertex(firstActor, *b_msags[msagId[i]]);
+          b::tie(_e, found) = b::add_edge(src, dst, curr_graph10);
+          b::put(b::edge_weight,  curr_graph10, _e, wcet[firstActor].min());
+          b::put(b::edge_weight2, curr_graph10, _e, 1);
+        } else {
+          //add edge i -> receivingActor[firstActor]
+          first.successor_key = receivingActors[firstActor];
+          first.delay = receivingTime[channelMapping[receivingActors[firstActor]
+              - n_actors]].min();
+          first.min_tok = 1;
+          first.max_tok = 1;
+          first.channel =
+              channelMapping[receivingActors[firstActor] - n_actors];
+
+          //add to boost-msag
+          boost_msag& curr_graph11 = *b_msags[msagId[i]];
+          src = g.getVertex(i);                           //b::vertex(i, *b_msags[msagId[i]]);
+          dst = g.getVertex(receivingActors[firstActor]); //b::vertex(receivingActors[firstActor], *b_msags[msagId[i]]);
+          b::tie(_e, found) = b::add_edge(src, dst, curr_graph11);
+          b::put(b::edge_weight,  curr_graph11, _e, receivingTime[channelMapping[receivingActors[firstActor] - n_actors]].min());
+          b::put(b::edge_weight2, curr_graph11, _e, 1);
+        }
+
+        n_msagChannels++;
+        if (printDebug) {
+          unordered_map<int, vector<SuccessorNode>>::const_iterator it =
+              msaGraph.find(i);
+          if (it != msaGraph.end()) { //i already has an entry in the map
+            msaGraph.at(i).push_back(first);
+          } else {    //no entry for i yet
+            vector<SuccessorNode> firstv;
+            firstv.push_back(first);
+            msaGraph.insert(pair<int, vector<SuccessorNode>>(i, firstv));
+          }
+        }
+      }
+    }
+  }
+
+  if (printDebug) {
+    //printThroughputGraphAsDot(".");
+  }
 }
 
 ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
