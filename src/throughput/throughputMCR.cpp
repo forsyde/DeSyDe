@@ -1282,90 +1282,127 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
 
     vector<int> msagMap(apps.size(), 0);
 
-    if(apps.size() > 1){
-        //check which application graphs are mapped to same processor (= combined into the same MSAG)
-        unordered_map<int, set<int>> coMappedApps;
-        vector<set<int>> result;
-        for(int i = 0; i < n_actors; i++){
-            if(next[i].assigned() && next[i].val() < n_actors){ //next[i] is decided and points to an application actor
-                int actor = i;
-                int nextActor = next[i].val();
-                if(getApp(actor) != getApp(nextActor)){ //from different applications
-                    unordered_map<int, set<int>>::const_iterator it = coMappedApps.find(getApp(actor));
-                    if(it != coMappedApps.end()){ //i already has an entry in the map
-                        coMappedApps.at(getApp(actor)).insert(getApp(nextActor));
-                    }else{ //no entry for ch_src[i] yet
-                        set<int> coApp;
-                        coApp.insert(getApp(nextActor));
-                        coMappedApps.insert(pair<int, set<int>>(getApp(actor), coApp));
+        cout << apps.size() << " applications." << endl;
+
+        if(apps.size() > 1){
+            //check which application graphs are mapped to same processor (= combined into the same MSAG)
+            vector<set<int>> result;
+            unordered_map<int, set<int>> coMappedApps;
+            vector<bool> checkedApps(apps.size(), false);
+            for(int a=0; a<apps.size(); a++){
+                coMappedApps.insert(pair<int, set<int>>(a, set<int>()));
+            }
+            for(int i = 0; i < n_actors; i++){
+                if(next[i].assigned() && next[i].val() < n_actors){ //next[i] is decided and points to an application actor
+                    int actor = i;
+                    int nextActor = next[i].val();
+                    if(getApp(actor) != getApp(nextActor)){ //from different applications
+                        unordered_map<int, set<int>>::const_iterator it = coMappedApps.find(getApp(actor));
+                        if(it != coMappedApps.end()){ //i already has an entry in the map
+                            coMappedApps.at(getApp(actor)).insert(getApp(nextActor));
+                        }else{ //no entry for ch_src[i] yet
+                            set<int> coApp;
+                            coApp.insert(getApp(nextActor));
+                            coMappedApps.insert(pair<int, set<int>>(getApp(actor), coApp));
+                        }
+                        it = coMappedApps.find(getApp(nextActor));
+                        if(it != coMappedApps.end()){ //i already has an entry in the map
+                            coMappedApps.at(getApp(nextActor)).insert(getApp(actor));
+                        }else{ //no entry for ch_src[i] yet
+                            set<int> coApp;
+                            coApp.insert(getApp(actor));
+                            coMappedApps.insert(pair<int, set<int>>(getApp(nextActor), coApp));
+                        }
                     }
                 }
             }
-        }
-        if(coMappedApps.size() > 0){
-            for(auto it = coMappedApps.begin(); it != coMappedApps.end(); it++){
-                //int app = it->first;
-                set<int> t_apps = it->second;
-                while(!t_apps.empty()){
-                    unordered_map<int, set<int>>::iterator iy = coMappedApps.find(*t_apps.begin());
-                    if(iy != coMappedApps.end()){ // has an entry in the map
-                        it->second.insert(iy->second.begin(), iy->second.end());
-                        t_apps.insert(iy->second.begin(), iy->second.end());
-                        iy->second.clear();
+            cout << coMappedApps.size() << " entries in coMappedApps" << endl;
+            if(coMappedApps.size() > 0){
+
+                for(auto it = coMappedApps.begin(); it != coMappedApps.end(); it++){
+                    cout << "App " << it-> first  << " is ";
+                    if(it->second.empty()) cout << "not ";
+                    cout << "co-mapped with ";
+                    if(it->second.empty()) cout << "any other application " << endl;
+                    else cout << endl << "    ";
+                    for(auto iy = it->second.begin(); iy != it->second.end(); iy++){
+                        cout << *iy;
+                    }
+                    cout << endl;
+
+                    if(it->second.empty() && !checkedApps[it->first]){
+                        set<int> res;
+                        res.insert(it->first);
+                        result.push_back(res);
+                        checkedApps[it->first]=true;
+                    }else if(!checkedApps[it->first]){
+                        set<int> t_apps = it->second;
+                        checkedApps[it->first]=true;
+
                     }
 
-                    t_apps.erase(t_apps.begin());
-                }
+                    //int app = it->first;
+    //                while(!t_apps.empty()){
+    //                    unordered_map<int, set<int>>::iterator iy = coMappedApps.find(*t_apps.begin());
+    //                    if(iy != coMappedApps.end() && iy->second.size()>0){ // has an entry in the map
+    //                        it->second.insert(iy->second.begin(), iy->second.end());
+    //                        t_apps.insert(iy->second.begin(), iy->second.end());
+    //                        iy->second.clear();
+    //                        t_apps.erase(t_apps.begin());
+    //                    }
+    //
+    //                }
 
-            }
-            for(auto it = coMappedApps.begin(); it != coMappedApps.end(); it++){
-                if(it->second.size() > 0){
-                    set<int> res = it->second;
-                    res.insert(it->first);
+                }
+                for(auto it = coMappedApps.begin(); it != coMappedApps.end(); it++){
+                    if(it->second.size() > 0){
+                        set<int> res = it->second;
+                        res.insert(it->first);
+                        result.push_back(res);
+                    }
+                }
+                cout << result.size() << " resulting graphs." << endl;
+            }else{
+                for(size_t i=0; i<wc_period.size(); i++){
+                    set<int> res;
+                    res.insert(i);
                     result.push_back(res);
                 }
             }
-        }else{
-            for(size_t i=0; i<wc_period.size(); i++){
-                set<int> res;
-                res.insert(i);
-                result.push_back(res);
-            }
-        }
-        cout << "~~~" << endl;
-        for(size_t i=0; i<result.size(); i++){
-            b_msags.push_back(new boost_msag());
-            for (std::set<int>::iterator it=result[i].begin(); it!=result[i].end(); ++it){
-                std::cout << ' ' << *it;
-                msagMap[*it] = i;
-            }
-              std::cout << '\n';
-        }
-        cout << "~~~" << endl;
-        constructMSAG(msagMap);
-
-        for(size_t i=0; i<b_msags.size(); i++){
-            cout << "Graph " << i << endl;
-          cout << "  Vertices number: " << num_vertices(*b_msags[i]) << endl;
-          cout << "  Edges number: " << num_edges(*b_msags[i]) << endl;
-        }
-
-        cout << "+~+~+~" << endl;
-        if(printDebug){
-            //if(next.assigned() && wcet.assigned()){
-            cout << "trying to print " << b_msags.size() << " boost-msags." << endl;
-                for(size_t t=0; t<b_msags.size(); t++){
-                    string graphName = "boost_msag"+to_string(t);
-                    ofstream out;
-                    string outputFile = ".";
-                    outputFile += (outputFile.back() == '/') ? (graphName + ".dot") : ("/" + graphName + ".dot");
-                    out.open(outputFile.c_str());
-                    write_graphviz(out, *b_msags[t]);
-                    out.close();
+            cout << "~~~" << endl;
+            for(size_t i=0; i<result.size(); i++){
+                b_msags.push_back(new boost_msag());
+                for (std::set<int>::iterator it=result[i].begin(); it!=result[i].end(); ++it){
+                    std::cout << ' ' << *it;
+                    msagMap[*it] = i;
                 }
-                printThroughputGraphAsDot(".");
-            //}
-        }
+                  std::cout << '\n';
+            }
+            cout << "~~~" << endl;
+            constructMSAG(msagMap);
+
+            for(size_t i=0; i<b_msags.size(); i++){
+                cout << "Graph " << i << endl;
+              cout << "  Vertices number: " << num_vertices(*b_msags[i]) << endl;
+              cout << "  Edges number: " << num_edges(*b_msags[i]) << endl;
+            }
+
+            cout << "+~+~+~" << endl;
+            if(printDebug){
+                //if(next.assigned() && wcet.assigned()){
+                cout << "trying to print " << b_msags.size() << " boost-msags." << endl;
+                    for(size_t t=0; t<b_msags.size(); t++){
+                        string graphName = "boost_msag"+to_string(t);
+                        ofstream out;
+                        string outputFile = ".";
+                        outputFile += (outputFile.back() == '/') ? (graphName + ".dot") : ("/" + graphName + ".dot");
+                        out.open(outputFile.c_str());
+                        write_graphviz(out, *b_msags[t]);
+                        out.close();
+                    }
+                    printThroughputGraphAsDot(".");
+                //}
+            }
 
     }else{ //only a single application
         constructMSAG();
