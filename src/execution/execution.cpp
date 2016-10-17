@@ -50,11 +50,15 @@ public:
             model(_model), settings(_settings) {
         geSearchOptions.threads = 0.0;
         if(settings->getTimeout()>0){
-            Search::TimeStop stop(settings->getTimeout());
-            geSearchOptions.stop = &stop;
+            Search::TimeStop* stop =  new Search::TimeStop(settings->getTimeout());
+            geSearchOptions.stop = stop;
         }
     }
     ;
+    ~Execution()
+    {
+		delete geSearchOptions.stop;
+	}
     /**
      * This funtion executes the CP model.
      * The CP model has to implement the following functions:
