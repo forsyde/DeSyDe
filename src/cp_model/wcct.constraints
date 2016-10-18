@@ -135,7 +135,7 @@ if(platform->getInterconnectType() == TDMA_BUS){
     //if all actors are on the same node, no communication via the bus
     rel(*this, (procsUsed==1) >> (tdmaAlloc[j]==0));
     //if no messages are sent from proc, allocate no tdma slots
-    rel(*this, (channelsOnProc[j]==0) >> (tdmaAlloc[j]==0));
+    rel(*this, (channelsOnProc[j]==0) == (tdmaAlloc[j]==0));
     //...otherwise, allocate at least one slot
     rel(*this, (channelsOnProc[j]>0) >> (tdmaAlloc[j]>0));
   }

@@ -91,6 +91,7 @@ private:
     IntVarArray             wcct_s;                    /**< communication delay, send. */
     IntVarArray             wcct_r;                    /**< coummunication delay, receive */
     
+
     int                        least_power_est;        /**< estimated least power consumption. */
   
 public:

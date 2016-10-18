@@ -22,7 +22,8 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, DSESettings* dseSettings)
     sys_utilization(*this, 0, p_mapping->max_utilization),
     procsUsed_utilization(*this, 0, p_mapping->max_utilization),
     proc_power(*this, platform->nodes(), 0, Int::Limits::max),
-    sys_power(*this, mapping->getLeastPowerConsumption(), Int::Limits::max),
+    //sys_power(*this, mapping->getLeastPowerConsumption(), Int::Limits::max),
+    sys_power(*this, 0, Int::Limits::max),
     proc_area(*this, platform->nodes(), 0, Int::Limits::max),
     sys_area(*this, 0, Int::Limits::max),
     proc_cost(*this, platform->nodes(), 0, Int::Limits::max),
@@ -157,7 +158,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, DSESettings* dseSettings)
          * Memory
          */
         cout << "Inserting memory constraints \n";
-#include "memory.constraints"   
+#include "memory.constraints"
 
         /**
          * Throughput
