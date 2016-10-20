@@ -28,7 +28,7 @@ ThroughputMCR::ThroughputMCR(Space& home, ViewArray<IntView> p_latency, ViewArra
    sendingNext.subscribe(home, *this, Int::PC_INT_VAL);
    receivingNext.subscribe(home, *this, Int::PC_INT_VAL);*/
 
-  printDebug = true;
+  printDebug = false;
 
   n_actors = p_wcet.size();
   n_channels = p_ch_src.size();
@@ -1248,8 +1248,6 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
 
   vector<int> msagMap(apps.size(), 0);
 
-  cout << apps.size() << " applications." << endl;
-
   if(apps.size() > 1){
     //check which application graphs are mapped to same processor (= combined into the same MSAG)
     vector<set<int>> result;
@@ -1282,7 +1280,7 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
         }
       }
     }
-    if(coMappedApps.size() > 0){
+//    if(coMappedApps.size() > 0){
 
       int sum_unchecked = 0;
       for(int x : uncheckedApps)
@@ -1308,13 +1306,13 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
 
       }
 
-    }else{
-      for(size_t i = 0; i < wc_period.size(); i++){
-        set<int> res;
-        res.insert(i);
-        result.push_back(res);
-      }
-    }
+//    }else{
+//      for(size_t i = 0; i < wc_period.size(); i++){
+//        set<int> res;
+//        res.insert(i);
+//        result.push_back(res);
+//      }
+//    }
     for(size_t i = 0; i < result.size(); i++){
       b_msags.push_back(new boost_msag());
       for(auto it = result[i].begin(); it != result[i].end(); ++it){
@@ -1356,7 +1354,20 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
       //do MCR analysis
       max_cr = maximum_cycle_ratio(*m, vim, ew1, ew2, &cc);
       msag_mcrs.push_back(max_cr);
-      cout << "Throughput of graph " << msag_mcrs.size()-1 << ": " << max_cr << endl;
+      if(printDebug){
+        cout << "Period of app(s) " << tools::toString(result[msag_mcrs.size()-1]) << ": ";
+        cout <<  max_cr << endl;
+        cout << "Critical cycle:\n";
+        for(t_critCycl::iterator itr = cc.begin(); itr != cc.end(); ++itr){
+          cout << "(" << vim[source(*itr, b_msag)] << "," << vim[target(*itr, b_msag)] << ") ";
+        }
+        cout << endl;
+      }
+    }
+    for(size_t i = 0; i < msag_mcrs.size(); i++){
+      for(auto r: result[i]){
+        wc_period[r] = msag_mcrs[i];
+      }
     }
 
   }else{ //only a single application
@@ -1431,10 +1442,10 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
      }else*/
     if(!all_assigned && !all_ch_local){
 //          GECODE_ME_CHECK(latency[i].gq(home, wc_latency[i][0]));
-      //GECODE_ME_CHECK(period[i].gq(home, wc_period[i]));
+      GECODE_ME_CHECK(period[i].gq(home, wc_period[i]));
     }else if(all_assigned){
 //          GECODE_ME_CHECK(latency[i].eq(home, wc_latency[i][0]));
-      //GECODE_ME_CHECK(period[i].eq(home, wc_period[i]));
+      GECODE_ME_CHECK(period[i].eq(home, wc_period[i]));
     }
   }
   /*
