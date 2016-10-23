@@ -33,20 +33,16 @@ OneProcModel::OneProcModel(Mapping* p_mapping, DSESettings* dseSettings):
     }
     cout << endl;
   }
-  cout << "  Found " << apps->n_programEntities() << " program entities (",
-    cout << apps->n_SDFActors()<< " actors of ";
-  cout << apps->n_SDFApps() << " SDFGs and ";
-  cout << apps->n_IPTTasks() << " ipt tasks)." << endl;
-  cout << "   --Actors and Tasks------------------\n";
-  for (size_t ii=0; ii<apps->n_programEntities(); ii++){
-    cout << "   " << ii << ": " << apps->getName(ii) << endl;
+  cout << "  Found " << apps->n_SDFApps() << " SDF applications: " << endl;
+  for (size_t ii=0; ii<apps->n_SDFApps(); ii++){
+    cout << "   " << ii << ": " << apps->getGraphName(ii) << endl;
   }
   
 
   
   cout << endl << "  Branching:" << endl;
-  
-
+  branch(*this, proc, INT_VAR_NONE(), INT_VAL_MIN());
+  branch(*this, proc_mode, INT_VAR_NONE(), INT_VAL_MIN());
 }
   
 OneProcModel::OneProcModel(bool share, OneProcModel& s):
@@ -68,4 +64,17 @@ Space* OneProcModel::copy(bool share){
 void OneProcModel::print(std::ostream& out) const{
   out << "Proc: " << proc << endl;
   out << "proc mode: " << proc_mode << endl;
+}
+
+vector<tuple<int,int>> OneProcModel::getResult() const{
+  vector<tuple<int,int>> result;
+  for(int i=0; i<proc.size(); i++){
+    if(proc[i].assigned() && proc_mode[proc[i].val()].assigned()){
+      result.push_back(tuple<int,int>(proc[i].val(), proc_mode[proc[i].val()].val()));
+    }else{
+      //throw some exception
+    }
+  }
+  
+  return result;
 }

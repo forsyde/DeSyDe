@@ -74,7 +74,7 @@ PROGRAMS := adse
 # Defines the application modules for the Gecode solver
 MODULES!adse := \
 	. exceptions tools logger applications cp_model platform system systemDesign throughput \
-	settings execution validation xml
+	settings execution validation xml presolving
 
 #===================
 # COMPILATION FLAGS

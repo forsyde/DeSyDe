@@ -3,6 +3,7 @@
 
 #include <math.h>
 #include <vector>
+#include <tuple>
 
 #include <gecode/int.hh>
 #include <gecode/gist.hh>
@@ -53,6 +54,8 @@ public:
 
   virtual void constrain(const Space& _b){
   }
+  
+  vector<tuple<int,int>> getResult() const;
   
   
 };
