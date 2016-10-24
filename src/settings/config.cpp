@@ -119,11 +119,24 @@ int Config::parse(int argc, const char** argv) throw (IOException, InvalidArgume
               boost::bind(&Config::setLubyScale, this, _1)),
           "Luby scale");
 
+  po::options_description presolver("Presolver options");
+  presolver.add_options()
+    ("presolver.model",
+              po::value<vector<string>>()->multitoken()->default_value({"NONE",""},
+                  "NONE ")->notifier(boost::bind(&Config::setPresolverModel, this, _1)),
+              "Constraint pre-solving model.\n"
+              "Valid options NONE, ONE_PROC_MAPPINGS.")
+    ("presolver.search",
+               po::value<string>()->default_value(string("ALL"))->notifier(
+                  boost::bind(&Config::setPresolverSearch, this, _1)),
+             "Search type.\n"
+             "Valid options NONESEARCH, FIRST, ALL, OPTIMIZE, OPTIMIZE_IT, GIST_ALL, GIST_OPT. ");
+
   po::variables_map vm;
   po::options_description visible_options, all_options;
 
-  visible_options.add(generic).add(dse);
-  all_options.add(hidden).add(generic).add(dse);
+  visible_options.add(generic).add(presolver).add(dse);
+  all_options.add(hidden).add(generic).add(presolver).add(dse);
 
 
   auto cli_options = po::command_line_parser(argc, argv).options(all_options).positional(p).run();
@@ -337,6 +350,12 @@ Config::OptCriterion stringToCriterion(const string &str) throw (InvalidFormatEx
   else THROW_EXCEPTION(InvalidFormatException, str, "invalid option");
 }
 
+Config::PresolverModels stringToPresolverModel(const string &str) throw (InvalidFormatException) {
+  if (str == "NONE")            return Config::NO_PRE;
+  else if (str == "ONE_PROC_MAPPINGS")      return Config::ONE_PROC_MAPPINGS;
+  else THROW_EXCEPTION(InvalidFormatException, str, "invalid option");
+}
+
 void Config::setCriteria(const vector<string> &str) throw (InvalidFormatException) {
   for (string s : str)
     if (s.length() != 0)
@@ -354,4 +373,14 @@ void Config::setTimeout(const vector<unsigned long int> &touts) throw (IllegalSt
 
 void Config::setLubyScale(unsigned long int scale) throw () {
   settings_.luby_scale = scale;
+}
+
+void Config::setPresolverModel(const vector<string> &str) throw (InvalidFormatException) {
+  for (string s : str)
+    if (s.length() != 0)
+      settings_.pre_models.push_back(stringToPresolverModel(tools::trim(s)));
+}
+
+void Config::setPresolverSearch(const string &str) throw (InvalidFormatException) {
+  settings_.pre_search = stringToSearch(str);
 }

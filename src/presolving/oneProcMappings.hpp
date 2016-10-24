@@ -1,5 +1,5 @@
-#ifndef __MODEL__
-#define __MODEL__
+#ifndef __ONEPROCMODEL__
+#define __ONEPROCMODEL__
 
 #include <math.h>
 #include <vector>
@@ -31,7 +31,7 @@ private:
   Platform*                platform;    /**< Pointer to the platform object. */
   Mapping*                 mapping;    /**< Pointer to the mapping object. */
   DesignDecisions*         desDec;        /**< Pointer to the design decision object. */
-  DSESettings*             settings;    /**< Pointer to the setting object. */
+  Config&                  settings;    /**< Pointer to the setting object. */
   
   //DECISION VARIABLES
   //mapping of firings onto processors
@@ -42,7 +42,7 @@ private:
   
 public:
 
-  OneProcModel(Mapping* p_mapping, DSESettings* dseSettings);
+  OneProcModel(Mapping* p_mapping, Config& cfg);
   
   OneProcModel(bool share, OneProcModel& s);
   
@@ -57,6 +57,8 @@ public:
   
   vector<tuple<int,int>> getResult() const;
   
+  void printSolution(std::ostream& out) const;
+
   
 };
 

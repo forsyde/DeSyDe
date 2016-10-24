@@ -1,11 +1,11 @@
 #include "oneProcMappings.hpp"
 
-OneProcModel::OneProcModel(Mapping* p_mapping, DSESettings* dseSettings):
+OneProcModel::OneProcModel(Mapping* p_mapping, Config& cfg):
     apps(p_mapping->getApplications()),
     platform(p_mapping->getPlatform()),
     mapping(p_mapping),
-    settings(dseSettings),
-    proc(*this, apps->n_programEntities(), 0, platform->nodes()-1),
+    settings(cfg),
+    proc(*this, apps->n_SDFApps(), 0, platform->nodes()-1),
     proc_mode(*this, platform->nodes(), 0, platform->getMaxModes()) {
     
   cout << "Creating Model..." << endl;
@@ -37,10 +37,41 @@ OneProcModel::OneProcModel(Mapping* p_mapping, DSESettings* dseSettings):
   for (size_t ii=0; ii<apps->n_SDFApps(); ii++){
     cout << "   " << ii << ": " << apps->getGraphName(ii) << endl;
   }
+
+  //CONSTRAINTS ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  for (size_t ji=0; ji<platform->nodes(); ji++){
+    rel(*this, proc_mode[ji] < platform->getModes(ji));
+  }
+
+  IntVarArgs nAppsOnProc(*this, platform->nodes(), 0, apps->n_SDFApps()); /**< number of SDF apps on proc[i]. */
+  count(*this, proc, nAppsOnProc);
+
+  if(mapping->homogeneousPlatform()){
+    for (size_t ii=0; ii<apps->n_SDFApps()-1; ii++){
+      for (size_t ij=ii+1; ij<apps->n_SDFApps(); ij++){
+        rel(*this, proc[ii]==proc[ij] || proc[ii]<proc[ij]);
+      }
+    }
+  }else{//platform not homogeneous
+    for (size_t ji=0; ji<platform->nodes(); ji++){
+      rel(*this, (nAppsOnProc[ji]==0) >> (proc_mode[ji]==0));
+      for (size_t jj=ji+1; jj<platform->nodes(); jj++){
+        if(mapping->homogeneousModeNodes(ji, jj)){
+          rel(*this, !(nAppsOnProc[ji]==0 && nAppsOnProc[jj]>0));
+          for (size_t ii=0; ii<apps->n_SDFApps()-1; ii++){
+            for (size_t ij=ii+1; ij<apps->n_SDFApps(); ij++){
+              rel(*this, !(proc[ii]==jj && proc[ij]==ji));
+            }
+          }
+        }
+      }
+    }
+  }
   
 
   
-  cout << endl << "  Branching:" << endl;
+//  cout << endl << "  Branching:" << endl;
   branch(*this, proc, INT_VAR_NONE(), INT_VAL_MIN());
   branch(*this, proc_mode, INT_VAR_NONE(), INT_VAL_MIN());
 }
@@ -77,4 +108,14 @@ vector<tuple<int,int>> OneProcModel::getResult() const{
   }
   
   return result;
+}
+
+
+void OneProcModel::printSolution(std::ostream& out) const{
+  vector<tuple<int,int>> result = getResult();
+
+  for(size_t i=0; i<result.size(); i++){
+    out << "App " << i << ": Proc " << std::get<0>(result[i]) << " mode " << std::get<1>(result[i]) << endl;
+  }
+
 }

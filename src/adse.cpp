@@ -39,7 +39,9 @@
 #include "system/mapping.hpp"
 #include "cp_model/model.hpp"
 #include "cp_model/sdf_pr_online_model.hpp"
+#include "presolving/oneProcMappings.hpp"
 #include "execution/execution.cpp"
+#include "presolving/presolver.cpp"
 #include "settings/input_reader.hpp"
 #include "cp_model/schedulability.hpp"
 #include "validation/validation.hpp"
@@ -139,14 +141,28 @@ int main(int argc, const char* argv[]) {
     map->SortTasksUtilization();
     cout << *inputTaskset;
 
-    cout << messageStart + "Creating a constraint model object ... " << endl;
-    SDFPROnlineModel* model = new SDFPROnlineModel(map, dseSettings);
+    //PRESOLVING +++
 
-    cout << messageStart + "Creating an execution object ... " << endl;
-    Execution<SDFPROnlineModel> execObj(model, dseSettings);
+    cout << messageStart + "Creating PRESOLVING constraint model object ... " << endl;
+    OneProcModel* pre_model = new OneProcModel(map, cfg);
 
-    cout << messageStart + "Running the model object ... " << endl;
-    execObj.Execute();
+    cout << messageStart + "Creating PRESOLVING execution object ... " << endl;
+    Presolver<OneProcModel> presolver(pre_model, cfg);
+
+    cout << messageStart + "Running PRESOLVING model object ... " << endl;
+    presolver.presolve();
+
+    vector<vector<tuple<int,int>>> mappings = presolver.getMappingResults();
+    cout << "Presolver found " << mappings.size() << " isolated mappings." << endl;
+
+//    cout << messageStart + "Creating a constraint model object ... " << endl;
+//    SDFPROnlineModel* model = new SDFPROnlineModel(map, dseSettings);
+//
+//    cout << messageStart + "Creating an execution object ... " << endl;
+//    Execution<SDFPROnlineModel> execObj(model, dseSettings);
+//
+//    cout << messageStart + "Running the model object ... " << endl;
+//    execObj.Execute();
 
     Validation* val = new Validation(map, dseSettings);
     val->Validate();

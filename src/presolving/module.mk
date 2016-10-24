@@ -28,7 +28,7 @@
 # MODULE PATH AND FILES
 #=======================
 
-CPP_FILES := oneProcMappings.cpp 
+CPP_FILES := oneProcMappings.cpp presolver.cpp
 
 
 

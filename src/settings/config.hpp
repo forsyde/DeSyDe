@@ -59,6 +59,10 @@ public:
     SDF,
     SDF_PR_ONLINE
   };
+  enum PresolverModels {
+    NO_PRE,
+    ONE_PROC_MAPPINGS
+  };
   enum SearchTypes {
     NONESEARCH,
     FIRST,
@@ -79,7 +83,9 @@ public:
     std::string              output_path;
 
     CPModels                  model;
+    std::vector<PresolverModels> pre_models;
     SearchTypes               search;
+    SearchTypes               pre_search;
     std::vector<OptCriterion> criteria;
     unsigned long int         timeout_first;
     unsigned long int         timeout_all;
@@ -130,6 +136,10 @@ private:
   void setCriteria(const std::vector<std::string> &) throw (InvalidFormatException);
   void setTimeout(const std::vector<unsigned long int> &) throw (IllegalStateException);
   void setLubyScale(unsigned long int) throw ();
+  void setPresolverModel(const std::vector<std::string> &) throw (InvalidFormatException);
+  void setPresolverSearch(const std::string &) throw (InvalidFormatException);
+
+
 };
 
 
