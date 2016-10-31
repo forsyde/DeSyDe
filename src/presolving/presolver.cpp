@@ -1,3 +1,6 @@
+#ifndef __PRESOLVER__
+#define __PRESOLVER__
+
 /* Copyright (c) 2013-2016, Nima Khalilzad   <nkhal@kth.se>
  *              Katrhin Rosvall  <krosvall@kth.se>
  * All rights reserved.
@@ -35,18 +38,21 @@
 #include <cstring>
 #include <gecode/gist.hh>
 #include "../settings/dse_settings.hpp"
+#include "../system/mapping.hpp"
+#include "../cp_model/sdf_pr_online_model.hpp"
+#include "oneProcMappings.hpp"
 #include <chrono>
 #include <fstream>
 
 using namespace std;
 using namespace Gecode;
 
-template<class CPModelTemplate>
 class Presolver {
 public:
-  Presolver(CPModelTemplate* _model, Config& _cfg) :
-      model(_model), settings(_cfg) {
+  Presolver(Config& _cfg) :
+      settings(_cfg) {
     geSearchOptions.threads = 0.0;
+    results = make_shared<PresolverResults>();
   }
   ;
   ~Presolver() {
@@ -55,44 +61,45 @@ public:
    * This function executes the presolving CP model.
    * The CP model has to implement the following functions:
    * (i)  print()
-   * (ii) printCSV()
    */
-  int presolve() {
+  Space* presolve(Mapping* map) {
+
+    OneProcModel* pre_model = new OneProcModel(map, settings);
 
     switch (settings.settings().pre_search) {
     case (Config::GIST_ALL): {
-      Gist::Print<CPModelTemplate> p("Print solution");
+      Gist::Print<OneProcModel> p("Print solution");
       Gist::Options options;
       options.inspect.click(&p);
-      Gist::dfs(model, options);
+      Gist::dfs(pre_model, options);
       break;
     }
     case (Config::GIST_OPT): {
-      Gist::Print<CPModelTemplate> p("Print solution");
+      Gist::Print<OneProcModel> p("Print solution");
       Gist::Options options;
       options.inspect.click(&p);
-      Gist::bab(model, options);
+      Gist::bab(pre_model, options);
       break;
     }
     case (Config::FIRST):
     case (Config::ALL): {
       cout << "DFS engine ...\n";
-      DFS<CPModelTemplate> e(model, geSearchOptions);
-      loopSolutions<DFS<CPModelTemplate>>(&e);
+      DFS<OneProcModel> e(pre_model, geSearchOptions);
+      loopSolutions<DFS<OneProcModel>>(&e, map);
       break;
     }
     case (Config::OPTIMIZE): {
       cout << "BAB engine, optimizing ... \n";
-      BAB<CPModelTemplate> e(model, geSearchOptions);
-      loopSolutions<BAB<CPModelTemplate>>(&e);
+      BAB<OneProcModel> e(pre_model, geSearchOptions);
+      loopSolutions<BAB<OneProcModel>>(&e, map);
       break;
     }
 //    case (Config::OPTIMIZE_IT): {
 //      cout << "BAB engine, optimizing iteratively ... \n";
 //      Search::Cutoff* cut = Search::Cutoff::luby(settings->getLubyScale());
 //      geSearchOptions.cutoff = cut;
-//      RBS<BAB, CPModelTemplate> e(model, geSearchOptions);
-//      loopSolutions<RBS<BAB, CPModelTemplate>>(&e);
+//      RBS<BAB, Space> e(model, geSearchOptions);
+//      loopSolutions<RBS<BAB, Space>>(&e);
 //      break;
 //    }
     default:
@@ -101,32 +108,33 @@ public:
       break;
     }
 //    cout << "Output file name: " << settings.settings().output_path << " end of exploration." << endl;
-    return 1;
+    return full_model;
   }
   ;
   vector<vector<tuple<int,int>>> getMappingResults() const{
-    return mappings;
+    return results->oneProcMappings;
   }
   ;
 
 private:
-  CPModelTemplate* model; /**< Pointer to the constraint model class. */
-  Config& settings; /**< pointer to the DSESetting class. */
+  vector<Space*> pre_models; /**< Vector of presolver constraint models. */
+  Space* full_model; /**< Pointer to the problem constraint model. */
+  Config& settings; /**< pointer to the Config object. */
   int nodes; /**< Number of nodes. */
   Search::Options geSearchOptions; /**< Gecode search option object. */
-  ofstream out; /**< Output file streams: .txt and .csv. */
+  ofstream out, outFull; /**< Output file streams: .txt and .csv. */
   typedef std::chrono::high_resolution_clock runTimer; /**< Timer type. */
   runTimer::time_point t_start, t_endAll; /**< Timer objects for start and end of experiment. */
-  vector<vector<tuple<int,int>>> mappings;
+  shared_ptr<PresolverResults> results;
 
   /**
-   * Prints the solutions in the ofstreams (out and outCSV)
+   * Prints the solutions in the ofstream (out)
    */
-  template<class SearchEngine> void printSolution(SearchEngine *e, CPModelTemplate* s) {
+  template<class SearchEngine> void printSolution(SearchEngine *e, OneProcModel* s) {
 
     out << "Solution " << nodes << ":" << endl;
     out << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
-    s->printSolution(out);
+    s->print(out);
     out << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n";
 
   }
@@ -135,17 +143,20 @@ private:
   /**
    * Loops through the solutions and prints them using the input search engine
    */
-  template<class SearchEngine> void loopSolutions(SearchEngine *e) {
+  template<class SearchEngine> void loopSolutions(SearchEngine *e, Mapping* map) {
+    DSESettings* dseSettings = new DSESettings(settings);
     nodes = 0;
     out.open(settings.settings().output_path + "/out/" + "presolver_results.txt");
+    outFull.open(dseSettings->getOutputsPath(".txt"));
+    outFull << "~~~~~ *** BEGIN OF PRESOLVER SOLUTIONS *** ~~~~~" << endl;
 //    cout << "start searching for " << settings.settings().pre_search << " solutions \n";
     t_start = runTimer::now();
-    while(CPModelTemplate * s = e->next()){
+    while(Space * s = e->next()){
       nodes++;
       if(nodes == 1){
         if(settings.settings().pre_search == Config::FIRST){
           t_endAll = runTimer::now();
-          printSolution(e, s);
+          printSolution(e, (OneProcModel*)s);
           cout << "returning" << endl;
           return;
         }
@@ -160,12 +171,22 @@ private:
           cout << endl;
       }
 
-      printSolution(e, s);
-      mappings.push_back(s->getResult());
-
+      printSolution(e, (OneProcModel*)s);
+      results->it_mapping = nodes-1;
+      results->oneProcMappings.push_back(((OneProcModel*)s)->getResult());
       delete s;
 
+      dseSettings->setPresolverResults(results);
+      SDFPROnlineModel* full_model = new SDFPROnlineModel(map, dseSettings);
+      DFS<SDFPROnlineModel> ef(full_model, geSearchOptions);
+      SDFPROnlineModel * sf = ef.next();
+      outFull << "Pre-solution " << nodes << "----------" << endl;
+      sf->print(outFull);
+      outFull << "------------------------------" << endl << endl;
+      delete full_model;
+      delete sf;
     }
+    outFull << "~~~~~ *** END OF PRESOLVER SOLUTIONS *** ~~~~~" << endl;
     cout << endl;
     auto durAll = runTimer::now() - t_start;
     auto durAll_s = std::chrono::duration_cast<std::chrono::seconds>(durAll).count();
@@ -178,7 +199,15 @@ private:
         << e->statistics().propagate << ", depth: " << e->statistics().depth << ", nogoods: " << e->statistics().nogood << " ***\n";
 
     out.close();
+    outFull.close();
+    // +++ Now: Create the full model
+    results->it_mapping = results->oneProcMappings.size();
+    dseSettings->setPresolverResults(results);
+    full_model = new SDFPROnlineModel(map, dseSettings);
+    delete dseSettings;
   }
 
 };
+
+#endif
 

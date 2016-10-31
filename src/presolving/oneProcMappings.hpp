@@ -57,7 +57,6 @@ public:
   
   vector<tuple<int,int>> getResult() const;
   
-  void printSolution(std::ostream& out) const;
 
   
 };

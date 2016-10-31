@@ -1,3 +1,6 @@
+#ifndef __EXECUTION__
+#define __EXECUTION__
+
 /**
  * Copyright (c) 2013-2016, Nima Khalilzad   <nkhal@kth.se>
  * 							Katrhin Rosvall  <krosvall@kth.se>
@@ -314,7 +317,7 @@ private:
    */
   template<class SearchEngine> void loopSolutions(SearchEngine *e) {
     nodes = 0;
-    out.open(settings->getOutputsPath(".txt"));
+    out.open(settings->getOutputsPath(".txt"), std::ofstream::app);
     outCSV.open(settings->getOutputsPath(".csv"));
     outMOSTCSV.open(settings->getOutputsPath("-MOST.csv"));
     outMappingCSV.open(settings->getOutputsPath("_mapping.csv"));
@@ -341,11 +344,11 @@ private:
 //            }
       out << "Solution " << nodes << ":" << endl;
       out << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
-      s->printSolution(out);
+      s->print(out);
       out << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
 
       //printSolution(e, s);
-      cout << nodes << " solutions found so far." << endl;
+     // cout << nodes << " solutions found so far." << endl;
       delete s;
 
 //            if(actorsOnOtherProcs>0) break;
@@ -378,3 +381,4 @@ private:
 
 };
 
+#endif

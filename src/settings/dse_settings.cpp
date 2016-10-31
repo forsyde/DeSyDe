@@ -139,3 +139,12 @@ std::ostream& operator<<(std::ostream &out, const DSESettings &dseSettings) {
   return out;
 }
 
+
+void DSESettings::setPresolverResults(shared_ptr<PresolverResults> _p){
+  pre_results = _p;
+}
+
+shared_ptr<PresolverResults> DSESettings::getPresolverResults(){
+  return pre_results;
+}
+

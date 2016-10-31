@@ -37,7 +37,7 @@
 #include "applications/sdfgraph.hpp"
 #include "platform/platform.hpp"
 #include "system/mapping.hpp"
-#include "cp_model/model.hpp"
+//#include "cp_model/model.hpp"
 #include "cp_model/sdf_pr_online_model.hpp"
 #include "presolving/oneProcMappings.hpp"
 #include "execution/execution.cpp"
@@ -144,13 +144,13 @@ int main(int argc, const char* argv[]) {
     //PRESOLVING +++
 
     cout << messageStart + "Creating PRESOLVING constraint model object ... " << endl;
-    OneProcModel* pre_model = new OneProcModel(map, cfg);
+    //OneProcModel* pre_model = new OneProcModel(map, cfg);
 
     cout << messageStart + "Creating PRESOLVING execution object ... " << endl;
-    Presolver<OneProcModel> presolver(pre_model, cfg);
+    Presolver presolver(cfg);
 
     cout << messageStart + "Running PRESOLVING model object ... " << endl;
-    presolver.presolve();
+    SDFPROnlineModel* model = (SDFPROnlineModel*)presolver.presolve(map);
 
     vector<vector<tuple<int,int>>> mappings = presolver.getMappingResults();
     cout << "Presolver found " << mappings.size() << " isolated mappings." << endl;
@@ -158,11 +158,11 @@ int main(int argc, const char* argv[]) {
 //    cout << messageStart + "Creating a constraint model object ... " << endl;
 //    SDFPROnlineModel* model = new SDFPROnlineModel(map, dseSettings);
 //
-//    cout << messageStart + "Creating an execution object ... " << endl;
-//    Execution<SDFPROnlineModel> execObj(model, dseSettings);
-//
-//    cout << messageStart + "Running the model object ... " << endl;
-//    execObj.Execute();
+    cout << messageStart + "Creating an execution object ... " << endl;
+    Execution<SDFPROnlineModel> execObj(model, dseSettings);
+
+    cout << messageStart + "Running the model object ... " << endl;
+    execObj.Execute();
 
     Validation* val = new Validation(map, dseSettings);
     val->Validate();

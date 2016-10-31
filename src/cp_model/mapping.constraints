@@ -103,6 +103,7 @@ rel(*this, sys_cost == sum(proc_cost));
 //symmetry breaking:
 //if the platform (or a pair of nodes) is homogeneous, then first-scheduled actors on each proc
 //shall be ordered according to their index
+cout << "Symmetry breaking: " << endl;
 if(mapping->homogeneousPlatform()){
   for(size_t ji=0; ji<platform->nodes(); ji++){
     for(size_t jj=ji+1; jj<platform->nodes()-1; jj++){
@@ -118,13 +119,16 @@ if(mapping->homogeneousPlatform()){
   }
 } else{
   for(size_t ji=0; ji<platform->nodes(); ji++){
-    for(size_t jj=ji+1; jj<platform->nodes()-1; jj++){
+    for(size_t jj=ji+1; jj<platform->nodes(); jj++){
       if((mapping->homogeneousModeNodes(ji, jj)) &&
-          (ji!=platform->nodes()-2)){
+          (ji!=platform->nodes()-1)){
         int first = (ji==0) ? apps->n_SDFActors()+platform->nodes()-1 : apps->n_SDFActors()+ji-1;
         int second = apps->n_SDFActors()+jj-1;
-        //cout << apps->n_programEntities()+jj << " > " << apps->n_programEntities()+ji << endl;
-        rel(*this, (proc_mode[ji] == proc_mode[jj]) >> (next[second] > next[first]));
+//        rel(*this, (proc_mode[ji] == proc_mode[jj]) >> (next[second] > next[first]));
+
+        //the first actor scheduled on ji (first is dummy node of ji), must have a lower index than
+        //the first actor scheduled on jj (second is dummy node of jj)
+        rel(*this, next[second] > next[first]);
       }
     }
     for(size_t jj=ji+1; jj<platform->nodes(); jj++){
@@ -140,7 +144,6 @@ if(mapping->homogeneousPlatform()){
    (next[apps->n_SDFActors()+ji] > next[apps->n_SDFActors()+jj]));
    } */
 }
-
 //SDFGs and IPTs are not allowed to share processors
 for(size_t i=0; i<apps->n_SDFActors(); i++){ //i iterates of SDF actors
   for(size_t j=apps->n_SDFActors(); j<apps->n_IPTTasks()+apps->n_SDFActors(); j++){ //j iterates over IPTs

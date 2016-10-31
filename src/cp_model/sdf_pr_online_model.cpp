@@ -192,6 +192,30 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, DSESettings* dseSettings)
         }
 #include "throughput.constraints"
 
+//#include "presolve.constraints"
+        //testing
+//        rel(*this, procsUsed <= 2);
+        //end testing
+        if(settings->getPresolverResults()->it_mapping < settings->getPresolverResults()->oneProcMappings.size()){
+          vector<tuple<int,int>> oneProcMapping = settings->getPresolverResults()->oneProcMappings[settings->getPresolverResults()->it_mapping];
+
+          for(size_t a = 0; a < apps->n_SDFActors(); a++){
+            rel(*this, proc[a] == get<0>(oneProcMapping[apps->getSDFGraph(a)]));
+            rel(*this, proc_mode[get<0>(oneProcMapping[apps->getSDFGraph(a)])] == get<1>(oneProcMapping[apps->getSDFGraph(a)]));
+          }
+        }else{ //...otherwise forbid all mappings in oneProcMappings
+          cout << "Now forbidding " << settings->getPresolverResults()->oneProcMappings.size() << " mappings." << endl;
+          cout << endl;
+          for(size_t i=0; i<settings->getPresolverResults()->oneProcMappings.size(); i++){
+            vector<tuple<int,int>> oneProcMapping = settings->getPresolverResults()->oneProcMappings[i];
+            IntVarArgs t_mapping(*this, apps->n_programEntities(), 0, platform->nodes()-1);
+            for(size_t a = 0; a < apps->n_SDFActors(); a++){
+              rel(*this, t_mapping[a] == get<0>(oneProcMapping[apps->getSDFGraph(a)]));
+            }
+            rel(*this, t_mapping, IRT_NQ, proc);
+          }
+        }
+
         for(size_t i = 0; i < channels.size(); i++){
             delete channels[i];
         }

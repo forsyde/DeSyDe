@@ -1,3 +1,6 @@
+#ifndef __SDF_PR_ONLINE_MODEL__
+#define __SDF_PR_ONLINE_MODEL__
+
 /**
  * Copyright (c) 2013-2016, Nima Khalilzad   <nkhal@kth.se>
  *                             Kathrin Rosvall  <krosvall@kth.se>
@@ -62,7 +65,7 @@ private:
     IntVarArray             rank;
     IntVarArray             proc;        /**< mapping of firings onto processors. */
     IntVarArray             proc_mode;    /**< processor modes: economy, regular and performance. */
-    IntVarArray                tdmaAlloc;    /**< allocation of TDMA slots to processors. */
+    IntVarArray                tdmaAlloc;    /**< allocation of TDMA slots to processors.__PRESOLVER__ */
 
     IntVarArray             sendNext;    /**< a schedule for sent messages on interconnect. */
     IntVarArray             recNext;    /**< a schedule for sent messages on interconnect. */
@@ -167,10 +170,11 @@ public:
   
     vector<int> getPeriodResults();
     
-    
     /**
     * Returns the processor number which task i has to be allocated.
     */ 
     static int valueProc(const Space& home, IntVar x, int i);
     typedef int (*IntBranchVal)(const Space& home, IntVar x, int i);    
 };
+
+#endif

@@ -110,12 +110,3 @@ vector<tuple<int,int>> OneProcModel::getResult() const{
   return result;
 }
 
-
-void OneProcModel::printSolution(std::ostream& out) const{
-  vector<tuple<int,int>> result = getResult();
-
-  for(size_t i=0; i<result.size(); i++){
-    out << "App " << i << ": Proc " << std::get<0>(result[i]) << " mode " << std::get<1>(result[i]) << endl;
-  }
-
-}
