@@ -1,0 +1,158 @@
+<?xml version="1.0"?>
+<sdf3 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.0" type="sdf" xsi:noNamespaceSchemaLocation="http://www.es.ele.tue.nl/sdf3/xsd/sdf3-sdf.xsd">
+  <applicationGraph>
+    <sdf name="g10_10_cycl" type="G">
+      <actor name="a0" type="A0">
+        <port name="p0" type="in" rate="1"/>
+        <port name="p1" type="out" rate="1"/>
+      </actor>
+      <actor name="a1" type="A1">
+        <port name="p0" type="in" rate="1"/>
+        <port name="p1" type="out" rate="1"/>
+        <port name="p2" type="out" rate="1"/>
+      </actor>
+      <actor name="a2" type="A2">
+        <port name="p0" type="in" rate="1"/>
+        <port name="p1" type="out" rate="1"/>
+        <port name="p3" type="out" rate="1"/>
+      </actor>
+      <actor name="a3" type="A3">
+        <port name="p0" type="in" rate="1"/>
+        <port name="p1" type="in" rate="1"/>
+        <port name="p2" type="in" rate="1"/>
+      </actor>
+      <actor name="a4" type="A4">
+        <port name="p1" type="out" rate="1"/>
+      </actor>
+      <actor name="a5" type="A5">
+        <port name="p0" type="in" rate="1"/>
+        <port name="p1" type="in" rate="1"/>
+        <port name="p2" type="out" rate="1"/>
+      </actor>
+      <actor name="a6" type="A6">
+        <port name="p0" type="in" rate="1"/>
+        <port name="p1" type="in" rate="1"/>
+      </actor>
+      <actor name="a7" type="A7">
+        <port name="p2" type="out" rate="1"/>
+        <port name="p3" type="out" rate="1"/>
+      </actor>
+      <actor name="a8" type="A8">
+        <port name="p0" type="in" rate="1"/>
+        <port name="p2" type="out" rate="1"/>
+        <port name="p3" type="out" rate="1"/>
+      </actor>
+      <actor name="a9" type="A9">
+        <port name="p0" type="in" rate="1"/>
+        <port name="p2" type="out" rate="1"/>
+      </actor>
+      <channel name="ch0" srcActor="a0" srcPort="p1" dstActor="a1" dstPort="p0"/>
+      <channel name="ch1" srcActor="a2" srcPort="p3" dstActor="a0" dstPort="p0" initialTokens="1"/>
+      <channel name="ch2" srcActor="a2" srcPort="p1" dstActor="a3" dstPort="p0"/>
+      <channel name="ch3" srcActor="a4" srcPort="p1" dstActor="a3" dstPort="p2"/>
+      <channel name="ch4" srcActor="a1" srcPort="p1" dstActor="a5" dstPort="p0"/>
+      <channel name="ch5" srcActor="a5" srcPort="p2" dstActor="a6" dstPort="p0" initialTokens="1"/>
+      <channel name="ch6" srcActor="a7" srcPort="p2" dstActor="a6" dstPort="p1" initialTokens="1"/>
+      <channel name="ch7" srcActor="a1" srcPort="p2" dstActor="a8" dstPort="p0" initialTokens="1"/>
+      <channel name="ch8" srcActor="a7" srcPort="p3" dstActor="a5" dstPort="p1" initialTokens="1"/>
+      <channel name="ch9" srcActor="a8" srcPort="p3" dstActor="a9" dstPort="p0"/>
+      <channel name="ch10" srcActor="a8" srcPort="p2" dstActor="a2" dstPort="p0"/>
+      <channel name="ch11" srcActor="a9" srcPort="p2" dstActor="a3" dstPort="p1"/>
+    </sdf>
+    <sdfProperties>
+      <actorProperties actor="a0">
+        <processor type="proc_0" default="true">
+          <executionTime time="3"/>
+          <memory>
+            <stateSize max="2"/>
+          </memory>
+        </processor>
+      </actorProperties>
+      <actorProperties actor="a1">
+        <processor type="proc_0" default="true">
+          <executionTime time="6"/>
+          <memory>
+            <stateSize max="1"/>
+          </memory>
+        </processor>
+      </actorProperties>
+      <actorProperties actor="a2">
+        <processor type="proc_0" default="true">
+          <executionTime time="6"/>
+          <memory>
+            <stateSize max="3"/>
+          </memory>
+        </processor>
+      </actorProperties>
+      <actorProperties actor="a3">
+        <processor type="proc_0" default="true">
+          <executionTime time="10"/>
+          <memory>
+            <stateSize max="3"/>
+          </memory>
+        </processor>
+      </actorProperties>
+      <actorProperties actor="a4">
+        <processor type="proc_0" default="true">
+          <executionTime time="6"/>
+          <memory>
+            <stateSize max="1"/>
+          </memory>
+        </processor>
+      </actorProperties>
+      <actorProperties actor="a5">
+        <processor type="proc_0" default="true">
+          <executionTime time="3"/>
+          <memory>
+            <stateSize max="3"/>
+          </memory>
+        </processor>
+      </actorProperties>
+      <actorProperties actor="a6">
+        <processor type="proc_0" default="true">
+          <executionTime time="4"/>
+          <memory>
+            <stateSize max="1"/>
+          </memory>
+        </processor>
+      </actorProperties>
+      <actorProperties actor="a7">
+        <processor type="proc_0" default="true">
+          <executionTime time="4"/>
+          <memory>
+            <stateSize max="2"/>
+          </memory>
+        </processor>
+      </actorProperties>
+      <actorProperties actor="a8">
+        <processor type="proc_0" default="true">
+          <executionTime time="3"/>
+          <memory>
+            <stateSize max="2"/>
+          </memory>
+        </processor>
+      </actorProperties>
+      <actorProperties actor="a9">
+        <processor type="proc_0" default="true">
+          <executionTime time="6"/>
+          <memory>
+            <stateSize max="3"/>
+          </memory>
+        </processor>
+      </actorProperties>
+      <channelProperties channel="ch0"/>
+      <channelProperties channel="ch1"/>
+      <channelProperties channel="ch2"/>
+      <channelProperties channel="ch3"/>
+      <channelProperties channel="ch4"/>
+      <channelProperties channel="ch5"/>
+      <channelProperties channel="ch6"/>
+      <channelProperties channel="ch7"/>
+      <channelProperties channel="ch8"/>
+      <channelProperties channel="ch9"/>
+      <channelProperties channel="ch10"/>
+      <channelProperties channel="ch11"/>
+      <graphProperties/>
+    </sdfProperties>
+  </applicationGraph>
+</sdf3>

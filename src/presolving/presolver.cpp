@@ -146,6 +146,7 @@ private:
   template<class SearchEngine> void loopSolutions(SearchEngine *e, Mapping* map) {
     DSESettings* dseSettings = new DSESettings(settings);
     nodes = 0;
+    int fullNodes = 0;
     out.open(settings.settings().output_path + "/out/" + "presolver_results.txt");
     outFull.open(dseSettings->getOutputsPath(".txt"));
     outFull << "~~~~~ *** BEGIN OF PRESOLVER SOLUTIONS *** ~~~~~" << endl;
@@ -179,12 +180,21 @@ private:
       dseSettings->setPresolverResults(results);
       SDFPROnlineModel* full_model = new SDFPROnlineModel(map, dseSettings);
       DFS<SDFPROnlineModel> ef(full_model, geSearchOptions);
-      SDFPROnlineModel * sf = ef.next();
-      outFull << "Pre-solution " << nodes << "----------" << endl;
-      sf->print(outFull);
-      outFull << "------------------------------" << endl << endl;
+      if(SDFPROnlineModel * sf = ef.next()){
+        fullNodes++;
+        outFull << "Pre-solution " << nodes << "----------" << endl;
+        sf->print(outFull);
+        outFull << "------------------------------" << endl << endl;
+        Mapping* mapRes = sf->extractResult();
+        dseSettings->getPresolverResults()->periods.push_back(mapRes->getPeriods());
+        dseSettings->getPresolverResults()->sys_energys.push_back(mapRes->getSysEnergy());
+        delete sf;
+      }else{
+        outFull << "------------------------------" << endl << endl;
+        outFull << "Presolver mapping " << nodes << " does not give a solution." << endl;
+        outFull << "------------------------------" << endl << endl;
+      }
       delete full_model;
-      delete sf;
     }
     outFull << "~~~~~ *** END OF PRESOLVER SOLUTIONS *** ~~~~~" << endl;
     cout << endl;
@@ -198,13 +208,21 @@ private:
     out << " =====\n" << nodes << " solutions found\n" << "search nodes: " << e->statistics().node << ", fail: " << e->statistics().fail << ", propagate: "
         << e->statistics().propagate << ", depth: " << e->statistics().depth << ", nogoods: " << e->statistics().nogood << " ***\n";
 
+
+    outFull << "===== search ended after: " << durAll_s << " s (" << durAll_ms << " ms)";
+    if(e->stopped()){
+      outFull << " due to time-out!";
+    }
+    outFull << " =====\n" << fullNodes << " solutions found\n" << "search nodes: " << e->statistics().node << ", fail: " << e->statistics().fail << ", propagate: "
+        << e->statistics().propagate << ", depth: " << e->statistics().depth << ", nogoods: " << e->statistics().nogood << " ***\n";
+
     out.close();
     outFull.close();
     // +++ Now: Create the full model
     results->it_mapping = results->oneProcMappings.size();
     dseSettings->setPresolverResults(results);
     full_model = new SDFPROnlineModel(map, dseSettings);
-    delete dseSettings;
+
   }
 
 };

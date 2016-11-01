@@ -41,8 +41,8 @@ using namespace DeSyDe;
 struct PresolverResults{
   size_t it_mapping; /**< Informs the CP model how to use oneProcMappings: <.size(): Enforce mapping, >=.size() Forbid all. */
   vector<vector<tuple<int,int>>> oneProcMappings;
-  vector<vector<size_t>> periods;
-  vector<size_t> sys_powers;
+  vector<vector<int>> periods;
+  vector<int> sys_energys;
 };
 
 class DSESettings

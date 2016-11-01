@@ -151,7 +151,7 @@ public:
                 for(size_t i=0;i<apps->n_SDFApps();i++)
                 {
                     if(apps->getPeriodConstraint(i) == -1)
-                        {    rel(*this, period[i] < b.period[i]);break;} 
+                        {    rel(*this, period[i] < b.period[i]);break;}
                 }
                 break;
             case(Config::LATENCY):
