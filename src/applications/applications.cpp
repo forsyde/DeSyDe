@@ -16,7 +16,7 @@ Applications::~Applications() {
     delete desContr[i];
 }
 
-Applications::Applications(vector<SDFGraph*> _sdfApps, TaskSet* _iptApps)
+Applications::Applications(vector<SDFGraph*> _sdfApps, TaskSet* _iptApps, XMLdoc& xml)
   : sdfApps(_sdfApps), iptApps(_iptApps) {
 
   n_sdfActors       = 0;
@@ -30,6 +30,37 @@ Applications::Applications(vector<SDFGraph*> _sdfApps, TaskSet* _iptApps)
   }
   
   n_iptTasks = iptApps->getNumberOfTasks();
+  
+  load_const(xml);
+}
+void Applications::load_const(XMLdoc& xml)
+{
+    const char* my_xpathString = "///designConstraints/constraint";
+	LOG_DEBUG("running xpathString  " + tools::toString(my_xpathString) + " on desConst file ...");
+	auto xml_constraints = xml.xpathNodes(my_xpathString);
+    LOG_DEBUG("xml_constraints size="+tools::toString(xml_constraints.size()));
+	for (const auto& cons : xml_constraints)
+	{
+		string app_name = xml.getProp(cons, "app_name");
+		string period_cons = xml.getProp(cons, "period");
+		string latency_cons = xml.getProp(cons, "latency");
+        
+        set_const(app_name, atoi(period_cons.c_str()), atoi(latency_cons.c_str()));
+        
+		LOG_DEBUG("Reading constraints for app: " + app_name + "...");		
+		
+	}	
+}
+void Applications::set_const(string app_name, int period_const, int latency_const)
+{
+    for(const auto& sdf : sdfApps)
+    {
+        if(sdf->getName().compare(app_name) == 0)
+        {
+            sdf->setPeriodConstraint(period_const);
+            sdf->setLatencyConstraint(latency_const);            
+        }
+    }
 }
 
 Applications::Applications(vector<SDFGraph*> _sdfApps, vector<DesignConstraints*> _desContr, TaskSet* _iptApps)

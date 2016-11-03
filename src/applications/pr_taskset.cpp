@@ -11,7 +11,7 @@ TaskSet::TaskSet(vector<PeriodicTask*> _tasks)
 
 TaskSet::TaskSet(XMLdoc& xml)
 {
-	const char* my_xpathString = "///@name";
+	const char* my_xpathString = "///taskset/@name";
 	LOG_DEBUG("running xpathString  " + tools::toString(my_xpathString) + " on task set ...");
 	for (const auto& name : xml.xpathStrings(my_xpathString)){
 		LOG_DEBUG("TaskSet class is parsing the following taskset: " + name + "...");
