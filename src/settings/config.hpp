@@ -39,11 +39,12 @@
 #include <string>
 #include <list>
 #include <boost/program_options.hpp>
+#include <vector>
 
 
 namespace po = boost::program_options;
 using namespace DeSyDe;
-
+using namespace std;
 /**
  * @brief Defines a class for containing program settings.
  *
@@ -92,6 +93,12 @@ public:
 
     unsigned long int luby_scale;
   };
+  struct PresolverResults{
+  size_t it_mapping; /**< Informs the CP model how to use oneProcMappings: <.size(): Enforce mapping, >=.size() Forbid all. */
+  vector<vector<tuple<int,int>>> oneProcMappings;
+  vector<vector<size_t>> periods;
+  vector<size_t> sys_powers;
+  };
 
 public:
 
@@ -121,8 +128,15 @@ public:
 
   std::string printSettings();
 
+   void setPresolverResults(shared_ptr<PresolverResults> _p);
+   shared_ptr<PresolverResults> getPresolverResults();
+    /**
+     * Determines whether optimization is used.
+     */
+    bool doOptimize() const;
 private:
   Settings settings_;
+  shared_ptr<PresolverResults> pre_results;
 
 private:
   void dumpConfigFile(std::string path, po::options_description opts) throw (IOException);

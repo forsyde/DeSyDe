@@ -384,3 +384,16 @@ void Config::setPresolverModel(const vector<string> &str) throw (InvalidFormatEx
 void Config::setPresolverSearch(const string &str) throw (InvalidFormatException) {
   settings_.pre_search = stringToSearch(str);
 }
+void Config::setPresolverResults(shared_ptr<Config::PresolverResults> _p){
+  pre_results = _p;
+}
+
+shared_ptr<Config::PresolverResults> Config::getPresolverResults(){
+  return pre_results;
+}
+bool Config::doOptimize() const {
+  if (settings().search == Config::OPTIMIZE || settings().search == Config::OPTIMIZE_IT || settings().search == Config::GIST_OPT) {
+    return true;
+  }
+  return false;
+}
