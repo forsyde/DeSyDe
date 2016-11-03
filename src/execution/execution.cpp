@@ -38,7 +38,7 @@
 #include <boost/math/common_factor.hpp>
 #include <cstring>
 #include <gecode/gist.hh>
-#include "../settings/dse_settings.hpp"
+#include "../settings/config.hpp"
 #include "../system/mapping.hpp"
 #include <chrono>
 #include <fstream> 
@@ -49,11 +49,11 @@ using namespace Gecode;
 template<class CPModelTemplate>
 class Execution {
 public:
-  Execution(CPModelTemplate* _model, DSESettings* _settings) :
-      model(_model), settings(_settings) {
+  Execution(CPModelTemplate* _model, Config& _cfg) :
+      model(_model), cfg(_cfg) {
     geSearchOptions.threads = 0.0;
-    if(settings->getTimeout() > 0){
-      Search::TimeStop* stop = new Search::TimeStop(settings->getTimeout());
+    if(cfg.settings().timeout_first > 0){
+      Search::TimeStop* stop = new Search::TimeStop(cfg.settings().timeout_first);
       geSearchOptions.stop = stop;
     }
   }
@@ -68,7 +68,7 @@ public:
    * (ii) printCSV()
    */
   int Execute() {
-    switch (settings->getSearchType()) {
+    switch (cfg.settings().search) {
     case (Config::GIST_ALL): {
       Gist::Print<CPModelTemplate> p("Print solution");
       Gist::Options options;
@@ -98,7 +98,7 @@ public:
     }
     case (Config::OPTIMIZE_IT): {
       cout << "BAB engine, optimizing iteratively ... \n";
-      Search::Cutoff* cut = Search::Cutoff::luby(settings->getLubyScale());
+      Search::Cutoff* cut = Search::Cutoff::luby(cfg.settings().luby_scale);
       geSearchOptions.cutoff = cut;
       RBS<BAB, CPModelTemplate> e(model, geSearchOptions);
       loopSolutions<RBS<BAB, CPModelTemplate>>(&e);
@@ -109,14 +109,14 @@ public:
       throw 42;
       break;
     }
-    cout << "Output file name: " << settings->getOutputsPath(".txt") << " end of exploration." << endl;
+    cout << "Output file name: " << cfg.settings().output_path + ".txt" << " end of exploration." << endl;
     return 1;
   }
   ;
 
 private:
   CPModelTemplate* model; /**< Pointer to the constraint model class. */
-  DSESettings* settings; /**< pointer to the DSESetting class. */
+  Config& cfg; /**< pointer to the config class. */
   int nodes; /**< Number of nodes. */
   Search::Options geSearchOptions; /**< Gecode search option object. */
   ofstream out, outCSV, outMOSTCSV, outMappingCSV; /**< Output file streams: .txt and .csv. */
@@ -317,16 +317,16 @@ private:
    */
   template<class SearchEngine> void loopSolutions(SearchEngine *e) {
     nodes = 0;
-    out.open(settings->getOutputsPath(".txt"), std::ofstream::app);
-    outCSV.open(settings->getOutputsPath(".csv"));
-    outMOSTCSV.open(settings->getOutputsPath("-MOST.csv"));
-    outMappingCSV.open(settings->getOutputsPath("_mapping.csv"));
-    cout << "start searching for " << settings->getSearchTypeString() << " solutions \n";
+    out.open(cfg.settings().output_path+".txt", std::ofstream::app);
+    outCSV.open(cfg.settings().output_path+".csv");
+    outMOSTCSV.open(cfg.settings().output_path+"-MOST.csv");    
+    outMappingCSV.open(cfg.settings().output_path+"_mapping.csv");
+    cout << "start searching for " << tools::toString(cfg.settings().search) << " solutions \n";
     t_start = runTimer::now();
     while(CPModelTemplate * s = e->next()){
       nodes++;
       if(nodes == 1){
-        if(settings->getSearchType() == Config::FIRST){
+        if(cfg.settings().search == Config::FIRST){
           t_endAll = runTimer::now();
           //printSolution(e, s);
           cout << "returning" << endl;

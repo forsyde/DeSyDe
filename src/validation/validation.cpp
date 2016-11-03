@@ -4,13 +4,13 @@ using namespace std;
 using namespace Gecode;
 
 
-Validation::Validation(Mapping* _map, DSESettings* settings)
+Validation::Validation(Mapping* _map, Config& cfg)
   : map(_map) {
 
   cout << "validation\n";
 
-  InputReader* iReader = new InputReader(settings->getInputsPath());
-  mapping_csv          = iReader->ReadCSV(settings->getOutputsPath("_mapping.csv"));
+  InputReader* iReader = new InputReader(cfg.settings().output_path);
+  mapping_csv          = iReader->ReadCSV(cfg.settings().output_path+"_mapping.csv");
   Applications* app    = map->getApplications();
   no_ipts              = app->n_IPTTasks();
   no_actors            = app->n_SDFActors();

@@ -177,7 +177,7 @@ private:
       delete s;
 
       dseSettings->setPresolverResults(results);
-      SDFPROnlineModel* full_model = new SDFPROnlineModel(map, dseSettings);
+      SDFPROnlineModel* full_model = new SDFPROnlineModel(map, &settings);
       DFS<SDFPROnlineModel> ef(full_model, geSearchOptions);
       SDFPROnlineModel * sf = ef.next();
       outFull << "Pre-solution " << nodes << "----------" << endl;
@@ -203,7 +203,7 @@ private:
     // +++ Now: Create the full model
     results->it_mapping = results->oneProcMappings.size();
     dseSettings->setPresolverResults(results);
-    full_model = new SDFPROnlineModel(map, dseSettings);
+    full_model = new SDFPROnlineModel(map, &settings);
     delete dseSettings;
   }
 
