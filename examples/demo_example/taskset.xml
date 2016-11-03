@@ -11,5 +11,5 @@
 ]>
 <taskset name="demo_task_set">
 	<periodicTask name="pr0" number="2" type="one" period="100" deadline="100" memCons="100"></periodicTask>    
-    <periodicTask name="pr1" number="1" type="one" period="50" deadline="50" memCons="100"></periodicTask>    
+    <periodicTask name="pr1" number="1" type="two" period="50" deadline="50" memCons="100"></periodicTask>    
 </taskset>
