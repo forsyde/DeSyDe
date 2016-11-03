@@ -2,7 +2,7 @@
 
 using namespace std;
 
-Mapping::Mapping(Applications* p_program, Platform* p_target) {
+Mapping::Mapping(Applications* p_program, Platform* p_target, XMLdoc& xml) {
   program = p_program;
   target = p_target;
   n_apps = program->n_SDFApps() + program->n_IPTTasks();
@@ -24,7 +24,7 @@ Mapping::Mapping(Applications* p_program, Platform* p_target) {
   wcets.insert(wcets.end(), program->n_programEntities(), //[Nima] n_SDFActors-->n_programEntities
                vector<vector<int>>(p_target->nodes(),
                                    vector<int>(p_target->getMaxModes(), std::numeric_limits<int>::max() - 1)));
-
+  
   //prepare WCETs
   for (size_t i=0; i<program->n_programEntities(); i++){ //all entities
     for (size_t j=0; j<target->nodes(); j++){  //all processors
@@ -42,6 +42,9 @@ Mapping::Mapping(Applications* p_program, Platform* p_target) {
 
   maxIterationsTransPhEntity.assign(p_program->n_programEntities(), 1);
   maxIterationsTransPhChannel.assign(p_program->n_programChannels(), 1);
+  
+  ///Load WCETs
+  load_wcets(xml);
 }
 
 /*Mapping::Mapping(Applications* p_program, Platform* p_target, 
@@ -65,7 +68,22 @@ Mapping::~Mapping() {
   delete program;
   delete target;
 }
-
+void Mapping::load_wcets(XMLdoc& xml)
+{
+    const char* my_xpathString = "///WCETs/mapping";
+	LOG_DEBUG("running xpathString  " + tools::toString(my_xpathString) + " on WCET file ...");
+	auto xml_mappings = xml.xpathNodes(my_xpathString);
+	for (const auto& map : xml_mappings)
+	{
+		string task_type = xml.getProp(map, "task_type");
+		string proc_type = xml.getProp(map, "processor");
+		string task_wcet = xml.getProp(map, "wcet");
+        setWCETs(task_type, proc_type, atoi(task_wcet.c_str()));
+        
+		LOG_DEBUG("Reading mapping for task type: " + task_type + "...");		
+		
+	}	
+}
 Applications* Mapping::getApplications() const {
   return program;
 }
@@ -163,7 +181,7 @@ bool Mapping::homogeneousModeNodes(int nodeI, int nodeJ) {
 
 //fixed
 void Mapping::setWCETs(string taskType, string procModel, int _wcet) {
-  for (size_t i = 0; i < program->n_programEntities(); i++) {
+  for (size_t i = 0; i < program->n_programEntities(); i++) {      
     if (taskType.compare(program->getType(i)) == 0) {
       for (size_t j = 0; j < target->nodes(); j++) {
         if (procModel.compare(target->getProcModel(j)) == 0) {

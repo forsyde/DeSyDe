@@ -116,11 +116,11 @@ public:
   int const max_utilization = 1000;
 
   Mapping() {};
-  Mapping(Applications*, Platform*);
+  Mapping(Applications*, Platform*, XMLdoc&);
   //Mapping(Applications*, Platform*, vector<vector<int>>&, vector<int>&, vector<int>&, vector<vector<SDFChannel*>>&);
 
   ~Mapping();
-
+  void load_wcets(XMLdoc& xml);
   Applications* getApplications() const;
 
   Platform* getPlatform() const;

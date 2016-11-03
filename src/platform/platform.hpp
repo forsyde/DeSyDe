@@ -33,6 +33,7 @@
 #include "math.h"
 #include <stdio.h>
 #include <string.h>
+#include "../xml/xmldoc.hpp"
 
 using namespace std;
 
@@ -70,7 +71,11 @@ public:
     monetaryCost  = _money;
     NI_bufferSize = p_buffer;
   }
-    
+   PE(std::string p_model, int id){
+    n_types       = 0;
+    name          = p_model + "_" + tools::toString(id); 
+    model         = p_model;
+  }  
   PE(vector<char*> elements, vector<char*> values, int number)
     : n_types(0),
       NI_bufferSize(0) {
@@ -131,7 +136,7 @@ public:
         cout << "reading taskset xml file error : " << e.what() << endl;
       }
     }
-    addMode(_cycle_length, _memorySize, _powerCons, _areaCost, _monetaryCost);
+    AddMode(_cycle_length, _memorySize, _powerCons, _areaCost, _monetaryCost);
   };
 
   friend std::ostream& operator<< (std::ostream &out, const PE &pe) {
@@ -145,9 +150,8 @@ public:
     return out;
   }
 
-private:
-
-  void addMode(double _cycle_length, int _memorySize, int _powerCons, int _areaCost, int _monetaryCost) {
+  void AddMode(double _cycle_length, int _memorySize, int _powerCons, int _areaCost, int _monetaryCost) {
+      n_types++;///Increase the number of modes
     cycle_length.push_back(_cycle_length);
     memorySize.push_back(_memorySize);
     powerCons.push_back(_powerCons);
@@ -198,6 +202,8 @@ protected:
 public:
 
   Platform() {};
+  
+  Platform(XMLdoc& doc);
 
   Platform(size_t p_nodes, int p_cycle, size_t p_memSize, int p_buffer, enum InterconnectType p_type, int p_dps, int p_tdma, int p_roundLength);
   
@@ -210,6 +216,7 @@ public:
    */
   ~Platform();
 
+   void load_xml(XMLdoc& xml);
   // Gives the number of nodes
   size_t nodes() const;
   
@@ -272,7 +279,7 @@ public:
   
   bool allProcsFixed() const;
   
-  string getProcModel(int id);
+  string getProcModel(size_t id);
   
   friend std::ostream& operator<< (std::ostream &out, const Platform &p);
 };
