@@ -158,8 +158,8 @@ int main(int argc, const char* argv[]) {
     vector<vector<tuple<int,int>>> mappings = presolver.getMappingResults();
     cout << "Presolver found " << mappings.size() << " isolated mappings." << endl;
 
-//    cout << messageStart + "Creating a constraint model object ... " << endl;
-//    SDFPROnlineModel* model = new SDFPROnlineModel(map, dseSettings);
+    //LOG_INFO("Creating a constraint model object ... ");
+    //SDFPROnlineModel* model = new SDFPROnlineModel(map, &cfg);
 //
     LOG_INFO("Creating an execution object ... ");
     Execution<SDFPROnlineModel> execObj(model, cfg);
