@@ -389,6 +389,8 @@ void Config::setPresolverResults(shared_ptr<Config::PresolverResults> _p){
 }
 
 shared_ptr<Config::PresolverResults> Config::getPresolverResults(){
+  if(!pre_results)  
+      THROW_EXCEPTION(RuntimeException, "no presolver results exist");
   return pre_results;
 }
 bool Config::doOptimize() const {
@@ -396,4 +398,11 @@ bool Config::doOptimize() const {
     return true;
   }
   return false;
+}
+bool Config::is_presolved()
+{
+    if(pre_results)  
+        return true;
+    else
+        return false;
 }

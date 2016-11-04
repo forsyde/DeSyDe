@@ -115,7 +115,7 @@ public:
    * @throws InvalidFormatException
    *         When the command line contains errors.
    */
-  Config() throw ();
+   Config() throw ();
   /**
    * Destroys this configuration.
    */
@@ -128,12 +128,13 @@ public:
 
   std::string printSettings();
 
-   void setPresolverResults(shared_ptr<PresolverResults> _p);
-   shared_ptr<PresolverResults> getPresolverResults();
+    void setPresolverResults(shared_ptr<PresolverResults> _p);
+    shared_ptr<PresolverResults> getPresolverResults();
     /**
      * Determines whether optimization is used.
      */
     bool doOptimize() const;
+    bool is_presolved();
 private:
   Settings settings_;
   shared_ptr<PresolverResults> pre_results;
