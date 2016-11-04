@@ -194,26 +194,29 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
         //testing
 //        rel(*this, procsUsed <= 2);
         //end testing
-        if(cfg->getPresolverResults()->it_mapping < cfg->getPresolverResults()->oneProcMappings.size()){
-          vector<tuple<int,int>> oneProcMapping = cfg->getPresolverResults()->oneProcMappings[cfg->getPresolverResults()->it_mapping];
+        cout << "checking presolver options\n";
+        if(cfg->is_presolved()){
+            LOG_INFO("The model is presolved");
+            if(cfg->getPresolverResults()->it_mapping < cfg->getPresolverResults()->oneProcMappings.size()){
+              vector<tuple<int,int>> oneProcMapping = cfg->getPresolverResults()->oneProcMappings[cfg->getPresolverResults()->it_mapping];
 
-          for(size_t a = 0; a < apps->n_SDFActors(); a++){
-            rel(*this, proc[a] == get<0>(oneProcMapping[apps->getSDFGraph(a)]));
-            rel(*this, proc_mode[get<0>(oneProcMapping[apps->getSDFGraph(a)])] == get<1>(oneProcMapping[apps->getSDFGraph(a)]));
-          }
-        }else{ //...otherwise forbid all mappings in oneProcMappings
-          cout << "Now forbidding " << cfg->getPresolverResults()->oneProcMappings.size() << " mappings." << endl;
-          cout << endl;
-          for(size_t i=0; i<cfg->getPresolverResults()->oneProcMappings.size(); i++){
-            vector<tuple<int,int>> oneProcMapping = cfg->getPresolverResults()->oneProcMappings[i];
-            IntVarArgs t_mapping(*this, apps->n_programEntities(), 0, platform->nodes()-1);
-            for(size_t a = 0; a < apps->n_SDFActors(); a++){
-              rel(*this, t_mapping[a] == get<0>(oneProcMapping[apps->getSDFGraph(a)]));
+              for(size_t a = 0; a < apps->n_SDFActors(); a++){
+                rel(*this, proc[a] == get<0>(oneProcMapping[apps->getSDFGraph(a)]));
+                rel(*this, proc_mode[get<0>(oneProcMapping[apps->getSDFGraph(a)])] == get<1>(oneProcMapping[apps->getSDFGraph(a)]));
+              }
+            }else{ //...otherwise forbid all mappings in oneProcMappings
+              cout << "Now forbidding " << cfg->getPresolverResults()->oneProcMappings.size() << " mappings." << endl;
+              cout << endl;
+              for(size_t i=0; i<cfg->getPresolverResults()->oneProcMappings.size(); i++){
+                vector<tuple<int,int>> oneProcMapping = cfg->getPresolverResults()->oneProcMappings[i];
+                IntVarArgs t_mapping(*this, apps->n_programEntities(), 0, platform->nodes()-1);
+                for(size_t a = 0; a < apps->n_SDFActors(); a++){
+                  rel(*this, t_mapping[a] == get<0>(oneProcMapping[apps->getSDFGraph(a)]));
+                }
+                rel(*this, t_mapping, IRT_NQ, proc);
+              }
             }
-            rel(*this, t_mapping, IRT_NQ, proc);
-          }
         }
-
         for(size_t i = 0; i < channels.size(); i++){
             delete channels[i];
         }
