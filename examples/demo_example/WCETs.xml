@@ -84,7 +84,7 @@
     <mapping task_type="jpeg_encoder_block_processor_2_dct11_0" processor="small" wcet="16"></mapping>
     <mapping task_type="jpeg_encoder_block_processor_2_huffman_encode0_0" processor="small" wcet="16"></mapping>
     <mapping task_type="jpeg_encoder_block_processor_2_huffman_encode1_0" processor="small" wcet="16"></mapping>
-    <mapping task_type=jpeg_encoder_block_processor_2_huffman_encode00_0"" processor="small" wcet="16"></mapping>
+    <mapping task_type="jpeg_encoder_block_processor_2_huffman_encode00_0" processor="small" wcet="16"></mapping>
     <mapping task_type="jpeg_encoder_block_processor_2_huffman_encode01_0" processor="small" wcet="16"></mapping>
     <mapping task_type="jpeg_encoder_block_processor_2_huffman_encode10_0" processor="small" wcet="16"></mapping>
     <mapping task_type="jpeg_encoder_block_processor_2_huffman_encode11_0" processor="small" wcet="16"></mapping>
