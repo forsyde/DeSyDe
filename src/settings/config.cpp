@@ -117,7 +117,12 @@ int Config::parse(int argc, const char** argv) throw (IOException, InvalidArgume
       ("dse.luby_scale",
           po::value<unsigned long int>()->default_value(0)->notifier(
               boost::bind(&Config::setLubyScale, this, _1)),
-          "Luby scale");
+          "Luby scale")      
+      ("dse.th_prop",
+          po::value<string>()->default_value(string("SSE"))->notifier(
+              boost::bind(&Config::setThPropagator, this, _1)),
+          "Throughput propagator type.\n"
+          "Valid options SSE, MCR. ");
 
   po::options_description presolver("Presolver options");
   presolver.add_options()
@@ -209,6 +214,7 @@ string Config::printSettings() {
       + " | " +  Logger::logLevelToString(Logger::instance().getLogLevel().second)
       + "\n* model : " + tools::toString(settings_.model)
       + "\n* search : " + tools::toString(settings_.search)
+      + "\n* propagator : " + tools::toString(settings_.th_prop)
       + "\n* criteria : " + tools::toString(settings_.criteria)
       + "\n* timeout : " + tools::toString(settings_.timeout_first)
       + " | " + tools::toString(settings_.timeout_all)
@@ -342,6 +348,15 @@ void Config::setSearch(const string &str) throw (InvalidFormatException) {
   settings_.search = stringToSearch(str);
 }
 
+Config::ThroughputPropagator stringToPropagator(const string &str) throw (InvalidFormatException) {
+  if (str == "SSE")            return Config::SSE;
+  else if (str == "MCR")      return Config::MCR;
+  else THROW_EXCEPTION(InvalidFormatException, str, "invalid option");
+}
+
+void Config::setThPropagator(const string &str) throw (InvalidFormatException) {
+  settings_.th_prop = stringToPropagator(str);
+}
 Config::OptCriterion stringToCriterion(const string &str) throw (InvalidFormatException) {
   if (str == "NONE")            return Config::NONE;
   else if (str == "POWER")      return Config::POWER;
@@ -355,6 +370,7 @@ Config::PresolverModels stringToPresolverModel(const string &str) throw (Invalid
   else if (str == "ONE_PROC_MAPPINGS")      return Config::ONE_PROC_MAPPINGS;
   else THROW_EXCEPTION(InvalidFormatException, str, "invalid option");
 }
+
 
 void Config::setCriteria(const vector<string> &str) throw (InvalidFormatException) {
   for (string s : str)

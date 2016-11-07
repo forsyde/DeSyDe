@@ -167,8 +167,8 @@ int main(int argc, const char* argv[]) {
     LOG_INFO("Running the model object ... ");
     execObj.Execute();
 
-    Validation* val = new Validation(map, cfg);
-    val->Validate();
+//    Validation* val = new Validation(map, cfg);
+//    val->Validate();
 
     return exit_status;
   } catch (DeSyDe::Exception& ex) {

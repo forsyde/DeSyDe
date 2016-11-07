@@ -60,6 +60,10 @@ public:
     SDF,
     SDF_PR_ONLINE
   };
+  enum ThroughputPropagator {
+    SSE,
+    MCR
+  };
   enum PresolverModels {
     NO_PRE,
     ONE_PROC_MAPPINGS
@@ -92,6 +96,7 @@ public:
     unsigned long int         timeout_all;
 
     unsigned long int luby_scale;
+    ThroughputPropagator      th_prop;
   };
   struct PresolverResults{
   size_t it_mapping; /**< Informs the CP model how to use oneProcMappings: <.size(): Enforce mapping, >=.size() Forbid all. */
@@ -149,6 +154,7 @@ private:
   void setModel(const std::string &) throw (InvalidFormatException);
   void setSearch(const std::string &) throw (InvalidFormatException);
   void setCriteria(const std::vector<std::string> &) throw (InvalidFormatException);
+  void setThPropagator(const std::string &) throw (InvalidFormatException);
   void setTimeout(const std::vector<unsigned long int> &) throw (IllegalStateException);
   void setLubyScale(unsigned long int) throw ();
   void setPresolverModel(const std::vector<std::string> &) throw (InvalidFormatException);

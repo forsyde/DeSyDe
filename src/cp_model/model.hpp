@@ -28,6 +28,7 @@ private:
   Applications* apps;
   Platform* platform;
   Mapping* mapping;
+  Config* cfg;
   DesignDecisions* desDec;
   
   //DECISION VARIABLES
@@ -94,7 +95,7 @@ private:
   
 public:
 
-  ADSEModel(Mapping* p_mapping);
+  ADSEModel(Mapping* p_mapping, Config* _cfg);
   
   ADSEModel(bool share, ADSEModel& s);
   
