@@ -90,7 +90,17 @@ int Config::parse(int argc, const char** argv) throw (IOException, InvalidArgume
           po::value<vector<string>>()->multitoken()->default_value({"INFO", "DEBUG"},
               "INFO DEBUG")->notifier(boost::bind(&Config::setLogLevel, this, _1)),
           "log level. If two options provided, the first one is for stdout, the second for log file.\n"
-          "Valid options are CRITICAL, ERROR, WARNING, INFO, and DEBUG.");
+          "Valid options are CRITICAL, ERROR, WARNING, INFO, and DEBUG.")
+      ("output-file-type",
+          po::value<string>()->default_value(string("ALL_OUT"))->notifier(
+              boost::bind(&Config::setOutputFileType, this, _1)),
+          "Output file type.\n"
+          "Valid options ALL, CSV, TXT, XML. ")
+      ("output-print-frequency",
+          po::value<string>()->default_value(string("ALL_SOL"))->notifier(
+              boost::bind(&Config::setOutputPrintFrequency, this, _1)),
+          "Frequency of printing output.\n"
+          "Valid options ALL, LAST, Every_n. ");        
 
   po::options_description dse("DSE options");
   dse.add_options()
@@ -363,6 +373,40 @@ Config::OptCriterion stringToCriterion(const string &str) throw (InvalidFormatEx
   else if (str == "THROUGHPUT") return Config::THROUGHPUT;
   else if (str == "LATENCY")    return Config::LATENCY;
   else THROW_EXCEPTION(InvalidFormatException, str, "invalid option");
+}
+
+
+
+Config::OutputFileType stringToOutputFileType(const string &str) throw (InvalidFormatException) {
+  if (str == "ALL_OUT")              return Config::ALL_OUT;
+  else if (str == "CSV")         return Config::CSV;
+  else if (str == "CSV_MOST")    return Config::CSV_MOST;
+  else if (str == "TXT")         return Config::TXT;
+  else if (str == "XML")         return Config::XML;
+  else THROW_EXCEPTION(InvalidFormatException, str, "invalid option");
+}
+void Config::setOutputFileType(const string &str) throw (InvalidFormatException) {
+  settings_.out_file_type = stringToOutputFileType(str);
+}
+
+Config::OutputPrintFrequency stringToPrintFrequency(const string &str) throw (InvalidFormatException) {
+  if (str == "ALL_SOL")            return Config::ALL_SOL;
+  else if (str == "LAST")      return Config::LAST;
+  else if (str == "EVERY_n") return Config::EVERY_n;
+  else THROW_EXCEPTION(InvalidFormatException, str, "invalid option");
+}
+
+string printFrequencyToString(Config::OutputPrintFrequency freq) throw (InvalidFormatException) {
+  if (freq == Config::ALL_SOL)     return "ALL_SOL";
+  else if (freq == Config::LAST)    return "LAST";
+  else if (freq == Config::EVERY_n) return "EVERY_n";
+  else THROW_EXCEPTION(InvalidFormatException, "ouput frequency", "invalid option");
+}
+string Config::get_out_freq() const {
+    return printFrequencyToString(settings_.out_print_freq);
+}
+void Config::setOutputPrintFrequency(const string &str) throw (InvalidFormatException) {
+  settings_.out_print_freq = stringToPrintFrequency(str);
 }
 
 Config::PresolverModels stringToPresolverModel(const string &str) throw (InvalidFormatException) {

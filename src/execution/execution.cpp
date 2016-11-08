@@ -298,17 +298,22 @@ private:
         << e->statistics().fail << ", propagate: " << e->statistics().propagate << ", depth: " << e->statistics().depth << ", nogoods: "
         << e->statistics().nogood << " ***\n";
     s->print(out);
-    outCSV << nodes << "," << durAll_ms << ",";
-    s->printCSV(outCSV);
-    s->printMappingCSV(outMappingCSV);
-
+    /// Printing CSV format output
+    if(cfg.settings().out_file_type == Config::ALL_OUT ||
+       cfg.settings().out_file_type == Config::CSV){    
+        outCSV << nodes << "," << durAll_ms << ",";
+        s->printCSV(outCSV);
+        s->printMappingCSV(outMappingCSV);
+    }
     /**
      * Calling printcsv for the MOST tool
      */
-    Mapping* mapping = s->extractResult();
-    const int split = -1;
-    printMOSTCSV(mapping, nodes, split);
-
+    if(cfg.settings().out_file_type == Config::ALL_OUT ||
+       cfg.settings().out_file_type == Config::CSV_MOST){
+        Mapping* mapping = s->extractResult();
+        const int split = -1;
+        printMOSTCSV(mapping, nodes, split);
+    }
   }
   ;
 
@@ -317,41 +322,36 @@ private:
    */
   template<class SearchEngine> void loopSolutions(SearchEngine *e) {
     nodes = 0;
-    out.open(cfg.settings().output_path+".txt", std::ofstream::app);
-    outCSV.open(cfg.settings().output_path+".csv");
-    outMOSTCSV.open(cfg.settings().output_path+"-MOST.csv");    
-    outMappingCSV.open(cfg.settings().output_path+"_mapping.csv");
-    cout << "start searching for " << tools::toString(cfg.settings().search) << " solutions \n";
+    out.open(cfg.settings().output_path+"out/out.txt", std::ofstream::app);
+    outCSV.open(cfg.settings().output_path+"out/out.csv");
+    outMOSTCSV.open(cfg.settings().output_path+"out/out-MOST.csv");    
+    outMappingCSV.open(cfg.settings().output_path+"out/out_mapping.csv");
+    LOG_INFO("started searching for " + tools::toString(cfg.settings().search) + " solutions ");
+    LOG_INFO("Printing frequency: " + cfg.get_out_freq());
+    out << "\n \n*** \n";    
+    
+    CPModelTemplate * prev_sol = nullptr;
     t_start = runTimer::now();
     while(CPModelTemplate * s = e->next()){
       nodes++;
       if(nodes == 1){
         if(cfg.settings().search == Config::FIRST){
           t_endAll = runTimer::now();
-          //printSolution(e, s);
+          printSolution(e, s);
           cout << "returning" << endl;
           return;
         }
       }
       t_endAll = runTimer::now();
 
-      //testing how many solutions using only the first processor are found
-//            Mapping* mapping = s->extractResult();
-//            vector<vector<int>> sched = mapping->getMappingSched();
-//            size_t actorsOnOtherProcs = 0;
-//            for(size_t i=1; i<sched.size(); i++){
-//              actorsOnOtherProcs += sched[i].size();
-//            }
-      out << "Solution " << nodes << ":" << endl;
-      out << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
-      s->print(out);
-      out << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
-
-      //printSolution(e, s);
-     // cout << nodes << " solutions found so far." << endl;
-      delete s;
-
-//            if(actorsOnOtherProcs>0) break;
+      if(cfg.settings().out_print_freq == Config::ALL_SOL){
+          cout << nodes << " solutions found so far." << endl;
+          printSolution(e, s);          
+     }
+     /// We want to keep the last solution in case we only print the last one
+      if(prev_sol != nullptr)
+        delete prev_sol;
+      prev_sol = s;
 
       if(nodes % 1000 == 0){
         cout << ".";
@@ -362,6 +362,9 @@ private:
       }
 
     }
+    if(cfg.settings().out_print_freq == Config::LAST)
+        printSolution(e, prev_sol);
+    delete prev_sol;
     cout << endl;
     auto durAll = runTimer::now() - t_start;
     auto durAll_s = std::chrono::duration_cast<std::chrono::seconds>(durAll).count();

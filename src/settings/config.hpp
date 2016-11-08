@@ -64,6 +64,18 @@ public:
     SSE,
     MCR
   };
+  enum OutputFileType {
+      ALL_OUT,
+      TXT,
+      CSV,
+      CSV_MOST,
+      XML
+  };
+  enum OutputPrintFrequency {
+      ALL_SOL,
+      LAST,
+      EVERY_n
+  };
   enum PresolverModels {
     NO_PRE,
     ONE_PROC_MAPPINGS
@@ -97,6 +109,8 @@ public:
 
     unsigned long int luby_scale;
     ThroughputPropagator      th_prop;
+    OutputFileType            out_file_type;
+    OutputPrintFrequency      out_print_freq;
   };
   struct PresolverResults{
   size_t it_mapping; /**< Informs the CP model how to use oneProcMappings: <.size(): Enforce mapping, >=.size() Forbid all. */
@@ -140,6 +154,7 @@ public:
      */
     bool doOptimize() const;
     bool is_presolved();
+    string get_out_freq() const;
 private:
   Settings settings_;
   shared_ptr<PresolverResults> pre_results;
@@ -159,7 +174,8 @@ private:
   void setLubyScale(unsigned long int) throw ();
   void setPresolverModel(const std::vector<std::string> &) throw (InvalidFormatException);
   void setPresolverSearch(const std::string &) throw (InvalidFormatException);
-
+  void setOutputFileType(const std::string &) throw (InvalidFormatException);
+  void setOutputPrintFrequency(const std::string &) throw (InvalidFormatException);
 
 };
 
