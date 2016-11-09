@@ -83,6 +83,17 @@ void Mapping::load_wcets(XMLdoc& xml)
 		LOG_DEBUG("Reading mapping for task type: " + task_type + "...");		
 		
 	}	
+    for (size_t i=0; i < wcets.size(); i++)
+    {
+        for (const auto& task_proc_wcets: wcets[i])
+        {
+            for (const auto& task_proc_mode_wcet: task_proc_wcets)
+            {
+                if(task_proc_mode_wcet >= std::numeric_limits<int>::max() - 1)
+                THROW_EXCEPTION(InvalidArgumentException,"wcet is not specified for task "+program->getName(i)+"\n");
+            }
+        }
+    }
 }
 Applications* Mapping::getApplications() const {
   return program;
@@ -222,7 +233,9 @@ vector<int> Mapping::getWCETsModes(unsigned actorId) const {
   //flatten the vector of vectors (wcets[actorId]) into one vector
   vector<int> _wcets;
   for(const auto &v: wcets[actorId])
+  {
     _wcets.insert(_wcets.end(), v.begin(), v.end());
+  }
   return _wcets;
 }
 

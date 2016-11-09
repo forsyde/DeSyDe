@@ -322,11 +322,11 @@ private:
    */
   template<class SearchEngine> void loopSolutions(SearchEngine *e) {
     nodes = 0;
-    out.open(cfg.settings().output_path+"out/out.txt", std::ofstream::app);
+    out.open(cfg.settings().output_path+"out/out.txt");
     outCSV.open(cfg.settings().output_path+"out/out.csv");
     outMOSTCSV.open(cfg.settings().output_path+"out/out-MOST.csv");    
     outMappingCSV.open(cfg.settings().output_path+"out/out_mapping.csv");
-    LOG_INFO("started searching for " + tools::toString(cfg.settings().search) + " solutions ");
+    LOG_INFO("started searching for " + cfg.get_search_type() + " solutions ");
     LOG_INFO("Printing frequency: " + cfg.get_out_freq());
     out << "\n \n*** \n";    
     

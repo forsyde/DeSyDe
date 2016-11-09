@@ -405,6 +405,21 @@ string printFrequencyToString(Config::OutputPrintFrequency freq) throw (InvalidF
 string Config::get_out_freq() const {
     return printFrequencyToString(settings_.out_print_freq);
 }
+
+string searchTypeToString(Config::SearchTypes freq) throw (InvalidFormatException) {
+  if (freq == Config::NONESEARCH)       return "NONESEARCH";
+  else if (freq == Config::FIRST)       return "FIRST";
+  else if (freq == Config::ALL)         return "ALL";
+  else if (freq == Config::OPTIMIZE)    return "OPTIMIZE";
+  else if (freq == Config::OPTIMIZE_IT) return "OPTIMIZE_IT";
+  else if (freq == Config::GIST_ALL)    return "GIST_ALL";
+  else if (freq == Config::GIST_OPT)    return "GIST_OPT";
+  else THROW_EXCEPTION(InvalidFormatException, "searchTypeToString", "invalid option");
+}
+string Config::get_search_type() const {
+    return searchTypeToString(settings_.search);
+}
+
 void Config::setOutputPrintFrequency(const string &str) throw (InvalidFormatException) {
   settings_.out_print_freq = stringToPrintFrequency(str);
 }

@@ -155,6 +155,7 @@ public:
     bool doOptimize() const;
     bool is_presolved();
     string get_out_freq() const;
+    string get_search_type() const;
 private:
   Settings settings_;
   shared_ptr<PresolverResults> pre_results;
