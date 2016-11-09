@@ -48,10 +48,10 @@
     <mapping task_type="mp3decoder_ProcessChanuleZeroRight0" processor="small" wcet="14"></mapping>
     <mapping task_type="mp3decoder_ProcessChanuleOneRight0" processor="small" wcet="14"></mapping>
     <mapping task_type="mp3decoder_ProcessChanuleOneLeft0" processor="small" wcet="16"></mapping>
-    <mapping task_type="vad_toneDetect1" processor="small" wcet="80"></mapping>
+    <mapping task_type="vad_toneDetect1" processor="small" wcet="42"></mapping>
     <mapping task_type="vad_engComp1" processor="small" wcet="43"></mapping>
-    <mapping task_type="vad_acfAvg1" processor="small" wcet="690"></mapping>
-    <mapping task_type="vad_predVal1" processor="small" wcet="16"></mapping>
+    <mapping task_type="vad_acfAvg1" processor="small" wcet="80"></mapping>
+    <mapping task_type="vad_predVal1" processor="small" wcet="680"></mapping>
     <mapping task_type="vad_specComp1" processor="small" wcet="8600"></mapping>
     <mapping task_type="vad_thrAdp1" processor="small" wcet="46"></mapping>
     <mapping task_type="vad_decide1" processor="small" wcet="4"></mapping>
@@ -163,14 +163,14 @@
     <mapping task_type="mp3decoder_ProcessChanuleZeroRight0" processor="large" wcet="14"></mapping>
     <mapping task_type="mp3decoder_ProcessChanuleOneRight0" processor="large" wcet="14"></mapping>
     <mapping task_type="mp3decoder_ProcessChanuleOneLeft0" processor="large" wcet="16"></mapping>
-    <mapping task_type="vad_toneDetect1" processor="large" wcet="16"></mapping>
-    <mapping task_type="vad_engComp1" processor="large" wcet="16"></mapping>
-    <mapping task_type="vad_acfAvg1" processor="large" wcet="16"></mapping>
-    <mapping task_type="vad_predVal1" processor="large" wcet="16"></mapping>
-    <mapping task_type="vad_specComp1" processor="large" wcet="16"></mapping>
-    <mapping task_type="vad_thrAdp1" processor="large" wcet="16"></mapping>
-    <mapping task_type="vad_decide1" processor="large" wcet="16"></mapping>
-    <mapping task_type="vad_hangover1" processor="large" wcet="16"></mapping>
+     <mapping task_type="vad_toneDetect1" processor="large" wcet="42"></mapping>
+    <mapping task_type="vad_engComp1" processor="large" wcet="43"></mapping>
+    <mapping task_type="vad_acfAvg1" processor="large" wcet="80"></mapping>
+    <mapping task_type="vad_predVal1" processor="large" wcet="680"></mapping>
+    <mapping task_type="vad_specComp1" processor="large" wcet="8600"></mapping>
+    <mapping task_type="vad_thrAdp1" processor="large" wcet="46"></mapping>
+    <mapping task_type="vad_decide1" processor="large" wcet="4"></mapping>
+    <mapping task_type="vad_hangover1" processor="large" wcet="4"></mapping>
     <mapping task_type="jpeg_encoder_read_bitmap_0" processor="large" wcet="16"></mapping>
     <mapping task_type="jpeg_encoder_read_bitmap_1" processor="large" wcet="16"></mapping>
     <mapping task_type="jpeg_encoder_read_bitmap_2" processor="large" wcet="16"></mapping>

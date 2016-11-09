@@ -25,7 +25,7 @@ for (( i=$first_exp;i<=$last_exp;i++)); do
     date >> log.txt
     ls exp_$i/sdfs >> log.txt
     SECONDS=0
-    ./../../bin/adse --config exp_$i/config.cfg --dse.th_prop SSE --output exp_$i/SSE/
+    ./../../bin/adse --config exp_$i/config.cfg --dse.th_prop SSE --output exp_$i/SSE/ 
     duration=$SECONDS
     echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed." >> log.txt
 
