@@ -1,0 +1,60 @@
+~~~~~ *** BEGIN OF PRESOLVER SOLUTIONS *** ~~~~~
+Pre-solution 1----------
+----------------------------------------
+Proc: {0, 0, 0, 0, 0}
+proc mode: {0, 0}
+Latency: {[0..2147483646]}
+Period: {[2072..10000]}
+Procs used: 1
+Proc_period: {[2072..10000], [1..2147483646]}
+Proc utilization: {[207..1000], 0}
+Sys utilization: [103..500]
+ProcsUsed utilization: [207..1000]
+proc power: {[0..2147483646], 0}
+sys power: [0..2147483646]
+least_power_est: 1242
+proc area: {16, 16}
+sys area: 32
+proc cost: {16, 16}
+sys cost: 32
+Next: 1 2 3 4 5 || 6 0 
+Rank: 0 1 2 3 4 
+TDMA slots: {0, 0}
+S-order: {1, 2, 3, 4, 5, 0}
+wcct_b: {0, 0, 0, 0}
+wcct_s: {0, 0, 0, 0}
+R-order: {1, 2, 3, 4, 5, 0}
+wcct_r: {0, 0, 0, 0}
+----------------------------------------
+------------------------------
+
+Pre-solution 2----------
+----------------------------------------
+Proc: {0, 0, 0, 0, 0}
+proc mode: {0, 0}
+Latency: {[0..2147483646]}
+Period: {[2072..10000]}
+Procs used: 1
+Proc_period: {[2072..10000], [1..2147483646]}
+Proc utilization: {[207..1000], 0}
+Sys utilization: [103..500]
+ProcsUsed utilization: [207..1000]
+proc power: {[0..2147483646], 0}
+sys power: [0..2147483646]
+least_power_est: 1242
+proc area: {16, 16}
+sys area: 32
+proc cost: {16, 16}
+sys cost: 32
+Next: 1 2 3 4 5 || 6 0 
+Rank: 0 1 2 3 4 
+TDMA slots: {0, 0}
+S-order: {1, 2, 3, 4, 5, 0}
+wcct_b: {0, 0, 0, 0}
+wcct_s: {0, 0, 0, 0}
+R-order: {1, 2, 3, 4, 5, 0}
+wcct_r: {0, 0, 0, 0}
+----------------------------------------
+------------------------------
+
+~~~~~ *** END OF PRESOLVER SOLUTIONS *** ~~~~~

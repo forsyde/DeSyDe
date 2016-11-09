@@ -1,0 +1,33 @@
+
+ 
+*** 
+*** Solution number: 421384, after 475801 ms, search nodes: 371, fail: 4, propagate: 1801258, depth: 19, nogoods: 0 ***
+----------------------------------------
+Proc: {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+proc mode: {1, 1}
+Latency: {[0..2147483646], [0..2147483646]}
+Period: {3613, 3613}
+Procs used: 2
+Proc_period: {3613, 3613}
+Proc utilization: {4, 1000}
+Sys utilization: 502
+ProcsUsed utilization: 502
+proc power: {30, 6000}
+sys power: 6030
+least_power_est: 3624
+proc area: {8, 8}
+sys area: 16
+proc cost: {8, 8}
+sys cost: 16
+Next: 12 6 11 4 13 1 7 8 9 10 2 3 || 5 0 
+Rank: 0 1 7 9 10 0 2 3 4 5 6 8 
+TDMA slots: {2, 0}
+S-order: {13, 7, 3, 14, 5, 6, 1, 8, 10, 11, 9, 12, 2, 4, 0}
+wcct_b: {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+wcct_s: {2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+R-order: {4, 6, 3, 14, 7, 10, 12, 8, 5, 11, 9, 1, 2, 0, 13}
+wcct_r: {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+----------------------------------------
+===== search ended after: 475 s (475801 ms) =====
+421384 solutions found
+search nodes: 371, fail: 4, propagate: 1801258, depth: 19, nogoods: 0 ***

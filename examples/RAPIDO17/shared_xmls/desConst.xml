@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<designConstraints>
+	<constraint app_name="a_sobel" period="10000" latency="8000"></constraint> 
+    <constraint app_name="b_susan" period="10000" latency="8000"></constraint> 
+    <constraint app_name="c_rasta" period="10000" latency="8000"></constraint> 
+    <constraint app_name="d_jpegEnc1" period="10000" latency="8000"></constraint> 	
+</designConstraints>
