@@ -9,11 +9,45 @@ TaskSet::TaskSet(vector<PeriodicTask*> _tasks)
   : tasks(_tasks),
     Scheduler(FP) { }
 
+TaskSet::TaskSet(XMLdoc& xml)
+{
+	const char* my_xpathString = "///taskset/@name";
+	LOG_DEBUG("running xpathString  " + tools::toString(my_xpathString) + " on task set ...");
+	for (const auto& name : xml.xpathStrings(my_xpathString)){
+		LOG_DEBUG("TaskSet class is parsing the following taskset: " + name + "...");
+	}
+	load_xml(xml);
+}
+
 TaskSet::~TaskSet() {
   for (size_t i=0;i<tasks.size();i++)
     delete tasks[i];
 }
-
+void TaskSet::load_xml(XMLdoc& xml)
+{
+	const char* my_xpathString = "///taskset/periodicTask";
+	LOG_DEBUG("running xpathString  " + tools::toString(my_xpathString) + " on task set ...");
+	auto xml_tasks = xml.xpathNodes(my_xpathString);
+	int task_id = 0;
+	for (const auto& task : xml_tasks)
+	{
+		string task_name = xml.getProp(task, "name");
+		string task_type = xml.getProp(task, "type");
+		string task_period = xml.getProp(task, "period");
+		string task_deadline = xml.getProp(task, "deadline");
+		string task_memCons = xml.getProp(task, "memCons");
+		string task_number = xml.getProp(task, "number");
+		LOG_DEBUG("Reading task with type: " + task_name + "...");		
+		for(int i=0; i<atoi(task_number.c_str()); i++)
+		{
+			PeriodicTask* pr_task = new 
+						 PeriodicTask(atoi(task_period.c_str()), atoi(task_memCons.c_str())
+									, 0, task_name, task_type, task_id);								
+			task_id++;
+			tasks.push_back(pr_task);
+		}
+	}	
+}
 int TaskSet::getNumberOfTasks() {
   return tasks.size();
 }

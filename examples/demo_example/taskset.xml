@@ -1,25 +1,15 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<taskset>
-	<periodicTask>
-		<number>0</number>
-		<type>one</type>
-		<period>100</period>
-		<deadline>100</deadline>
-		<memCons>100</memCons>
-	</periodicTask> 	
-	<periodicTask>
-		<number>0</number>
-		<type>two</type>
-		<period>70</period>
-		<deadline>70</deadline>
-		<memCons>100</memCons>
-	</periodicTask>
-	<periodicTask>
-		<number>0</number>
-		<type>three</type>
-		<period>110</period>
-		<deadline>110</deadline>
-		<memCons>200</memCons>
-	</periodicTask>
-	
+<?xml version="1.0"?>
+<!DOCTYPE taskset [
+<!ELEMENT taskset (name, periodicTask)>
+<!ELEMENT name (#PCDATA)>
+<!ELEMENT periodicTask (number, type, period, deadline, memCons)>
+<!ELEMENT number (#PCDATA)>
+<!ELEMENT type (#PCDATA)>
+<!ELEMENT period (#PCDATA)>
+<!ELEMENT deadline (#PCDATA)>
+<!ELEMENT memCons (#PCDATA)>
+]>
+<taskset name="demo_task_set">
+	<periodicTask name="pr0" number="2" type="one" period="100" deadline="100" memCons="100"></periodicTask>    
+    <periodicTask name="pr1" number="1" type="two" period="50" deadline="50" memCons="100"></periodicTask>    
 </taskset>

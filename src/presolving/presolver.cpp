@@ -49,10 +49,9 @@ using namespace Gecode;
 
 class Presolver {
 public:
-  Presolver(Config& _cfg) :
-      settings(_cfg) {
+  Presolver(Config& _cfg) : settings(_cfg) {
     geSearchOptions.threads = 0.0;
-    results = make_shared<PresolverResults>();
+    results = make_shared<Config::PresolverResults>();
   }
   ;
   ~Presolver() {
@@ -125,7 +124,7 @@ private:
   ofstream out, outFull; /**< Output file streams: .txt and .csv. */
   typedef std::chrono::high_resolution_clock runTimer; /**< Timer type. */
   runTimer::time_point t_start, t_endAll; /**< Timer objects for start and end of experiment. */
-  shared_ptr<PresolverResults> results;
+  shared_ptr<Config::PresolverResults> results;
 
   /**
    * Prints the solutions in the ofstream (out)
@@ -177,8 +176,8 @@ private:
       results->oneProcMappings.push_back(((OneProcModel*)s)->getResult());
       delete s;
 
-      dseSettings->setPresolverResults(results);
-      SDFPROnlineModel* full_model = new SDFPROnlineModel(map, dseSettings);
+      settings.setPresolverResults(results);
+      SDFPROnlineModel* full_model = new SDFPROnlineModel(map, &settings);
       DFS<SDFPROnlineModel> ef(full_model, geSearchOptions);
       if(SDFPROnlineModel * sf = ef.next()){
         fullNodes++;
@@ -186,8 +185,8 @@ private:
         sf->print(outFull);
         outFull << "------------------------------" << endl << endl;
         Mapping* mapRes = sf->extractResult();
-        dseSettings->getPresolverResults()->periods.push_back(mapRes->getPeriods());
-        dseSettings->getPresolverResults()->sys_energys.push_back(mapRes->getSysEnergy());
+        settings.getPresolverResults()->periods.push_back(mapRes->getPeriods());
+        settings.getPresolverResults()->sys_energys.push_back(mapRes->getSysEnergy());
         delete sf;
       }else{
         outFull << "------------------------------" << endl << endl;
@@ -220,9 +219,10 @@ private:
     outFull.close();
     // +++ Now: Create the full model
     results->it_mapping = results->oneProcMappings.size();
-    dseSettings->setPresolverResults(results);
-    full_model = new SDFPROnlineModel(map, dseSettings);
+    settings.setPresolverResults(results);
 
+    full_model = new SDFPROnlineModel(map, &settings);
+    delete dseSettings;
   }
 
 };

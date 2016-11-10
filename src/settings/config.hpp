@@ -39,11 +39,12 @@
 #include <string>
 #include <list>
 #include <boost/program_options.hpp>
+#include <vector>
 
 
 namespace po = boost::program_options;
 using namespace DeSyDe;
-
+using namespace std;
 /**
  * @brief Defines a class for containing program settings.
  *
@@ -58,6 +59,22 @@ public:
     NONECP,
     SDF,
     SDF_PR_ONLINE
+  };
+  enum ThroughputPropagator {
+    SSE,
+    MCR
+  };
+  enum OutputFileType {
+      ALL_OUT,
+      TXT,
+      CSV,
+      CSV_MOST,
+      XML
+  };
+  enum OutputPrintFrequency {
+      ALL_SOL,
+      LAST,
+      EVERY_n
   };
   enum PresolverModels {
     NO_PRE,
@@ -91,6 +108,15 @@ public:
     unsigned long int         timeout_all;
 
     unsigned long int luby_scale;
+    ThroughputPropagator      th_prop;
+    OutputFileType            out_file_type;
+    OutputPrintFrequency      out_print_freq;
+  };
+  struct PresolverResults{
+    size_t it_mapping; /**< Informs the CP model how to use oneProcMappings: <.size(): Enforce mapping, >=.size() Forbid all. */
+    vector<vector<tuple<int,int>>> oneProcMappings;
+    vector<vector<int>> periods;
+    vector<int> sys_energys;
   };
 
 public:
@@ -108,7 +134,7 @@ public:
    * @throws InvalidFormatException
    *         When the command line contains errors.
    */
-  Config() throw ();
+   Config() throw ();
   /**
    * Destroys this configuration.
    */
@@ -121,8 +147,18 @@ public:
 
   std::string printSettings();
 
+  void setPresolverResults(shared_ptr<PresolverResults> _p);
+    shared_ptr<PresolverResults> getPresolverResults();
+    /**
+     * Determines whether optimization is used.
+     */
+    bool doOptimize() const;
+    bool is_presolved();
+    string get_out_freq() const;
+    string get_search_type() const;
 private:
   Settings settings_;
+  shared_ptr<PresolverResults> pre_results;
 
 private:
   void dumpConfigFile(std::string path, po::options_description opts) throw (IOException);
@@ -134,11 +170,13 @@ private:
   void setModel(const std::string &) throw (InvalidFormatException);
   void setSearch(const std::string &) throw (InvalidFormatException);
   void setCriteria(const std::vector<std::string> &) throw (InvalidFormatException);
+  void setThPropagator(const std::string &) throw (InvalidFormatException);
   void setTimeout(const std::vector<unsigned long int> &) throw (IllegalStateException);
   void setLubyScale(unsigned long int) throw ();
   void setPresolverModel(const std::vector<std::string> &) throw (InvalidFormatException);
   void setPresolverSearch(const std::string &) throw (InvalidFormatException);
-
+  void setOutputFileType(const std::string &) throw (InvalidFormatException);
+  void setOutputPrintFrequency(const std::string &) throw (InvalidFormatException);
 
 };
 

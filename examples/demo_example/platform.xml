@@ -1,43 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<platform>
-	<processor>
-		<model>small</model>
-		<number>2</number>
-		<mode>
-			<name>default</name>
-			<cycle_length>1.2</cycle_length>
-			<memorySize>160000</memorySize>
-			<powerCons>6</powerCons>
-			<areaCost>8</areaCost>
-			<monetaryCost>8</monetaryCost>
-		</mode>
-		<mode>
-			<name>economy</name>
-			<cycle_length>1</cycle_length>
-			<memorySize>160000</memorySize>
-			<powerCons>10</powerCons>
-			<areaCost>10</areaCost>
-			<monetaryCost>10</monetaryCost>
-		</mode>
-	</processor>
-	<processor>
-		<model>large</model>
-		<number>4</number>
-		<mode>
-			<name>default</name>
-			<cycle_length>1.2</cycle_length>
-			<memorySize>160000</memorySize>
-			<powerCons>6</powerCons>
-			<areaCost>8</areaCost>
-			<monetaryCost>8</monetaryCost>
-		</mode>
-		<mode>
-			<name>economy</name>
-			<cycle_length>0.8</cycle_length>
-			<memorySize>160000</memorySize>
-			<powerCons>12</powerCons>
-			<areaCost>14</areaCost>
-			<monetaryCost>14</monetaryCost>
-		</mode>
-	</processor>
+<platform name="demo_platform">
+	<processor model="small" number="2">	
+        <mode name="default" cycle="1" mem="16000" power="10" area="16" monetary="16"></mode>
+        <mode name="eco" cycle="1.2" mem="16000" power="6" area="8" monetary="8"></mode>
+    </processor>
 </platform>

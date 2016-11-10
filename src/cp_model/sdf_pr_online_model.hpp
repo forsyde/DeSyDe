@@ -58,8 +58,8 @@ private:
     Platform*                 platform;    /**< Pointer to the platform object. */
     Mapping*                 mapping;    /**< Pointer to the mapping object. */
     DesignDecisions*         desDec;        /**< Pointer to the design decition object. */
-    DSESettings*             settings;    /**< Pointer to the setting object. */
-
+    //DSESettings*             settings;    /**< Pointer to the setting object. */
+    Config*                  cfg;    /**< Pointer to the config object. */
 
     IntVarArray             next;        /**< static schedule of firings. */
     IntVarArray             rank;
@@ -99,7 +99,7 @@ private:
   
 public:
 
-    SDFPROnlineModel(Mapping* p_mapping, DSESettings* dseSettings);
+    SDFPROnlineModel(Mapping* p_mapping, Config* _cfg);
 
     SDFPROnlineModel(bool share, SDFPROnlineModel& s);
 
@@ -142,7 +142,7 @@ public:
     {
         const SDFPROnlineModel& b = static_cast<const SDFPROnlineModel&>(_b);
 
-        switch(settings->getOptCriterion())
+        switch(cfg->settings().criteria[0]) //creates the model based on the first criterion
         {
             case(Config::POWER):
                 rel(*this, sys_power < b.sys_power);

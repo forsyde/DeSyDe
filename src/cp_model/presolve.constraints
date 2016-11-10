@@ -1,15 +1,17 @@
-//    for(size_t i=0; i<dseSettings->getPresolverResults()->periods.size(); i++){
+//    for(size_t i=0; i<settings->getPresolverResults()->periods.size(); i++){
 //      cout << "Pre-solution " << i << "----------------" << endl;
 //      cout << "  Periods: ";
-//      for(size_t j=0; j<dseSettings->getPresolverResults()->periods[i].size(); j++){
-//        cout << dseSettings->getPresolverResults()->periods[i][j] << " ";
+//      for(size_t j=0; j<settings->getPresolverResults()->periods[i].size(); j++){
+//        cout << settings->getPresolverResults()->periods[i][j] << " ";
 //      }
 //        cout << endl;
-//        cout << "  Sys-energy: " << dseSettings->getPresolverResults()->sys_energys[i] << endl;
+//        cout << "  Sys-energy: " << settings->getPresolverResults()->sys_energys[i] << endl;
 //        cout << "------------------------------" << endl << endl;
 //    }
 
-if(settings->getPresolverResults()->it_mapping < settings->getPresolverResults()->oneProcMappings.size()){
+if(cfg->is_presolved()){
+            LOG_INFO("The model is presolved");
+            if(cfg->getPresolverResults()->it_mapping < cfg->getPresolverResults()->oneProcMappings.size()){
   vector<tuple<int,int>> oneProcMapping = settings->getPresolverResults()->oneProcMappings[settings->getPresolverResults()->it_mapping];
 
   for(size_t a = 0; a < apps->n_SDFActors(); a++){
@@ -28,19 +30,46 @@ if(settings->getPresolverResults()->it_mapping < settings->getPresolverResults()
     rel(*this, t_mapping, IRT_NQ, proc);
   }
 }
+}
+
+
+/*   cout << "checking presolver options\n";
+        if(cfg->is_presolved()){
+            LOG_INFO("The model is presolved");
+            if(cfg->getPresolverResults()->it_mapping < cfg->getPresolverResults()->oneProcMappings.size()){
+              vector<tuple<int,int>> oneProcMapping = cfg->getPresolverResults()->oneProcMappings[cfg->getPresolverResults()->it_mapping];
+
+              for(size_t a = 0; a < apps->n_SDFActors(); a++){
+                rel(*this, proc[a] == get<0>(oneProcMapping[apps->getSDFGraph(a)]));
+                rel(*this, proc_mode[get<0>(oneProcMapping[apps->getSDFGraph(a)])] == get<1>(oneProcMapping[apps->getSDFGraph(a)]));
+              }
+            }else{ //...otherwise forbid all mappings in oneProcMappings
+              cout << "Now forbidding " << cfg->getPresolverResults()->oneProcMappings.size() << " mappings." << endl;
+              cout << endl;
+              for(size_t i=0; i<cfg->getPresolverResults()->oneProcMappings.size(); i++){
+                vector<tuple<int,int>> oneProcMapping = cfg->getPresolverResults()->oneProcMappings[i];
+                IntVarArgs t_mapping(*this, apps->n_programEntities(), 0, platform->nodes()-1);
+                for(size_t a = 0; a < apps->n_SDFActors(); a++){
+                  rel(*this, t_mapping[a] == get<0>(oneProcMapping[apps->getSDFGraph(a)]));
+                }
+                rel(*this, t_mapping, IRT_NQ, proc);
+              }
+            }
+        }*/
+
 
 switch(settings->getOptCriterion())
 {
   case(Config::POWER):
-  for(size_t i=0; i<dseSettings->getPresolverResults()->sys_energys.size(); i++){
-    rel(*this, sys_power < dseSettings->getPresolverResults()->sys_energys[i]);
+  for(size_t i=0; i<settings->getPresolverResults()->sys_energys.size(); i++){
+    rel(*this, sys_power < settings->getPresolverResults()->sys_energys[i]);
   }
   break;
   case(Config::THROUGHPUT):
   for(size_t i=0;i<apps->n_SDFApps();i++){
     if(apps->getPeriodConstraint(i) == -1){
-      for(size_t j=0; j<dseSettings->getPresolverResults()->periods.size(); j++){
-        rel(*this, period[i] < dseSettings->getPresolverResults()->periods[j][i]);
+      for(size_t j=0; j<settings->getPresolverResults()->periods.size(); j++){
+        rel(*this, period[i] < settings->getPresolverResults()->periods[j][i]);
       }
       break;
     }

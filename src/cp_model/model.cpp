@@ -1,9 +1,10 @@
 #include "model.hpp"
 
-ADSEModel::ADSEModel(Mapping* p_mapping)
+ADSEModel::ADSEModel(Mapping* p_mapping, Config* _cfg)
   : apps     (p_mapping->getApplications()),
     platform (p_mapping->getPlatform()),
     mapping  (p_mapping),
+    cfg(_cfg),
     next                  (*this, apps->n_SDFActors()+platform->nodes(), 0, 
                            apps->n_SDFActors()+platform->nodes()), 
     proc                  (*this, apps->n_programEntities(), 0, platform->nodes()-1),

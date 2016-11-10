@@ -52,11 +52,12 @@
 
 using namespace Gecode;
 using namespace Int;
-using namespace std;
+
 
 int main(int argc, const char* argv[]) {
 
   cout << "DeSyDe - Analytical Design Space Exploration Tool\n";
+  int exit_status = 0;
 
   Config cfg;
 
@@ -69,105 +70,108 @@ int main(int argc, const char* argv[]) {
   }
 
   try {
-
-    /**
-     * name of the input files
-     */
-    const string tasksetFile = "taskset.xml";
-    const string platformFile = "platform.xml";
-    const string wcetsFile = "WCETs.xml";
-    const string messageStart = "==========";
-    int exit_status = 0;
-
-    cout << "\n###START###\n\n";
-
-    cout << messageStart + "Reading settings ..." << endl;
-    DSESettings* dseSettings = new DSESettings(cfg);
-    cout << *dseSettings;
-
-    cout << messageStart + "Creating InputReader object ..." << endl;
-    InputReader* iReader = new InputReader(dseSettings->getInputsPath());
-    cout << *iReader;
-
-    cout << messageStart + "Reading periodic tasks and setting priorities ..."
-        << endl;
-    vector<PeriodicTask*> tasks = iReader->ReadTaskset(tasksetFile);
-    TaskSet* inputTaskset = new TaskSet(tasks);
-    if (tasks.size() > 0) {
-      inputTaskset->SetRMPriorities();
-      cout << *inputTaskset;
-    } else {
-      cout << "did not import any periodic tasks!" << endl;
-    }
-
-    cout << messageStart + "Reading processors ..." << endl;
-    vector<PE*> procs = iReader->ReadPlatform(platformFile);
-    for (size_t i = 0; i < procs.size(); i++)
-      cout << *procs[i] << endl;
-
-    cout << messageStart + "Creating a platform object ... " << endl;
-    Platform* plat = new Platform(procs, TDMA_BUS, 32, (int) procs.size(), 1);
-
-    cout << messageStart + "Reading SDF appications ..." << endl;
+	  
+	  TaskSet* taskset;
+	  Platform* platform;
+	  string WCET_path;
+	  string desConst_path;
+	  for (const auto& path : cfg.settings().inputs_paths) {
+       /// Reading taskset
+       size_t found_taskset=path.find("taskset");
+       if(found_taskset != string::npos){
+			XMLdoc xml(path);
+			LOG_INFO("Parsing taskset XML files...");
+			xml.read(false);
+			taskset =  new TaskSet(xml);
+			if (taskset->getNumberOfTasks() > 0) {
+			  taskset->SetRMPriorities();
+			  cout << *taskset;
+			} else {
+			  cout << "did not import any periodic tasks!" << endl;
+			}
+	   }
+	   /// Reading platform
+       size_t found_platform=path.find("platform");
+       if(found_platform != string::npos){
+			XMLdoc xml(path);
+			LOG_INFO("Parsing platform XML files...");
+			xml.read(false);
+			platform =  new Platform(xml);
+			cout << *platform << endl;
+	   }
+	   /// Storing WCET xml path
+       size_t found_wcet=path.find("WCETs");
+       if(found_wcet != string::npos){
+		   WCET_path = path;
+			LOG_INFO("Storing WCET XML file...");
+	   }
+	   /// Storing design constraints xml path
+       size_t found_desConst=path.find("desConst");
+       if(found_desConst != string::npos){
+		   desConst_path = path;
+			LOG_INFO("Storing desConst XML file...");
+	   }
+     }
+	
+    
     vector<SDFGraph*> sdfs;
-
     for (const auto& path : cfg.settings().inputs_paths) {
-       XMLdoc xml(path);
-       LOG_INFO("Parsing SDF3 graphs...");
-       xml.readXSD("sdf3", "noNamespaceSchemaLocation");
-       sdfs.push_back(new SDFGraph(xml));
+		 
+       if(path.find("/sdfs/") != string::npos){		
+           XMLdoc xml(path);
+           LOG_INFO("Parsing SDF3 graphs...");
+           xml.readXSD("sdf3", "noNamespaceSchemaLocation");
+           sdfs.push_back(new SDFGraph(xml));
+       }
      }
     /*for(auto &i : sdfXMLs)
      sdfs.push_back(new SDFGraph(i));*/
 
-    cout << messageStart + "Reading design constraints ... " << endl;
-    iReader->ReadConstraints("desConst.xml", &sdfs);
-    for (size_t i = 0; i < sdfs.size(); i++)
-      cout << "App " << sdfs[i]->getName() << " period const: "
-          << sdfs[i]->getPeriodConstraint() << " latency const: "
-          << sdfs[i]->getLatencyConstraint() << endl;
-
-    cout << messageStart + "Creating an application object ... " << endl;
-    Applications* appset = new Applications(sdfs, inputTaskset);
-
+    
+	XMLdoc xml_const(desConst_path);
+	xml_const.read(false);
+    LOG_INFO("Creating an application object ... ");
+    Applications* appset = new Applications(sdfs, taskset, xml_const);
     cout << *appset;
 
-    cout << messageStart + "Creating a mapping object ... " << endl;
-    Mapping* map = new Mapping(appset, plat);
-
-    cout << messageStart + "Reading the WCET mapping file ... " << endl;
-    iReader->ReadWCETS(wcetsFile, map);
-    cout << messageStart + "Sorting pr tasks based on utilization ... " << endl;
+	LOG_INFO("Creating a mapping object ... " );
+    XMLdoc xml_wcet(WCET_path);
+    xml_wcet.read(false);
+    Mapping* map = new Mapping(appset, platform, xml_wcet);
+    
+    LOG_INFO("Sorting pr tasks based on utilization ... ");
+    map->PrintWCETs();
     map->SortTasksUtilization();
-    cout << *inputTaskset;
+    cout << *taskset;
 
     //PRESOLVING +++
 
-    cout << messageStart + "Creating PRESOLVING constraint model object ... " << endl;
+    LOG_INFO("Creating PRESOLVING constraint model object ... ");
     //OneProcModel* pre_model = new OneProcModel(map, cfg);
 
-    cout << messageStart + "Creating PRESOLVING execution object ... " << endl;
+    LOG_INFO("Creating PRESOLVING execution object ... ");
     Presolver presolver(cfg);
 
-    cout << messageStart + "Running PRESOLVING model object ... " << endl;
+    LOG_INFO("Running PRESOLVING model object ... ");
     SDFPROnlineModel* model = (SDFPROnlineModel*)presolver.presolve(map);
 
     vector<vector<tuple<int,int>>> mappings = presolver.getMappingResults();
     cout << "Presolver found " << mappings.size() << " isolated mappings." << endl;
 
 
-
 //    cout << messageStart + "Creating a constraint model object ... " << endl;
 //    SDFPROnlineModel* model = new SDFPROnlineModel(map, dseSettings);
+    //LOG_INFO("Creating a constraint model object ... ");
+    //SDFPROnlineModel* model = new SDFPROnlineModel(map, &cfg);
 //
-    cout << messageStart + "Creating an execution object ... " << endl;
-    Execution<SDFPROnlineModel> execObj(model, dseSettings);
+    LOG_INFO("Creating an execution object ... ");
+    Execution<SDFPROnlineModel> execObj(model, cfg);
 
-    cout << messageStart + "Running the model object ... " << endl;
+    LOG_INFO("Running the model object ... ");
     execObj.Execute();
 
-    Validation* val = new Validation(map, dseSettings);
-    val->Validate();
+//    Validation* val = new Validation(map, cfg);
+//    val->Validate();
 
     return exit_status;
   } catch (DeSyDe::Exception& ex) {

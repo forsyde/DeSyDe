@@ -1,0 +1,6 @@
+--- Experiments for RAPIDO 2017 ---
+
+--- Experiment 1 SSE ...
+ons  9 nov 2016 16:41:10 CET
+b_susan.hsdf.xml
+c_rasta.hsdf.xml

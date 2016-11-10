@@ -57,7 +57,7 @@ protected:
 public:
   Applications();
   ~Applications();
-  Applications(vector<SDFGraph*> _sdfApps, TaskSet* _iptApps);
+  Applications(vector<SDFGraph*> _sdfApps, TaskSet* _iptApps, XMLdoc& xml);
   Applications(vector<SDFGraph*> _sdfApps, vector<DesignConstraints*> _desContr, TaskSet* _iptApps);
   Applications(vector<SDFGraph*> _sdfApps, vector<DesignConstraints*> _desContr);
   Applications(TaskSet* _iptApps);
@@ -203,6 +203,14 @@ public:
    * Swaps pr task_i with pr task_j
    */ 
   void swapPrTasks(int i, int j);
+  /**
+   * Loads the design constraints from an xml input
+   */ 
+  void load_const(XMLdoc&);
+  /**
+   * assinging period and latency constraints for an sdf application
+   */ 
+  void set_const(string app_name, int period_const, int latency_const);
   /**
    * Prints applications
    */ 
