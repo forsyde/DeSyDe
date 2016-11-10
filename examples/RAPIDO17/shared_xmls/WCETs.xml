@@ -48,14 +48,14 @@
     <mapping task_type="mp3decoder_ProcessChanuleZeroRight0" processor="small" wcet="14"></mapping>
     <mapping task_type="mp3decoder_ProcessChanuleOneRight0" processor="small" wcet="14"></mapping>
     <mapping task_type="mp3decoder_ProcessChanuleOneLeft0" processor="small" wcet="16"></mapping>
-    <mapping task_type="vad_toneDetect1" processor="small" wcet="42"></mapping>
-    <mapping task_type="vad_engComp1" processor="small" wcet="43"></mapping>
-    <mapping task_type="vad_acfAvg1" processor="small" wcet="80"></mapping>
-    <mapping task_type="vad_predVal1" processor="small" wcet="680"></mapping>
-    <mapping task_type="vad_specComp1" processor="small" wcet="8600"></mapping>
-    <mapping task_type="vad_thrAdp1" processor="small" wcet="46"></mapping>
-    <mapping task_type="vad_decide1" processor="small" wcet="4"></mapping>
-    <mapping task_type="vad_hangover1" processor="small" wcet="4"></mapping>
+    <mapping task_type="toneDetect1" processor="small" wcet="42"></mapping>
+    <mapping task_type="engComp1" processor="small" wcet="43"></mapping>
+    <mapping task_type="acfAvg1" processor="small" wcet="80"></mapping>
+    <mapping task_type="predVal1" processor="small" wcet="680"></mapping>
+    <mapping task_type="specComp1" processor="small" wcet="8600"></mapping>
+    <mapping task_type="thrAdp1" processor="small" wcet="46"></mapping>
+    <mapping task_type="decide1" processor="small" wcet="4"></mapping>
+    <mapping task_type="hangover1" processor="small" wcet="4"></mapping>
     <mapping task_type="jpeg_encoder_read_bitmap_0" processor="small" wcet="16"></mapping>
     <mapping task_type="jpeg_encoder_read_bitmap_1" processor="small" wcet="16"></mapping>
     <mapping task_type="jpeg_encoder_read_bitmap_2" processor="small" wcet="16"></mapping>
@@ -118,6 +118,16 @@
     <mapping task_type="jpeg_encoder_block_processor_4_huffman_encode11_0" processor="small" wcet="16"></mapping>
     <mapping task_type="jpeg_encoder_block_processor_4_concatenate_steps_0" processor="small" wcet="16"></mapping>
     <mapping task_type="jpeg_encoder_merge_blocks_0" processor="small" wcet="16"></mapping>
+    <mapping task_type="a0" processor="small" wcet="30"></mapping>
+    <mapping task_type="a1" processor="small" wcet="10"></mapping>
+    <mapping task_type="a2" processor="small" wcet="20"></mapping>
+    <mapping task_type="a3" processor="small" wcet="8"></mapping>
+    <mapping task_type="a4" processor="small" wcet="320"></mapping>
+    <mapping task_type="a5" processor="small" wcet="77"></mapping>
+    <mapping task_type="a6" processor="small" wcet="77"></mapping>
+    <mapping task_type="a7" processor="small" wcet="123"></mapping>
+    <mapping task_type="a8" processor="small" wcet="141"></mapping>
+    <mapping task_type="a9" processor="small" wcet="31"></mapping>
     <!-- large -->
     <mapping task_type="get_pixel" processor="large" wcet="320"></mapping>
     <mapping task_type="gx" processor="large" wcet="77"></mapping>
@@ -163,14 +173,14 @@
     <mapping task_type="mp3decoder_ProcessChanuleZeroRight0" processor="large" wcet="14"></mapping>
     <mapping task_type="mp3decoder_ProcessChanuleOneRight0" processor="large" wcet="14"></mapping>
     <mapping task_type="mp3decoder_ProcessChanuleOneLeft0" processor="large" wcet="16"></mapping>
-     <mapping task_type="vad_toneDetect1" processor="large" wcet="42"></mapping>
-    <mapping task_type="vad_engComp1" processor="large" wcet="43"></mapping>
-    <mapping task_type="vad_acfAvg1" processor="large" wcet="80"></mapping>
-    <mapping task_type="vad_predVal1" processor="large" wcet="680"></mapping>
-    <mapping task_type="vad_specComp1" processor="large" wcet="8600"></mapping>
-    <mapping task_type="vad_thrAdp1" processor="large" wcet="46"></mapping>
-    <mapping task_type="vad_decide1" processor="large" wcet="4"></mapping>
-    <mapping task_type="vad_hangover1" processor="large" wcet="4"></mapping>
+     <mapping task_type="toneDetect1" processor="large" wcet="42"></mapping>
+    <mapping task_type="engComp1" processor="large" wcet="43"></mapping>
+    <mapping task_type="acfAvg1" processor="large" wcet="80"></mapping>
+    <mapping task_type="predVal1" processor="large" wcet="680"></mapping>
+    <mapping task_type="specComp1" processor="large" wcet="8600"></mapping>
+    <mapping task_type="thrAdp1" processor="large" wcet="46"></mapping>
+    <mapping task_type="decide1" processor="large" wcet="4"></mapping>
+    <mapping task_type="hangover1" processor="large" wcet="4"></mapping>
     <mapping task_type="jpeg_encoder_read_bitmap_0" processor="large" wcet="16"></mapping>
     <mapping task_type="jpeg_encoder_read_bitmap_1" processor="large" wcet="16"></mapping>
     <mapping task_type="jpeg_encoder_read_bitmap_2" processor="large" wcet="16"></mapping>
@@ -233,4 +243,14 @@
     <mapping task_type="jpeg_encoder_block_processor_4_huffman_encode11_0" processor="large" wcet="16"></mapping>
     <mapping task_type="jpeg_encoder_block_processor_4_concatenate_steps_0" processor="large" wcet="16"></mapping>
     <mapping task_type="jpeg_encoder_merge_blocks_0" processor="large" wcet="16"></mapping>
+    <mapping task_type="a0" processor="large" wcet="30"></mapping>
+    <mapping task_type="a1" processor="large" wcet="10"></mapping>
+    <mapping task_type="a2" processor="large" wcet="20"></mapping>
+    <mapping task_type="a3" processor="large" wcet="8"></mapping>
+    <mapping task_type="a4" processor="large" wcet="320"></mapping>
+    <mapping task_type="a5" processor="large" wcet="77"></mapping>
+    <mapping task_type="a6" processor="large" wcet="77"></mapping>
+    <mapping task_type="a7" processor="large" wcet="123"></mapping>
+    <mapping task_type="a8" processor="large" wcet="141"></mapping>
+    <mapping task_type="a9" processor="large" wcet="31"></mapping>
     </WCETs>

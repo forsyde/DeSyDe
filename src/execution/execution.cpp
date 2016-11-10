@@ -362,9 +362,7 @@ private:
       }
 
     }
-    if(cfg.settings().out_print_freq == Config::LAST)
-        printSolution(e, prev_sol);
-    delete prev_sol;
+
     cout << endl;
     auto durAll = runTimer::now() - t_start;
     auto durAll_s = std::chrono::duration_cast<std::chrono::seconds>(durAll).count();
@@ -375,6 +373,13 @@ private:
     }
     out << " =====\n" << nodes << " solutions found\n" << "search nodes: " << e->statistics().node << ", fail: " << e->statistics().fail << ", propagate: "
         << e->statistics().propagate << ", depth: " << e->statistics().depth << ", nogoods: " << e->statistics().nogood << " ***\n";
+
+    if(cfg.settings().out_print_freq == Config::LAST && nodes > 0){
+           printSolution(e, prev_sol);
+       }else if(nodes == 0){
+
+       }
+       delete prev_sol;
 
     out.close();
     outCSV.close();
