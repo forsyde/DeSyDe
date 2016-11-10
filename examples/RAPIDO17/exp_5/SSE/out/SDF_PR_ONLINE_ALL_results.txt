@@ -2019,7 +2019,88 @@ Presolver mapping 403 does not give a solution.
 Presolver mapping 404 does not give a solution.
 ------------------------------
 
-~~~~~ *** END OF PRESOLVER SOLUTIONS *** ~~~~~
-===== search ended after: 41 s (41520 ms) =====
-0 solutions found
-search nodes: 199, fail: 0, propagate: 733, depth: 11, nogoods: 0 ***
+------------------------------
+
+Presolver mapping 405 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 406 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 407 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 408 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 409 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 410 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 411 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 412 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 413 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 414 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 415 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 416 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 417 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 418 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 419 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 420 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 421 does not give a solution.
+------------------------------
+

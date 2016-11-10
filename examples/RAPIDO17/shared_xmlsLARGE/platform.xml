@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <platform name="demo_platform">
-	<processor model="small" number="2">	
+	<processor model="small" number="4">	
         <mode name="default" cycle="1" mem="16000" power="10" area="16" monetary="16"></mode>
         <mode name="eco" cycle="1.2" mem="16000" power="6" area="8" monetary="8"></mode>
     </processor>
-    <processor model="large" number="2">	
+    <processor model="large" number="4">	
         <mode name="default" cycle=".7" mem="16000" power="20" area="32" monetary="32"></mode>
         <mode name="eco" cycle=".9" mem="16000" power="12" area="16" monetary="16"></mode>
     </processor>

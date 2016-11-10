@@ -1,0 +1,6 @@
+
+ 
+*** 
+===== search ended after: 1 s (1285 ms) =====
+0 solutions found
+search nodes: 167, fail: 84, propagate: 3953142, depth: 10, nogoods: 0 ***
