@@ -1,6 +1,14 @@
 --- Experiments for RAPIDO 2017 ---
 
---- Experiment 1 SSE ...
-ons  9 nov 2016 16:41:10 CET
-b_susan.hsdf.xml
+--- Experiment 7 MCR ...
+fre 11 nov 2016 15:27:26 CET
 c_rasta.hsdf.xml
+e_vad.xml
+0 minutes and 9 seconds elapsed.
+--- Experiment 7 SSE ...
+fre 11 nov 2016 15:27:35 CET
+c_rasta.hsdf.xml
+e_vad.xml
+0 minutes and 8 seconds elapsed.
+end of experiment 7
+fre 11 nov 2016 15:27:43 CET

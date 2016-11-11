@@ -3,7 +3,7 @@ Experiment="--- Experiments for RAPIDO 2017 ---"
 echo $Experiment
 echo $Experiment > log.txt
 #number of experiments
-total_experiments=5
+total_experiments=7
 
 echo -n "Insert the experiment number (Enter for all experiments) > "
 read exp_no
