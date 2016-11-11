@@ -58,7 +58,6 @@
       <channel name="ch7" srcActor="a1" srcPort="p3" dstActor="a8" dstPort="p0"/>
       <channel name="ch8" srcActor="a1" srcPort="p2" dstActor="a9" dstPort="p1"/>
       <channel name="ch9" srcActor="a3" srcPort="p2" dstActor="a8" dstPort="p1"/>
-      <channel name="ch10" srcActor="a8" srcPort="p2" dstActor="a4" dstPort="p0" initialTokens="1"/>
       <channel name="ch11" srcActor="a3" srcPort="p1" dstActor="a6" dstPort="p0"/>
       <channel name="ch12" srcActor="a2" srcPort="p1" dstActor="a5" dstPort="p1"/>
     </sdf>
@@ -171,9 +170,6 @@
         <tokenSize sz="16"/>
       </channelProperties>
       <channelProperties channel="ch9">
-        <tokenSize sz="16"/>
-      </channelProperties>
-      <channelProperties channel="ch10">
         <tokenSize sz="16"/>
       </channelProperties>
       <channelProperties channel="ch11">
