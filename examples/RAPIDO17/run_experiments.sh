@@ -21,19 +21,19 @@ fi
 
 for (( i=$first_exp;i<=$last_exp;i++)); do
     printf "\n" >> log.txt
-    echo "--- Experiment "$i" SSE ..." >> log.txt
-    date >> log.txt
-    ls exp_$i/sdfs >> log.txt
-    SECONDS=0
-    ./../../bin/adse --config exp_$i/config.cfg --dse.th_prop SSE --output exp_$i/SSE/ 
-    duration=$SECONDS
-    echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed." >> log.txt
-
     echo "--- Experiment "$i" MCR ..." >> log.txt
     date >> log.txt
     ls exp_$i/sdfs >> log.txt
     SECONDS=0
-    ./../../bin/adse --config exp_$i/config.cfg --dse.th_prop MCR --output exp_$i/MCR/
+    sudo chrt --rr 99 ./../../bin/adse --config exp_$i/config.cfg --dse.th_prop MCR --output exp_$i/MCR/
+    duration=$SECONDS
+    echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed." >> log.txt
+
+    echo "--- Experiment "$i" SSE ..." >> log.txt
+    date >> log.txt
+    ls exp_$i/sdfs >> log.txt
+    SECONDS=0
+    sudo chrt --rr 99 ./../../bin/adse --config exp_$i/config.cfg --dse.th_prop SSE --output exp_$i/SSE/ 
     duration=$SECONDS
     echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed." >> log.txt
     echo "end of experiment "$i >> log.txt
