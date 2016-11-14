@@ -100,6 +100,6 @@ Presolver mapping 20 does not give a solution.
 ------------------------------
 
 ~~~~~ *** END OF PRESOLVER SOLUTIONS *** ~~~~~
-===== search ended after: 1 s (1875 ms) =====
+===== search ended after: 1 s (1461 ms) =====
 0 solutions found
 search nodes: 59, fail: 10, propagate: 1152, depth: 8, nogoods: 0 ***

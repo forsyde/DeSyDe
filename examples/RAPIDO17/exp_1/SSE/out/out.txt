@@ -1,0 +1,33 @@
+
+ 
+*** 
+===== search ended after: 1004 s (1004584 ms) =====
+3219992 solutions found
+search nodes: 1890, fail: 0, propagate: 353584, depth: 25, nogoods: 0 ***
+*** Solution number: 3219992, after 1004584 ms, search nodes: 1890, fail: 0, propagate: 353584, depth: 25, nogoods: 0 ***
+----------------------------------------
+Proc: {4, 4, 0, 0, 1, 5, 5, 5, 5, 5, 5, 2}
+proc mode: {1, 1, 1, 0, 1, 1}
+Latency: {2143, 903}
+Period: {1074, 738}
+Procs used: 5
+Proc_period: {1074, 1074, 738, [1..2147483646], 1074, 738}
+Proc utilization: {967, 16, 216, 0, 1000, 1000}
+Sys utilization: 533
+ProcsUsed utilization: 639
+proc power: {5808, 102, 1302, 0, 12000, 12000}
+sys power: 31212
+least_power_est: 26508
+proc area: {8, 8, 8, 16, 16, 16}
+sys area: 72
+proc cost: {8, 8, 8, 16, 16, 16}
+sys cost: 72
+Next: 1 16 3 12 13 6 7 8 9 10 17 14 || 4 11 15 0 5 2 
+Rank: 0 1 2 3 4 0 1 2 3 4 5 6 
+TDMA slots: {4, 0, 0, 0, 1, 1}
+S-order: {1, 17, 3, 13, 5, 6, 7, 8, 10, 11, 9, 12, 18, 14, 15, 16, 0, 4, 2}
+wcct_b: {0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1}
+wcct_s: {0, 8, 0, 2, 0, 0, 4, 0, 0, 0, 0, 0, 4}
+R-order: {17, 2, 13, 14, 7, 10, 12, 8, 5, 11, 9, 18, 15, 3, 6, 16, 0, 4, 1}
+wcct_r: {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+----------------------------------------

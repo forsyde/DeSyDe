@@ -5,15 +5,22 @@ echo $Experiment > log.txt
 #number of experiments
 total_experiments=7
 
-echo -n "Insert the experiment number (Enter for all experiments) > "
-read exp_no
-if [ "$exp_no" == "" ]
+echo -n "Insert the experiment number or first-exp last-exp (Enter for all experiments) > "
+read first_experiment exp_no
+if [ "$exp_no" == ""]
 then
-    echo "Running all experiments"
-    first_exp=1
-    last_exp=$total_experiments
+    if [ "$first_experiment" == ""]
+	then
+	    echo "Running all experiments"
+	    first_exp=1
+	    last_exp=$total_experiments
+    else
+        first_exp=$first_experiment
+        last_exp=$first_experiment
+        echo "Running experiment "$first_experiment
+    fi
 else
-    first_exp=$exp_no
+    first_exp=$first_experiment
     last_exp=$exp_no
     echo "Running experiment "$exp_no
 fi

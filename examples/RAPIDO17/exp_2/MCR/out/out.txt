@@ -1,0 +1,33 @@
+
+ 
+*** 
+===== search ended after: 16 s (16272 ms) =====
+688416 solutions found
+search nodes: 303, fail: 0, propagate: 70433, depth: 22, nogoods: 0 ***
+*** Solution number: 688416, after 16272 ms, search nodes: 303, fail: 0, propagate: 70433, depth: 22, nogoods: 0 ***
+----------------------------------------
+Proc: {0, 1, 4, 4, 2, 2, 5, 5, 5}
+proc mode: {1, 1, 0, 0, 1, 1}
+Latency: {[0..2147483646], [0..2147483646]}
+Period: {384, 1192}
+Procs used: 5
+Proc_period: {384, 384, 1192, [1..2147483646], 384, 1192}
+Proc utilization: {1000, 242, 1000, 0, 471, 665}
+Sys utilization: 563
+ProcsUsed utilization: 675
+proc power: {6000, 1458, 10000, 0, 5664, 7992}
+sys power: 31114
+least_power_est: 31824
+proc area: {8, 8, 16, 16, 16, 16}
+sys area: 80
+proc cost: {8, 8, 16, 16, 16, 16}
+sys cost: 80
+Next: 9 10 3 13 5 11 7 8 14 || 1 4 12 2 6 0 
+Rank: 0 1 1 2 0 1 2 3 4 
+TDMA slots: {3, 2, 1, 0, 0, 0}
+S-order: {8, 0, 9, 12, 5, 10, 7, 13, 2, 4, 11, 3, 6, 1}
+wcct_b: {1, 1, 1, 0, 0, 1, 0, 0}
+wcct_s: {1, 1, 1, 0, 0, 8, 0, 0}
+R-order: {9, 3, 12, 2, 10, 6, 7, 13, 0, 4, 11, 1, 5, 8}
+wcct_r: {0, 0, 0, 0, 0, 0, 0, 0}
+----------------------------------------

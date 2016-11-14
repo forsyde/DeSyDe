@@ -49,3 +49,2497 @@ Presolver mapping 9 does not give a solution.
 Presolver mapping 10 does not give a solution.
 ------------------------------
 
+------------------------------
+
+Presolver mapping 11 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 12 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 13 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 14 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 15 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 16 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 17 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 18 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 19 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 20 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 21 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 22 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 23 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 24 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 25 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 26 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 27 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 28 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 29 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 30 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 31 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 32 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 33 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 34 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 35 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 36 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 37 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 38 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 39 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 40 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 41 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 42 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 43 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 44 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 45 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 46 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 47 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 48 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 49 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 50 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 51 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 52 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 53 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 54 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 55 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 56 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 57 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 58 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 59 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 60 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 61 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 62 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 63 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 64 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 65 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 66 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 67 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 68 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 69 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 70 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 71 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 72 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 73 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 74 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 75 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 76 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 77 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 78 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 79 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 80 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 81 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 82 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 83 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 84 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 85 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 86 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 87 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 88 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 89 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 90 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 91 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 92 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 93 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 94 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 95 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 96 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 97 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 98 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 99 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 100 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 101 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 102 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 103 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 104 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 105 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 106 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 107 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 108 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 109 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 110 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 111 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 112 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 113 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 114 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 115 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 116 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 117 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 118 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 119 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 120 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 121 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 122 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 123 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 124 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 125 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 126 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 127 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 128 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 129 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 130 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 131 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 132 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 133 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 134 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 135 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 136 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 137 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 138 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 139 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 140 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 141 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 142 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 143 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 144 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 145 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 146 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 147 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 148 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 149 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 150 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 151 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 152 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 153 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 154 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 155 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 156 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 157 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 158 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 159 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 160 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 161 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 162 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 163 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 164 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 165 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 166 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 167 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 168 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 169 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 170 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 171 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 172 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 173 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 174 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 175 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 176 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 177 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 178 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 179 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 180 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 181 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 182 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 183 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 184 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 185 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 186 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 187 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 188 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 189 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 190 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 191 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 192 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 193 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 194 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 195 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 196 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 197 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 198 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 199 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 200 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 201 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 202 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 203 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 204 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 205 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 206 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 207 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 208 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 209 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 210 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 211 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 212 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 213 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 214 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 215 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 216 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 217 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 218 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 219 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 220 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 221 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 222 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 223 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 224 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 225 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 226 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 227 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 228 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 229 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 230 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 231 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 232 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 233 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 234 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 235 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 236 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 237 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 238 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 239 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 240 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 241 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 242 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 243 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 244 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 245 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 246 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 247 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 248 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 249 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 250 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 251 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 252 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 253 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 254 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 255 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 256 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 257 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 258 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 259 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 260 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 261 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 262 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 263 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 264 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 265 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 266 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 267 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 268 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 269 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 270 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 271 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 272 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 273 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 274 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 275 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 276 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 277 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 278 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 279 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 280 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 281 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 282 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 283 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 284 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 285 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 286 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 287 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 288 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 289 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 290 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 291 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 292 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 293 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 294 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 295 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 296 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 297 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 298 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 299 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 300 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 301 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 302 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 303 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 304 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 305 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 306 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 307 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 308 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 309 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 310 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 311 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 312 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 313 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 314 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 315 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 316 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 317 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 318 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 319 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 320 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 321 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 322 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 323 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 324 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 325 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 326 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 327 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 328 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 329 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 330 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 331 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 332 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 333 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 334 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 335 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 336 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 337 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 338 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 339 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 340 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 341 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 342 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 343 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 344 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 345 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 346 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 347 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 348 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 349 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 350 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 351 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 352 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 353 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 354 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 355 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 356 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 357 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 358 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 359 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 360 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 361 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 362 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 363 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 364 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 365 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 366 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 367 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 368 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 369 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 370 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 371 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 372 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 373 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 374 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 375 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 376 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 377 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 378 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 379 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 380 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 381 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 382 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 383 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 384 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 385 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 386 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 387 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 388 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 389 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 390 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 391 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 392 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 393 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 394 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 395 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 396 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 397 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 398 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 399 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 400 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 401 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 402 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 403 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 404 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 405 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 406 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 407 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 408 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 409 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 410 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 411 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 412 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 413 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 414 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 415 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 416 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 417 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 418 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 419 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 420 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 421 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 422 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 423 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 424 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 425 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 426 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 427 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 428 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 429 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 430 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 431 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 432 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 433 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 434 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 435 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 436 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 437 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 438 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 439 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 440 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 441 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 442 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 443 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 444 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 445 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 446 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 447 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 448 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 449 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 450 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 451 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 452 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 453 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 454 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 455 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 456 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 457 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 458 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 459 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 460 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 461 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 462 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 463 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 464 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 465 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 466 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 467 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 468 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 469 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 470 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 471 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 472 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 473 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 474 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 475 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 476 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 477 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 478 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 479 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 480 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 481 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 482 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 483 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 484 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 485 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 486 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 487 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 488 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 489 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 490 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 491 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 492 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 493 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 494 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 495 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 496 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 497 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 498 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 499 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 500 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 501 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 502 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 503 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 504 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 505 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 506 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 507 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 508 does not give a solution.
+------------------------------
+
+~~~~~ *** END OF PRESOLVER SOLUTIONS *** ~~~~~
+===== search ended after: 89 s (89569 ms) =====
+0 solutions found
+search nodes: 505, fail: 21, propagate: 5587, depth: 14, nogoods: 0 ***
