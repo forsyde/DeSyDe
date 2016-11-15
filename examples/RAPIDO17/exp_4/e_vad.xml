@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sdf3 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" type="sdf" version="1.0"
+      xsi:noNamespaceSchemaLocation="http://www.es.ele.tue.nl/sdf3/xsd/sdf3-sdf.xsd">
+   <applicationGraph name="e_vad">
+      <sdf name="e_vad" type="VAD">
+         <actor name="toneDetect1" type="a">
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="engComp1" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="iport1_2" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+            <port name="oport1_2" type="out" rate="1"/>
+            <port name="oport1_3" type="out" rate="1"/>
+         </actor>
+         <actor name="acfAvg1" type="a">
+            <port name="oport1_1" type="out" rate="1"/>
+            <port name="oport1_2" type="out" rate="1"/>
+         </actor>
+         <actor name="predVal1" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="oport1_1_0" type="out" rate="1"/>
+            <port name="oport1_1_1" type="out" rate="1"/>
+            <port name="oport1_2_0" type="out" rate="1"/>
+            <port name="oport1_2_1" type="out" rate="1"/>
+         </actor>
+         <actor name="specComp1" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="iport2_1" type="in" rate="1"/>
+            <port name="iport2_2" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="thrAdp1" type="a">
+            <port name="iport1_6" type="in" rate="1"/>
+            <port name="iport1_4" type="in" rate="1"/>
+            <port name="iport1_5" type="in" rate="1"/>
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="iport1_2" type="in" rate="1"/>
+            <port name="iport1_3" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+            <port name="oport1_2" type="out" rate="1"/>
+            <port name="oport1_3" type="out" rate="1"/>
+         </actor>
+         <actor name="decide1" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+            <port name="iport2_1" type="in" rate="1"/>
+            <port name="oport1_1" type="out" rate="1"/>
+         </actor>
+         <actor name="hangover1" type="a">
+            <port name="iport1_1" type="in" rate="1"/>
+         </actor>
+         <channel name="toneDetect1_oport1_1_thrAdp1_iport1_6" srcActor="toneDetect1"
+                  srcPort="oport1_1"
+                  dstActor="thrAdp1"
+                  dstPort="iport1_6"
+                  initialTokens="0"/>
+         <channel name="engComp1_oport1_1_thrAdp1_iport1_4" srcActor="engComp1"
+                  srcPort="oport1_1"
+                  dstActor="thrAdp1"
+                  dstPort="iport1_4"
+                  initialTokens="0"/>
+         <channel name="engComp1_oport1_2_thrAdp1_iport1_5" srcActor="engComp1"
+                  srcPort="oport1_2"
+                  dstActor="thrAdp1"
+                  dstPort="iport1_5"
+                  initialTokens="0"/>
+         <channel name="engComp1_oport1_3_decide1_iport1_1" srcActor="engComp1"
+                  srcPort="oport1_3"
+                  dstActor="decide1"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="acfAvg1_oport1_1_specComp1_iport1_1" srcActor="acfAvg1"
+                  srcPort="oport1_1"
+                  dstActor="specComp1"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="acfAvg1_oport1_2_predVal1_iport1_1" srcActor="acfAvg1"
+                  srcPort="oport1_2"
+                  dstActor="predVal1"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="predVal1_oport1_1_specComp1_iport2_1" srcActor="predVal1"
+                  srcPort="oport1_1_0"
+                  dstActor="specComp1"
+                  dstPort="iport2_1"
+                  initialTokens="0"/>
+         <channel name="predVal1_oport1_1_thrAdp1_iport1_1" srcActor="predVal1"
+                  srcPort="oport1_1_1"
+                  dstActor="thrAdp1"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+         <channel name="predVal1_oport1_2_specComp1_iport2_2" srcActor="predVal1"
+                  srcPort="oport1_2_0"
+                  dstActor="specComp1"
+                  dstPort="iport2_2"
+                  initialTokens="0"/>
+         <channel name="predVal1_oport1_2_thrAdp1_iport1_2" srcActor="predVal1"
+                  srcPort="oport1_2_1"
+                  dstActor="thrAdp1"
+                  dstPort="iport1_2"
+                  initialTokens="0"/>
+         <channel name="specComp1_oport1_1_thrAdp1_iport1_3" srcActor="specComp1"
+                  srcPort="oport1_1"
+                  dstActor="thrAdp1"
+                  dstPort="iport1_3"
+                  initialTokens="0"/>
+         <channel name="thrAdp1_oport1_1_engComp1_iport1_1" srcActor="thrAdp1"
+                  srcPort="oport1_1"
+                  dstActor="engComp1"
+                  dstPort="iport1_1"
+                  initialTokens="1"/>
+         <channel name="thrAdp1_oport1_2_engComp1_iport1_2" srcActor="thrAdp1"
+                  srcPort="oport1_2"
+                  dstActor="engComp1"
+                  dstPort="iport1_2"
+                  initialTokens="1"/>
+         <channel name="thrAdp1_oport1_3_decide1_iport2_1" srcActor="thrAdp1"
+                  srcPort="oport1_3"
+                  dstActor="decide1"
+                  dstPort="iport2_1"
+                  initialTokens="0"/>
+         <channel name="decide1_oport1_1_hangover1_iport1_1" srcActor="decide1"
+                  srcPort="oport1_1"
+                  dstActor="hangover1"
+                  dstPort="iport1_1"
+                  initialTokens="0"/>
+      </sdf>
+      <sdfProperties>
+         <actorProperties actor="toneDetect1">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="engComp1">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="acfAvg1">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="predVal1">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="specComp1">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="thrAdp1">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="decide1">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <actorProperties actor="hangover1">
+            <processor type="microblaze0" default="true">
+               <executionTime time="1000"/>
+               <memory>
+                  <stateSize max="1000"/>
+               </memory>
+            </processor>
+         </actorProperties>
+         <channelProperties channel="toneDetect1_oport1_1_thrAdp1_iport1_6">
+            <tokenSize sz="16"/>
+         </channelProperties>
+         <channelProperties channel="engComp1_oport1_1_thrAdp1_iport1_4">
+            <tokenSize sz="64"/>
+         </channelProperties>
+         <channelProperties channel="engComp1_oport1_2_thrAdp1_iport1_5">
+            <tokenSize sz="64"/>
+         </channelProperties>
+         <channelProperties channel="engComp1_oport1_3_decide1_iport1_1">
+            <tokenSize sz="32"/>
+         </channelProperties>
+         <channelProperties channel="acfAvg1_oport1_1_specComp1_iport1_1">
+            <tokenSize sz="144"/>
+         </channelProperties>
+         <channelProperties channel="acfAvg1_oport1_2_predVal1_iport1_1">
+            <tokenSize sz="144"/>
+         </channelProperties>
+         <channelProperties channel="predVal1_oport1_1_specComp1_iport2_1">
+            <tokenSize sz="160"/>
+         </channelProperties>
+         <channelProperties channel="predVal1_oport1_1_thrAdp1_iport1_1">
+            <tokenSize sz="160"/>
+         </channelProperties>
+         <channelProperties channel="predVal1_oport1_2_specComp1_iport2_2">
+            <tokenSize sz="160"/>
+         </channelProperties>
+         <channelProperties channel="predVal1_oport1_2_thrAdp1_iport1_2">
+            <tokenSize sz="160"/>
+         </channelProperties>
+         <channelProperties channel="specComp1_oport1_1_thrAdp1_iport1_3">
+            <tokenSize sz="16"/>
+         </channelProperties>
+         <channelProperties channel="thrAdp1_oport1_1_engComp1_iport1_1">
+            <tokenSize sz="160"/>
+         </channelProperties>
+         <channelProperties channel="thrAdp1_oport1_2_engComp1_iport1_2">
+            <tokenSize sz="160"/>
+         </channelProperties>
+         <channelProperties channel="thrAdp1_oport1_3_decide1_iport2_1">
+            <tokenSize sz="32"/>
+         </channelProperties>
+         <channelProperties channel="decide1_oport1_1_hangover1_iport1_1">
+            <tokenSize sz="16"/>
+         </channelProperties>
+      </sdfProperties>
+   </applicationGraph>
+</sdf3>

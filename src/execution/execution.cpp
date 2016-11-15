@@ -323,6 +323,7 @@ private:
   template<class SearchEngine> void loopSolutions(SearchEngine *e) {
     nodes = 0;
     out.open(cfg.settings().output_path+"out/out.txt");
+    LOG_INFO("Opened file for printing results: " +cfg.settings().output_path+"out/out.txt");
     outCSV.open(cfg.settings().output_path+"out/out.csv");
     outMOSTCSV.open(cfg.settings().output_path+"out/out-MOST.csv");    
     outMappingCSV.open(cfg.settings().output_path+"out/out_mapping.csv");
@@ -375,10 +376,10 @@ private:
         << e->statistics().propagate << ", depth: " << e->statistics().depth << ", nogoods: " << e->statistics().nogood << " ***\n";
 
     if(cfg.settings().out_print_freq == Config::LAST && nodes > 0){
-           printSolution(e, prev_sol);
-       }else if(nodes == 0){
-
-       }
+      printSolution(e, prev_sol);
+    }else if(cfg.settings().out_print_freq == Config::LAST && nodes == 0){
+      out << "No (better) solution found." << endl;
+    }
        delete prev_sol;
 
     out.close();

@@ -18,6 +18,7 @@ ThroughputMCR::ThroughputMCR(Space& home, ViewArray<IntView> p_latency, ViewArra
   sendingTime.subscribe(home, *this, Int::PC_INT_BND);
   sendingNext.subscribe(home, *this, Int::PC_INT_VAL);
   next.subscribe(home, *this, Int::PC_INT_VAL);
+  wcet.subscribe(home, *this, Int::PC_INT_BND);
   /*latency.subscribe(home, *this, Int::PC_INT_BND);
    period.subscribe(home, *this, Int::PC_INT_BND);
    sendbufferSz.subscribe(home, *this, Int::PC_INT_BND);
@@ -43,6 +44,7 @@ size_t ThroughputMCR::dispose(Space& home) {
   sendingTime.cancel(home, *this, Int::PC_INT_BND);
   sendingNext.cancel(home, *this, Int::PC_INT_VAL);
   next.cancel(home, *this, Int::PC_INT_VAL);
+  wcet.cancel(home, *this, Int::PC_INT_BND);
   /*latency.cancel(home, *this, Int::PC_INT_BND);
    period.cancel(home, *this, Int::PC_INT_BND);
    sendbufferSz.cancel(home, *this, Int::PC_INT_BND);
