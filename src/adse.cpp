@@ -144,26 +144,26 @@ int main(int argc, const char* argv[]) {
     map->SortTasksUtilization();
     cout << *taskset;
 
+    SDFPROnlineModel* model;
     //PRESOLVING +++
 
+    if(sdfs.size() > 0){
     LOG_INFO("Creating PRESOLVING constraint model object ... ");
     //OneProcModel* pre_model = new OneProcModel(map, cfg);
 
-    LOG_INFO("Creating PRESOLVING execution object ... ");
-    Presolver presolver(cfg);
+        LOG_INFO("Creating PRESOLVING execution object ... ");
+        Presolver presolver(cfg);
 
-    LOG_INFO("Running PRESOLVING model object ... ");
-    SDFPROnlineModel* model = (SDFPROnlineModel*)presolver.presolve(map);
+        LOG_INFO("Running PRESOLVING model object ... ");
+        model = (SDFPROnlineModel*)presolver.presolve(map);
 
-    vector<vector<tuple<int,int>>> mappings = presolver.getMappingResults();
-    cout << "Presolver found " << mappings.size() << " isolated mappings." << endl;
-
-
-//    cout << messageStart + "Creating a constraint model object ... " << endl;
-//    SDFPROnlineModel* model = new SDFPROnlineModel(map, dseSettings);
-    //LOG_INFO("Creating a constraint model object ... ");
-    //SDFPROnlineModel* model = new SDFPROnlineModel(map, &cfg);
-//
+        vector<vector<tuple<int,int>>> mappings = presolver.getMappingResults();
+        cout << "Presolver found " << mappings.size() << " isolated mappings." << endl;
+    }
+    else{
+        LOG_INFO("Creating a constraint model object ... ");
+        model = new SDFPROnlineModel(map, &cfg);
+    }
     LOG_INFO("Creating an execution object ... ");
     Execution<SDFPROnlineModel> execObj(model, cfg);
 

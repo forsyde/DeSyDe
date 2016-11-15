@@ -151,6 +151,7 @@ public:
                 for(size_t i=0;i<apps->n_SDFApps();i++)
                 {
                     if(apps->getPeriodConstraint(i) == -1)
+                    cout << "BAB app: " << i << "period=" << b.period[i] << endl;
                         {    rel(*this, period[i] < b.period[i]);break;}
                 }
                 break;

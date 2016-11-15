@@ -5,8 +5,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
     platform(p_mapping->getPlatform()),
     mapping(p_mapping),
     cfg(_cfg),
-    next(*this, apps->n_SDFActors()+platform->nodes(), 0, apps->n_SDFActors()+platform->nodes()),
-    rank(*this, apps->n_SDFActors(), 0, apps->n_SDFActors()-1),
+    next(*this, apps->n_SDFActors()+platform->nodes(), 0, apps->n_SDFActors()+platform->nodes()),    
     proc(*this, apps->n_programEntities(), 0, platform->nodes()-1),
     proc_mode(*this, platform->nodes(), 0, platform->getMaxModes()),
     tdmaAlloc(*this, platform->nodes(), 0, platform->tdmaSlots()),
@@ -32,7 +31,10 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
     wcct_s(*this, apps->n_programChannels(), 0, Int::Limits::max),
     wcct_r(*this, apps->n_programChannels(), 0, Int::Limits::max),
     least_power_est(mapping->getLeastPowerConsumption()){
-
+    LOG_DEBUG("Creating CP model");
+    if(apps->n_SDFActors() > 0){
+        rank = IntVarArray(*this, apps->n_SDFActors(), 0, apps->n_SDFActors()-1);
+    }
     std::ostream debug_stream(nullptr); /**< debuging stream, it is printed only in debug mode. */
     debug_stream << "\n==========\ndebug log:\n..........\n";
     vector<SDFChannel*> channels = apps->getChannels();
