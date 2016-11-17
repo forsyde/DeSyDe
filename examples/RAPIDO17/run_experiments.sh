@@ -22,7 +22,7 @@ then
 else
     first_exp=$first_experiment
     last_exp=$exp_no
-    echo "Running experiment "$exp_no
+    echo "Running experiments "$first_exp" to "$last_exp
 fi
 
 

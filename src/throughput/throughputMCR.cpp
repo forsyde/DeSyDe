@@ -56,6 +56,10 @@ size_t ThroughputMCR::dispose(Space& home) {
    receivingNext.cancel(home, *this, Int::PC_INT_VAL);*/
 
   //b_msag.~adj_list_impl();
+  for(size_t t = 0; t < b_msags.size(); t++){
+    //b_msags[t]->clear();
+    delete b_msags[t];
+  }
   b_msags.~vector<boost_msag*>();
   msaGraph.~unordered_map<int, vector<SuccessorNode>>();
   channelMapping.~vector<int>();
@@ -1361,7 +1365,7 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
         cout <<  max_cr << endl;
         cout << "Critical cycle:\n";
         for(t_critCycl::iterator itr = cc.begin(); itr != cc.end(); ++itr){
-          cout << "(" << vim[source(*itr, b_msag)] << "," << vim[target(*itr, b_msag)] << ") ";
+          cout << "(" << vim[source(*itr, *m)] << "," << vim[target(*itr, *m)] << ") ";
         }
         cout << endl;
       }
