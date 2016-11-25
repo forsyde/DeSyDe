@@ -26,7 +26,6 @@
     rel(*this, procsUsed == (max(proc)+1)); //requires symmetry breaking
                                        //through ordering
 
-	cout << "counting proc elements \n";
   count(*this, proc.slice(0, 1, apps->n_SDFActors()), nSDFAsOnProc);
   if(apps->n_IPTTasks()>0)
 	count(*this, proc.slice(apps->n_SDFActors()), nTasksOnProc);
@@ -58,7 +57,7 @@
       element(*this, wcets_procs, proc[ii], wcet[ii]);
     }
   }
-	cout << "memory consumption constraint \n";
+
   //memory consumption of actors for code, depending on mapping
   IntVarArgs memConsCode(*this, apps->n_programEntities(), 0, Int::Limits::max);
   for(size_t ii=0; ii<apps->n_programEntities(); ii++){
@@ -72,7 +71,7 @@
     IntArgs memConss(mapping->memConsData(ii));
     element(*this, memConss, proc[ii], memConsData[ii]);
   }
-cout << "utilization\n"; 
+
   //processor utilization
   for(size_t j=0; j<platform->nodes(); j++){
     rel(*this, (proc_period[j]>0 && nSDFAsOnProc[j]>0) >> (utilization[j] == ((proc_SDF_wcet_sum[j]*mapping->max_utilization)/proc_period[j])));

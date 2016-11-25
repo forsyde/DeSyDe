@@ -112,15 +112,44 @@ bool Mapping::homogeneousNodes(int nodeI, int nodeJ) {
 }
 
 bool Mapping::homogeneousModeNodes(int nodeI, int nodeJ) {
-  if (!target->homogeneousModeNodes(nodeI, nodeJ)) {
-    return false;
-  }
-  for (size_t i = 0; i < program->n_SDFActors(); i++) {
-    vector<int> wcets_i = getWCETsModes(i);//fixed
-    if (wcets_i[nodeI] != wcets_i[nodeJ])
-      return false;
-  }
-  return true;
+    //cout << "~~~~~~~~~~~~~~~~" << endl;
+    //cout << "Mapping::homogeneousModeNodes("<< nodeI << ", " << nodeJ << ")" << endl;
+    if(!target->homogeneousModeNodes(nodeI, nodeJ)){
+        //cout << "  target->homogeneousModeNodes("<< nodeI << ", " << nodeJ << ") = ";
+        //cout << target->homogeneousModeNodes(nodeI, nodeJ) << endl;
+
+        //cout << "~~~~~~~~~~~~~~~~" << endl;
+        return false;
+    }
+    for(size_t i = 0; i < program->n_SDFActors(); i++){
+        vector<vector<int>> wcets_i = getWCETs(i); //getWCETsModes(i);//fixed
+
+        /*cout << "  Actor " << i << endl;
+        cout << "    ";
+        for(size_t k = 0; k < wcets_i[nodeI].size(); k++){
+            cout << wcets_i[nodeI][k] << " ";
+        }
+        cout << endl;
+        cout << "    ";
+        for(size_t k = 0; k < wcets_i[nodeJ].size(); k++){
+            cout << wcets_i[nodeJ][k] << " ";
+        }
+        cout << endl;*/
+
+        if(wcets_i[nodeI].size() != wcets_i[nodeJ].size()){
+            //cout << "~~~~~~~~~~~~~~~~" << endl;
+            return false;
+        }else{ //same number of modes
+            for(size_t j = 0; j < wcets_i[nodeI].size(); j++){
+                if(wcets_i[nodeI][j] != wcets_i[nodeJ][j]){
+                    //cout << "~~~~~~~~~~~~~~~~" << endl;
+                    return false;
+                }
+            }
+        }
+    }
+    //cout << "~~~~~~~~~~~~~~~~" << endl;
+    return true;
 }
 
 //void Mapping::setWCETs(string name, vector<int> _wcets) {

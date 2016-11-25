@@ -22,7 +22,7 @@
 	</processor>
 	<processor>
 		<model>large</model>
-		<number>2</number>
+		<number>4</number>
 		<mode>
 			<name>default</name>
 			<cycle_length>0.8</cycle_length>

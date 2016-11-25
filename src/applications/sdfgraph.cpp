@@ -49,7 +49,7 @@ void SDFGraph::buildDictionaries() {
     }
     _d->actor_id[name] = i;
 
-    string size_query = "///sdfProperties/actorProperties[@actor=" + name + "]/processor/memory/stateSize/@max";
+    string size_query = "///sdfProperties/actorProperties[@actor=\'" + name + "\']/processor/memory/stateSize/@max";
     auto codeSizeValue = xml.xpathStrings(size_query.c_str());
     // TODO: if state size are not found, they are replaced with 0;
     _d->actor_sz[name] = (codeSizeValue.size() > 0) ? atoi(codeSizeValue[0].c_str()) : 0;
@@ -65,7 +65,7 @@ void SDFGraph::buildDictionaries() {
     _d->channel[src_act][src_prt] = ch_name;
     _d->channel[dst_act][dst_prt] = ch_name;
     _d->chan_con[ch_name] = {src_act, src_prt, dst_act, dst_prt};
-    string size_query = "///sdfProperties/channelProperties[@channel=" + ch_name + "]/tokenSize/@sz";
+    string size_query = "///sdfProperties/channelProperties[@channel=\'" + ch_name + "\']/tokenSize/@sz";
     auto tokenSizeValue = xml.xpathStrings(size_query.c_str());
     // TODO: if token sizes or channel sizes are not found, they are replaced with 0;
     _d->chan_sz[ch_name] = (tokenSizeValue.size() > 0) ? atoi(tokenSizeValue[0].c_str()) : 0;
@@ -251,177 +251,185 @@ void SDFGraph::transformFromSDF(const vector<int>& rp) {
   }
 }
 
-void SDFGraph::transformFromHSDF(){
-  auto& rate     = _d->rate;
-  auto& actor_id = _d->actor_id;
-  auto& actor_sz = _d->actor_sz;
-  auto& chan_sz  = _d->chan_sz;
-  auto& init_tok = _d->init_tok;
-  
-  LOG_DEBUG("Transforming graph " + graphName + " from HSDF...");
-  
-  //Step 1: Copy the actors
-  int parentActorCount = 0;
-  set<string> parentActorIds;
+void SDFGraph::transformFromHSDF() {
+    auto& rate = _d->rate;
+    auto& actor_id = _d->actor_id;
+    auto& actor_sz = _d->actor_sz;
+    auto& chan_sz = _d->chan_sz;
+    auto& init_tok = _d->init_tok;
 
-  auto actor_nodes = xml.xpathNodes("///sdf/actor");
-  for (auto& gF : actor_nodes) {
-    SDFActor* a = new SDFActor();
-    string a_name = xml.getProp(gF, "name");
+    LOG_DEBUG("Transforming graph " + graphName + " from HSDF...");
 
-    a->name     = a_name;
-    a->id       = actor_id[a_name];
-    a->codeSize = actor_sz[a_name]; //TODO: combine with data size?
-    a->dataSize = actor_sz[a_name];
-    
-    //find the name and id of the parent actor (in original SDF)
-    unsigned pos   = a->name.find_last_of("_");
-    a->parent_name = a->name.substr(0,pos);
-    
-    if (parentActorIds.find(a->parent_name) != parentActorIds.end())
-      a->parent_id = parentActorCount++;
-    else
-      a->parent_id = parentActorCount;
-    parentActorIds.insert(a->parent_name);
+    //Step 1: Copy the actors
+    int parentActorCount = 0;
+    unordered_map<string, int> parentActorIds;
 
-    //insert into actors vector
-    actors.push_back(a);
-  }
+    auto actor_nodes = xml.xpathNodes("///sdf/actor");
+    for(auto& gF : actor_nodes){
+        SDFActor* a = new SDFActor();
+        string a_name = xml.getProp(gF, "name");
 
-  parentActors = parentActorCount;
-  parentActorIds.clear();
-  
-  //Step 2: Check for and combine parallel channels
-  unordered_map<int, vector<SDFChannel*>> channelMap;
-  int old = 0;
-  int newCh = 0;
-  
-  auto chan_nodes = xml.xpathNodes("///sdf/channel");
-  for (size_t i = 0; i < chan_nodes.size(); i++) {
-    auto gC = chan_nodes[i];
-    string ch_name = xml.getProp(gC, "name");
-    string src_act = xml.getProp(gC, "srcActor");
-    string dst_act = xml.getProp(gC, "dstActor");
-    string src_prt = xml.getProp(gC, "srcPort");
-    string dst_prt = xml.getProp(gC, "dstPort");
+        a->name = a_name;
+        a->id = actor_id[a_name];
+        a->codeSize = actor_sz[a_name]; //TODO: combine with data size?
+        a->dataSize = actor_sz[a_name];
 
-    SDFChannel* c = new SDFChannel();
-    c->id          = i;
-    c->name        = ch_name;
-    c->source      = actor_id[src_act];
-    c->src_name    = src_act;
-    c->prod        = rate[src_act][src_prt];
-    c->destination = actor_id[dst_act];
-    c->dst_name    = dst_act;
-    c->cons        = rate[dst_act][dst_prt];
-    c->initTokens  = init_tok[ch_name];
-    c->tokenSize   = chan_sz [ch_name];
-    c->messageSize = c->tokenSize; //update if combined with other channel
-    c->oldIds.push_back(c->id);
+        //find the name and id of the parent actor (in original SDF)
+        unsigned pos = a->name.find_last_of("_");
+        a->parent_name = a->name.substr(0, pos);
 
-    unordered_map<int,vector<SDFChannel*>>::const_iterator it = channelMap.find(c->source);
-    if(it != channelMap.end()){
-      //c->source already has an entry in the map, check whether a channel with same dest. exists
-      vector<SDFChannel*> srcChannels = channelMap.at(c->source);
-      bool sameChannel = false;
-      int tmpCh = 0;
-      int oldCh = 0;
-      for (auto it = srcChannels.begin(); it != srcChannels.end(); ++it){
-        if(c->destination == (*it)->destination){ //same destination
-          sameChannel = true;
-          oldCh = tmpCh;
-          if((*it)->initTokens != c->initTokens) LOG_WARNING ("(*it)->initTokens != c->initTokens");
-          c->initTokens = max(c->initTokens, (*it)->initTokens);
-          //check how the channels are to be combined. Same or different token size?
-          //TODO: this identification could be done using the channel names
-          //      same name = increase rates, different name = concatenate names & add token sizes
-          if(c->tokenSize == (*it)->tokenSize){
-            c->prod++;
-            c->cons++;
-            c->messageSize = c->prod * c->tokenSize;
-          }else{ //different token size
-            c->tokenSize += (*it)->tokenSize;
-            c->messageSize = c->prod * c->tokenSize;
-          }
-          //append all so-far-collected ids of combined channels
-          c->oldIds.insert(c->oldIds.end(), (*it)->oldIds.begin(), (*it)->oldIds.end());
-          c->id = (*it)->id;
+        auto it = parentActorIds.find(a->parent_name);
+        if(it != parentActorIds.end()){ //actor has been found before
+            a->parent_id = it->second;
+        }else{ //actor is found for the first time
+            parentActorIds.insert(
+                    pair<string, int>(a->parent_name, parentActorCount));
+            a->parent_id = parentActorCount;
+            parentActorCount++;
         }
-        tmpCh++; //save the index of the found channel (for later update)
-      }
-      if(!sameChannel){ //there was no channel with same destination, so add it
-        c->id = newCh; //TODO: update channel name as well?
-        newCh++;
-        channelMap.at(c->source).push_back(c);
-      }else{ //channel already existed -> replace with new, combined channel
-        delete channelMap.at(c->source)[oldCh];
-        channelMap.at(c->source)[oldCh]=c;
-      }
-    }else{//no entry for c->source yet
-      vector<SDFChannel*> newChannel;
-      c->id=newCh;
-      newCh++;
-      newChannel.push_back(c);
-      channelMap.insert(make_pair(c->source,newChannel));
+        //insert into actors vector
+        actors.push_back(a);
     }
-    
-    old++; //count original channels
-  }
 
-  for (size_t i=0; i<actors.size(); i++){
-    unordered_map<int,vector<SDFChannel*>>::const_iterator it = channelMap.find(i);
-    if(it != channelMap.end()){
-      //channels.insert(channels.end(), channelMap.at(i).begin(), channelMap.at(i).end()); //append vector to channels vector
-      for (vector<SDFChannel*>::iterator y = channelMap.at(i).begin(); y != channelMap.at(i).end(); ++y){
-        channels.push_back(*y);
-      }
+    parentActors = parentActorCount;
+    parentActorIds.clear();
+
+    //Step 2: Check for and combine parallel channels
+    unordered_map<int, vector<SDFChannel*>> channelMap;
+    int old = 0;
+    int newCh = 0;
+
+    auto chan_nodes = xml.xpathNodes("///sdf/channel");
+    for(size_t i = 0; i < chan_nodes.size(); i++){
+        auto gC = chan_nodes[i];
+        string ch_name = xml.getProp(gC, "name");
+        string src_act = xml.getProp(gC, "srcActor");
+        string dst_act = xml.getProp(gC, "dstActor");
+        string src_prt = xml.getProp(gC, "srcPort");
+        string dst_prt = xml.getProp(gC, "dstPort");
+
+        SDFChannel* c = new SDFChannel();
+        c->id = i;
+        c->name = ch_name;
+        c->source = actor_id[src_act];
+        c->src_name = src_act;
+        c->prod = rate[src_act][src_prt];
+        c->destination = actor_id[dst_act];
+        c->dst_name = dst_act;
+        c->cons = rate[dst_act][dst_prt];
+        c->initTokens = init_tok[ch_name];
+        c->tokenSize = chan_sz[ch_name];
+        c->messageSize = c->tokenSize; //update if combined with other channel
+        c->oldIds.push_back(c->id);
+
+        unordered_map<int, vector<SDFChannel*>>::const_iterator it =
+                channelMap.find(c->source);
+        if(it != channelMap.end()){
+            //c->source already has an entry in the map, check whether a channel with same dest. exists
+            vector<SDFChannel*> srcChannels = channelMap.at(c->source);
+            bool sameChannel = false;
+            int tmpCh = 0;
+            int oldCh = 0;
+            for(auto it = srcChannels.begin(); it != srcChannels.end(); ++it){
+                if(c->destination == (*it)->destination){ //same destination
+                    sameChannel = true;
+                    oldCh = tmpCh;
+                    if((*it)->initTokens != c->initTokens)
+                        LOG_WARNING("(*it)->initTokens != c->initTokens");
+                    c->initTokens = max(c->initTokens, (*it)->initTokens);
+                    //check how the channels are to be combined. Same or different token size?
+                    //TODO: this identification could be done using the channel names
+                    //      same name = increase rates, different name = concatenate names & add token sizes
+                    if(c->tokenSize == (*it)->tokenSize){
+                        c->prod += (*it)->prod;
+                        c->cons += (*it)->cons;
+                        c->messageSize = c->prod * c->tokenSize;
+                    }else{ //different token size
+                        c->tokenSize += (*it)->tokenSize;
+                        c->messageSize = c->prod * c->tokenSize;
+                    }
+                    //append all so-far-collected ids of combined channels
+                    c->oldIds.insert(c->oldIds.end(), (*it)->oldIds.begin(),
+                            (*it)->oldIds.end());
+                    c->id = (*it)->id;
+                }
+                tmpCh++; //save the index of the found channel (for later update)
+            }
+            if(!sameChannel){ //there was no channel with same destination, so add it
+                c->id = newCh; //TODO: update channel name as well?
+                newCh++;
+                channelMap.at(c->source).push_back(c);
+            }else{ //channel already existed -> replace with new, combined channel
+                delete channelMap.at(c->source)[oldCh];
+                channelMap.at(c->source)[oldCh] = c;
+            }
+        }else{ //no entry for c->source yet
+            vector<SDFChannel*> newChannel;
+            c->id = newCh;
+            newCh++;
+            newChannel.push_back(c);
+            channelMap.insert(make_pair(c->source, newChannel));
+        }
+
+        old++; //count original channels
     }
-  }
-  for (size_t k=0; k<channels.size(); k++){
-    channels[k]->id = k;
-  }  
+
+    for(size_t i = 0; i < actors.size(); i++){
+        unordered_map<int, vector<SDFChannel*>>::const_iterator it =
+                channelMap.find(i);
+        if(it != channelMap.end()){
+            //channels.insert(channels.end(), channelMap.at(i).begin(), channelMap.at(i).end()); //append vector to channels vector
+            for(vector<SDFChannel*>::iterator y = channelMap.at(i).begin();
+                    y != channelMap.at(i).end(); ++y){
+                channels.push_back(*y);
+            }
+        }
+    }
+    for(size_t k = 0; k < channels.size(); k++){
+        channels[k]->id = k;
+    }
 }
 
-void SDFGraph::createPathMatrix(){
-  using namespace boost;
-  typedef adjacency_list<vecS, vecS, bidirectionalS> Graph;
-  typedef adjacency_list <> TcGraph;
-  pathMatrix.assign(actors.size() * actors.size(), simplePath());
-  const int num_vertices = actors.size();
+void SDFGraph::createPathMatrix() {
+    using namespace boost;
+    typedef adjacency_list<vecS, vecS, bidirectionalS> Graph;
+    typedef adjacency_list<> TcGraph;
+    pathMatrix.assign(actors.size() * actors.size(), simplePath());
+    const int num_vertices = actors.size();
 
-  Graph g(num_vertices);
-  TcGraph tc;
-  Graph g_noTokens(num_vertices);
-  TcGraph tc_noTokens;
+    Graph g(num_vertices);
+    TcGraph tc;
+    Graph g_noTokens(num_vertices);
+    TcGraph tc_noTokens;
 
-  for (size_t k=0; k<channels.size(); k++){
-    int src = channels[k]->source;
-    int dst = channels[k]->destination;
-    int initTokens = channels[k]->initTokens;
-    if(!initTokens){
-      add_edge(src, dst, g_noTokens);
+    for(size_t k = 0; k < channels.size(); k++){
+        int src = channels[k]->source;
+        int dst = channels[k]->destination;
+        int initTokens = channels[k]->initTokens;
+        if(!initTokens){
+            add_edge(src, dst, g_noTokens);
+        }
+        add_edge(src, dst, g);
     }
-    add_edge(src, dst, g);
-  }
 
-  transitive_closure(g, tc);
-  transitive_closure(g_noTokens, tc_noTokens);  
+    transitive_closure(g, tc);
+    transitive_closure(g_noTokens, tc_noTokens);
 
-  graph_traits<TcGraph>::edge_iterator ei, ei_end;
-  for (tie(ei, ei_end) = edges(tc); ei != ei_end; ++ei){
-    auto src = boost::source(*ei, tc);
-    auto dst = boost::target(*ei, tc);
+    graph_traits<TcGraph>::edge_iterator ei, ei_end;
+    for(tie(ei, ei_end) = edges(tc); ei != ei_end; ++ei){
+        auto src = boost::source(*ei, tc);
+        auto dst = boost::target(*ei, tc);
 
-    pathMatrix[src * actors.size() + dst].exists = 1;
-    pathMatrix[src * actors.size() + dst].initTokens = 1;
-  }
-  for (tie(ei, ei_end) = edges(tc_noTokens); ei != ei_end; ++ei){
-    auto src = boost::source(*ei, tc_noTokens);
-    auto dst = boost::target(*ei, tc_noTokens);
+        pathMatrix[src * actors.size() + dst].exists = 1;
+        pathMatrix[src * actors.size() + dst].initTokens = 1;
+    }
+    for(tie(ei, ei_end) = edges(tc_noTokens); ei != ei_end; ++ei){
+        auto src = boost::source(*ei, tc_noTokens);
+        auto dst = boost::target(*ei, tc_noTokens);
 
-    pathMatrix[src * actors.size() + dst].exists = 1;
-    pathMatrix[src * actors.size() + dst].initTokens = 0;
-  }
+        pathMatrix[src * actors.size() + dst].exists = 1;
+        pathMatrix[src * actors.size() + dst].initTokens = 0;
+    }
 }
 
 string SDFGraph::printPathMatrix() const {
@@ -478,8 +486,8 @@ string SDFGraph::getString() const {
     str += "\n    - cost : " + tools::toString(c->cost);
     str += "\n    - oldIds : " + tools::toString(c->oldIds);
   }
-  str += "\n* path matrix :\n";
 #ifdef DEBUG
+  str += "\n* path matrix :\n";
   str += printPathMatrix();
 #endif
   return str;

@@ -410,7 +410,7 @@ vector<SDFChannel*> Applications::getChannels(int appId){
   return channels;
 }
 
-//get the list of channels in the program 
+//get the list of channels in all programs
 vector<SDFChannel*> Applications::getChannels(){
   vector<SDFChannel*> channels;
   int newId=0;
