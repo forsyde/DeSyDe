@@ -1,5 +1,34 @@
+/**
+ * Copyright (c) 2013-2016, Kathrin Rosvall  <krosvall@kth.se>
+ *                          George Ungureanu <ugeorge@kth.se>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
 #ifndef __THROUGHPUTMCR__
 #define __THROUGHPUTMCR__
+
+
+#include "../tools/tools.hpp"
 
 #include <gecode/int.hh>
 #include <vector>
@@ -18,9 +47,20 @@ using namespace Gecode;
 using namespace Int;
 using namespace std;
 //using namespace boost;
+namespace b = boost;
 
-typedef boost::adjacency_list<boost::listS, boost::listS, boost::directedS, boost::property<boost::vertex_index_t, int>,
-        boost::property<boost::edge_weight_t, int, boost::property<boost::edge_weight2_t, int> > > boost_msag;
+//! alias for actor ID property (check BGL documentation)
+//<http://www.boost.org/doc/libs/1_53_0/libs/graph/doc/using_adjacency_list.html#sec:adjacency-list-properties>
+enum vertex_actorid_t { vertex_actorid };
+namespace boost {
+  BOOST_INSTALL_PROPERTY(vertex, actorid);
+}
+
+using actor_prop = b::property<vertex_actorid_t, int>;
+using chan_prop  = b::property<b::edge_weight_t, int, b::property<b::edge_weight2_t, int> >;
+using boost_msag = b::adjacency_list<b::vecS, b::vecS, b::directedS, actor_prop, chan_prop>;
+
+
 
 
 class ThroughputMCR : public Propagator {
@@ -52,14 +92,6 @@ protected:
   ViewArray<IntView> sendingNext; //current sending schedule for channels
   ViewArray<IntView> receivingTime; //current receiving time for channels (atm 0)
   ViewArray<IntView> receivingNext; //current receiving schedule (Note: sending schedule is included/respected in sending latency)
-  ViewArray<IntView> timedSched_start; //time-based schedule for transient phase, start times
-  ViewArray<IntView> timedSched_end; //time-based schedule for transient phase, end times
-  ViewArray<IntView> timedSched_IC_start; //time-based schedule for transient phase, start times for interconnect
-  ViewArray<IntView> timedSched_IC_end; //time-based schedule for transient phase, end times for interconnect
-  ViewArray<IntView> periodicSched_start; //time-based schedule for periodic phase, start times
-  ViewArray<IntView> periodicSched_end; //time-based schedule for periodic phase, start times
-  ViewArray<IntView> periodicSched_IC_start; //time-based schedule for periodic phase, start times for interconnect
-  ViewArray<IntView> periodicSched_IC_end; //time-based schedule for periodic phase, end times for interconnect
   IntArgs ch_src; //source actors for all channels 
   IntArgs ch_dst; //destination actors for all channels
   IntArgs tok; //initial token distribution of application graph
@@ -78,13 +110,12 @@ protected:
   unordered_map<int,vector<SuccessorNode>> msaGraph;
   //MSAG representation for boost
   boost_msag b_msag;
+  //MSAG representation for boost
+  vector<boost_msag*> b_msags;
   //for mapping from msag send/rec actors to appG-channels
   vector<int> channelMapping;
   //receivingActors: for storing/finding the first receiving actor for each dst
   vector<int> receivingActors;
-  //to represent the state of state space exploration
-  vector<int> ch_state; //tokens on channels of msag
-  vector<int> actor_delay; //actor wcets of msag
 
   //MCR results
   vector<vector<int>> wc_latency; 
@@ -102,22 +133,20 @@ protected:
   vector<int> min_rec_buffer; //min buffer size of all appG-channels
   vector<int> max_rec_buffer; //max buffer size of all appG-channels
 
-
   //for evaluation purposes
-  int calls;
-  int total_time;
   bool printDebug;
   
-  //builds the intial msaGraph & SSE-matrices
-  void debug_constructMSAG();
+  //builds the msaGraph based on the current state of the solution
   void constructMSAG();
+  //builds the msaGraph based on the current state of the solution
+  //the coMapped vector specifies for each application, which MSAG it is part of
+  void constructMSAG(vector<int> &msagMap);
   int getBlockActor(int ch_id) const;
   int getSendActor(int ch_id) const;
   int getRecActor(int ch_id) const;
   int getApp(int msagActor_id) const;
-  void printThroughputGraph();
+  void printThroughputGraph() const;
   void printThroughputGraphAsDot(const string &dir) const;
-  void printSchedule(string type, int length);
 
 
 public:
@@ -134,14 +163,6 @@ ThroughputMCR(Space& home, ViewArray<IntView> p_latency,
                          ViewArray<IntView> p_sendingNext, 
                          ViewArray<IntView> p_receivingTime,  
                          ViewArray<IntView> p_receivingNext,
-                         ViewArray<IntView> p_timedSched_start, 
-                         ViewArray<IntView> p_timedSched_end, 
-                         ViewArray<IntView> p_timedSched_IC_start,
-                         ViewArray<IntView> p_timedSched_IC_end, 
-                         ViewArray<IntView> p_periodicSched_start,
-                         ViewArray<IntView> p_periodicSched_end, 
-                         ViewArray<IntView> p_periodicSched_IC_start,
-                         ViewArray<IntView> p_periodicSched_IC_end, 
                          IntArgs p_ch_src, 
                          IntArgs p_ch_dst,
                          IntArgs p_tok, 
@@ -162,14 +183,6 @@ static ExecStatus post(Space& home, ViewArray<IntView> p_latency,
                        ViewArray<IntView> p_sendingNext, 
                        ViewArray<IntView> p_receivingTime,  
                        ViewArray<IntView> p_receivingNext,
-                       ViewArray<IntView> p_timedSched_start, 
-                       ViewArray<IntView> p_timedSched_end, 
-                       ViewArray<IntView> p_timedSched_IC_start,
-                       ViewArray<IntView> p_timedSched_IC_end, 
-                       ViewArray<IntView> p_periodicSched_start,
-                       ViewArray<IntView> p_periodicSched_end, 
-                       ViewArray<IntView> p_periodicSched_IC_start,
-                       ViewArray<IntView> p_periodicSched_IC_end, 
                        IntArgs p_ch_src, 
                        IntArgs p_ch_dst,
                        IntArgs p_tok, 
@@ -179,11 +192,8 @@ static ExecStatus post(Space& home, ViewArray<IntView> p_latency,
   (void) new (home) ThroughputMCR(home, p_latency, p_period, p_iterations, p_iterationsCh, 
                                   p_sendbufferSz, p_recbufferSz, p_next,
                                   p_wcet, p_sendingTime, p_sendingLatency, p_sendingNext,
-                                  p_receivingTime, p_receivingNext, p_timedSched_start, 
-                                  p_timedSched_end, p_timedSched_IC_start, p_timedSched_IC_end, 
-                                  p_periodicSched_start, p_periodicSched_end, 
-                                  p_periodicSched_IC_start, p_periodicSched_IC_end, 
-                                  p_ch_src, p_ch_dst, p_tok, p_apps, p_minIndices, p_maxIndices);
+                                  p_receivingTime, p_receivingNext,p_ch_src, p_ch_dst,
+                                  p_tok, p_apps, p_minIndices, p_maxIndices);
   return ES_OK;
 }
 
@@ -200,33 +210,6 @@ virtual ExecStatus propagate(Space& home, const ModEventDelta&);
 
 };
 
-//throughput constraint with propagation on time-based schedule
-extern void throughputMCR(Space& home, const IntVar latency,
-                             const IntVar period,
-                             const IntVarArgs& iterations, //min/max
-                             const IntVarArgs& iterationsCh, //min/max
-                             const IntVarArgs& sendbufferSz,
-                             const IntVarArgs& recbufferSz, 
-                             const IntVarArgs& next,  
-                             const IntVarArgs& wcet,
-                             const IntVarArgs& sendingTime,
-                             const IntVarArgs& sendingLatency,
-                             const IntVarArgs& sendingNext,
-                             const IntVarArgs& receivingTime,
-                             const IntVarArgs& receivingNext,
-                             const IntVarArgs& timedSched_start, 
-                             const IntVarArgs& timedSched_end, 
-                             const IntVarArgs& timedSched_IC_start, 
-                             const IntVarArgs& timedSched_IC_end, 
-                             const IntVarArgs& periodicSched_start, 
-                             const IntVarArgs& periodicSched_end,
-                             const IntVarArgs& periodicSched_IC_start,
-                             const IntVarArgs& periodicSched_IC_end,
-                             const IntArgs& ch_src,
-                             const IntArgs& ch_dst, 
-                             const IntArgs& tok, 
-                             const IntArgs& minIndices, 
-                             const IntArgs& maxIndices);
 
 //throughput constraint for one app without propagation on time-based schedule
 extern void throughputMCR(Space& home, const IntVar latency,

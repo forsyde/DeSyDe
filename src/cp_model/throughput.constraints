@@ -32,16 +32,21 @@ for(size_t j=0; j<platform->nodes(); j++){
   rel(*this, proc_SDF_wcet_sum[j] == sum(proc_wcet));
 }
 
-
+if(cfg->settings().th_prop == Config::SSE)
+{
 throughputSSE(*this, latency, period, iterations, iterationsCh,
            sendbufferSz, recbufferSz, next, wcet.slice(0, 1, apps->n_SDFActors()), wcct_s,
            wcct_b, sendNext, wcct_r, recNext,
            ch_src, ch_dst, ch_tok, appIndex);
-
-//throughputMCR(*this, latency, period, iterations, iterationsCh,
-//           sendbufferSz, recbufferSz, next, wcet.slice(0, 1, apps->n_SDFActors()), wcct_s,
-//           wcct_b, sendNext, wcct_r, recNext, ch_src, ch_dst, ch_tok, appIndex);
-
+LOG_INFO("using SSE propagator");
+}
+if(cfg->settings().th_prop == Config::MCR)
+{
+    throughputMCR(*this, latency, period, iterations, iterationsCh,
+           sendbufferSz, recbufferSz, next, wcet.slice(0, 1, apps->n_SDFActors()), wcct_s,
+           wcct_b, sendNext, wcct_r, recNext, ch_src, ch_dst, ch_tok, appIndex);
+    LOG_INFO("using MCR propagator");
+}
 for(size_t a=0; a<apps->n_SDFApps(); a++){
   if(apps->getPeriodConstraint(a) > 0){
     rel(*this, period[a] <= apps->getPeriodConstraint(a));

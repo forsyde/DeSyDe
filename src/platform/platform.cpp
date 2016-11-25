@@ -26,6 +26,52 @@ Platform::Platform(std::vector<PE*> p_nodes, enum InterconnectType p_type, int p
   }
 }
 
+Platform::Platform(XMLdoc& xml)
+{
+    const char* my_xpathString = "///@name";
+	LOG_DEBUG("running xpathString  " + tools::toString(my_xpathString) + " on platform xml ...");
+	for (const auto& name : xml.xpathStrings(my_xpathString)){
+		LOG_DEBUG("Platform class is parsing the following platform: " + name + "...");
+	}
+	load_xml(xml);
+    ///Assigning default interconnect
+    interconnect = Interconnect(TDMA_BUS, 32, (int) compNodes.size(), 1, (int)compNodes.size(), 1);    
+}
+void Platform::load_xml(XMLdoc& xml)
+{
+	const char* my_xpathString = "///platform/processor";
+	LOG_DEBUG("running xpathString  " + tools::toString(my_xpathString) + " platform xml ...");
+	auto xml_procs = xml.xpathNodes(my_xpathString);
+	int proc_id = 0;
+	for (const auto& proc : xml_procs)
+	{
+		string proc_model = xml.getProp(proc, "model");
+		string proc_number = xml.getProp(proc, "number");
+		LOG_DEBUG("Reading processor model: " + proc_model + "...");		
+		for(int i=0; i<atoi(proc_number.c_str()); i++)
+		{
+			PE* pe = new PE(proc_model, i);
+            /// Parsing the modes
+            string query = "///platform/processor[@model=\'" + proc_model + "\']/mode";
+            auto   modes = xml.xpathNodes(query.c_str());
+            for (auto mode : modes) {
+              string mode_name = xml.getProp(mode, "name");
+              string mode_cycle = xml.getProp(mode, "cycle");
+              string mode_mem = xml.getProp(mode, "mem");
+              string mode_power = xml.getProp(mode, "power");
+              string mode_area = xml.getProp(mode, "area");
+              string mode_monetary = xml.getProp(mode, "monetary");
+              pe->AddMode(atof(mode_cycle.c_str()), atoi(mode_mem.c_str()),
+                        atoi(mode_power.c_str()), atoi(mode_area.c_str()),
+                        atoi(mode_monetary.c_str()));
+              LOG_DEBUG("Reading processor mode: " + mode_name + "...");		
+            }
+            
+			proc_id++;
+			compNodes.push_back(pe);
+		}
+	}	
+}
 Platform::~Platform(){
   //compNodes (they were potentially created with 'new'')
   for (size_t i=0; i<compNodes.size(); i++){
@@ -212,8 +258,10 @@ bool Platform::allProcsFixed() const{
   return true;
 }
 
-string Platform::getProcModel(int id)
+string Platform::getProcModel(size_t id)
 {
+  if(id > compNodes.size())
+      THROW_EXCEPTION(InvalidArgumentException,"processor id out of bound\n");  
   return compNodes[id]->model;
 }
 

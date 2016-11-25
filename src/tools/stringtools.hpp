@@ -60,6 +60,8 @@ std::string toString(const T& e) throw () {
   return ss.str();
 }
 
+//set<int,less<int>,allocator<int>>
+
 /*template<template<class, class> class TContainer>
 std::string toString(const TContainer<std::string, std::allocator<std::string>> & container) throw () {
   std::ostringstream imploded;
@@ -68,6 +70,26 @@ std::string toString(const TContainer<std::string, std::allocator<std::string>> 
              std::ostream_iterator<std::string>(imploded, delim));
   return imploded.str();
 }*/
+
+template <typename T>
+void printcoll (T const& coll)
+{
+    typename T::const_iterator pos;  // iterator to iterate over coll
+    typename T::const_iterator end(coll.end());  // end position
+
+    for (pos=coll.begin(); pos!=end; ++pos) {
+        std::cout << *pos << ' ';
+    }
+    std::cout << std::endl;
+}
+
+template<template<class, class, class> class TContainer, class TComp, class TObject>
+std::string toString(const TContainer<TObject, TComp, std::allocator<TObject>> & container) throw () {
+  string out = "{";
+  for (const auto& el : container)
+    out+=tools::toString(el) + " ";
+  return out + "}";
+}
 
 template<template<class, class> class TContainer, class TObject>
 std::string toString(const TContainer<TObject, std::allocator<TObject>> & container) throw () {

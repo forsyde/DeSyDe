@@ -1,12 +1,11 @@
 #include "sdf_pr_online_model.hpp"
 
-SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, DSESettings* dseSettings):
+SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
     apps(p_mapping->getApplications()),
     platform(p_mapping->getPlatform()),
     mapping(p_mapping),
-    settings(dseSettings),
-    next(*this, apps->n_SDFActors()+platform->nodes(), 0, apps->n_SDFActors()+platform->nodes()),
-    rank(*this, apps->n_SDFActors(), 0, apps->n_SDFActors()-1),
+    cfg(_cfg),
+    next(*this, apps->n_SDFActors()+platform->nodes(), 0, apps->n_SDFActors()+platform->nodes()),    
     proc(*this, apps->n_programEntities(), 0, platform->nodes()-1),
     proc_mode(*this, platform->nodes(), 0, platform->getMaxModes()),
     tdmaAlloc(*this, platform->nodes(), 0, platform->tdmaSlots()),
@@ -22,7 +21,8 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, DSESettings* dseSettings)
     sys_utilization(*this, 0, p_mapping->max_utilization),
     procsUsed_utilization(*this, 0, p_mapping->max_utilization),
     proc_power(*this, platform->nodes(), 0, Int::Limits::max),
-    sys_power(*this, mapping->getLeastPowerConsumption(), Int::Limits::max),
+    //sys_power(*this, mapping->getLeastPowerConsumption(), Int::Limits::max),
+    sys_power(*this, 0, Int::Limits::max),
     proc_area(*this, platform->nodes(), 0, Int::Limits::max),
     sys_area(*this, 0, Int::Limits::max),
     proc_cost(*this, platform->nodes(), 0, Int::Limits::max),
@@ -31,10 +31,11 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, DSESettings* dseSettings)
     wcct_s(*this, apps->n_programChannels(), 0, Int::Limits::max),
     wcct_r(*this, apps->n_programChannels(), 0, Int::Limits::max),
     least_power_est(mapping->getLeastPowerConsumption()){
-
+    LOG_DEBUG("Creating CP model");
+    if(apps->n_SDFActors() > 0){
+        rank = IntVarArray(*this, apps->n_SDFActors(), 0, apps->n_SDFActors()-1);
+    }
     std::ostream debug_stream(nullptr); /**< debuging stream, it is printed only in debug mode. */
-    std::stringbuf debug_strbuf;
-    debug_stream.rdbuf(&debug_strbuf);
     debug_stream << "\n==========\ndebug log:\n..........\n";
     vector<SDFChannel*> channels = apps->getChannels();
 
@@ -157,7 +158,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, DSESettings* dseSettings)
          * Memory
          */
         cout << "Inserting memory constraints \n";
-#include "memory.constraints"   
+#include "memory.constraints"
 
         /**
          * Throughput
@@ -187,9 +188,63 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, DSESettings* dseSettings)
 
                     sumMinWCETs[a] += maxMinWcetActor[i];
                 }
-            }
-        }
+      }
+    }
 #include "throughput.constraints"
+
+    cout << "Inserting presolver constraints \n";
+//#include "presolve.constraints"
+
+    if (cfg->is_presolved()) {
+      LOG_INFO("The model is presolved");
+      if (cfg->getPresolverResults()->it_mapping < cfg->getPresolverResults()->oneProcMappings.size()) {
+        vector<tuple<int, int>> oneProcMapping =
+            cfg->getPresolverResults()->oneProcMappings[cfg->getPresolverResults()->it_mapping];
+
+        for (size_t a = 0; a < apps->n_SDFActors(); a++) {
+          rel(*this, proc[a] == get<0>(oneProcMapping[apps->getSDFGraph(a)]));
+          rel(*this, proc_mode[get<0>(oneProcMapping[apps->getSDFGraph(a)])] == get<1>(oneProcMapping[apps->getSDFGraph(a)]));
+        }
+      } else { //...otherwise forbid all mappings in oneProcMappings
+        cout << "Now forbidding " << cfg->getPresolverResults()->oneProcMappings.size() << " mappings." << endl;
+        cout << endl;
+        for (size_t i = 0;
+            i < cfg->getPresolverResults()->oneProcMappings.size(); i++) {
+          vector<tuple<int, int>> oneProcMapping =
+              cfg->getPresolverResults()->oneProcMappings[i];
+          IntVarArgs t_mapping(*this, apps->n_programEntities(), 0,
+              platform->nodes() - 1);
+          for (size_t a = 0; a < apps->n_SDFActors(); a++) {
+            rel(*this,
+                t_mapping[a] == get<0>(oneProcMapping[apps->getSDFGraph(a)]));
+          }
+          rel(*this, t_mapping, IRT_NQ, proc);
+        }
+      }
+    }
+
+    switch (cfg->settings().criteria[0]) {
+    case (Config::POWER):
+      for (size_t i = 0;
+          i < cfg->getPresolverResults()->sys_energys.size(); i++) {
+        rel(*this, sys_power < cfg->getPresolverResults()->sys_energys[i]);
+      }
+      break;
+    case (Config::THROUGHPUT):
+      for (size_t i = 0; i < apps->n_SDFApps(); i++) {
+        if (apps->getPeriodConstraint(i) == -1) {
+          for (size_t j = 0; j < cfg->getPresolverResults()->periods.size(); j++) {
+            rel(*this, period[i] < cfg->getPresolverResults()->periods[j][i]);
+          }
+          break;
+        }
+      }
+      break;
+    default:
+      cout << "unknown optimization criterion !!!\n";
+      throw 42;
+      break;
+    }
 
         for(size_t i = 0; i < channels.size(); i++){
             delete channels[i];
@@ -232,7 +287,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, DSESettings* dseSettings)
         IntVarArgs procBranchOrderOther;
         cout << "    procBranchOrderSAT: " << endl;
         for(unsigned a = 0; a < ids.size(); a++){
-            if(apps->getPeriodConstraint(ids[a]) > 0 && !settings->doOptimize()){
+            if(apps->getPeriodConstraint(ids[a]) > 0 && !cfg->doOptimize()){
                 vector<int> branchProc = mapping->sortedByWCETs(ids[a]);
                 cout << "      " << apps->getGraphName(ids[a]) << " [";
                 for(int i = minA[ids[a]]; i <= maxA[ids[a]]; i++){
@@ -245,9 +300,9 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, DSESettings* dseSettings)
         }
         cout << "    procBranchOrderOPT: " << endl;
         for(size_t a = 0; a < ids.size(); a++){
-            if(apps->getPeriodConstraint(ids[a]) > 0 && settings->doOptimize()){
+            if(apps->getPeriodConstraint(ids[a]) > 0 && cfg->doOptimize()){
                 vector<int> branchProc = mapping->sortedByWCETs(ids[a]);
-                cout << "      " << apps->getGraphName(ids[ids[a]]) << " [";
+                cout << "      " << apps->getGraphName(ids[a]) << " [";
                 for(int i = minA[ids[a]]; i <= maxA[ids[a]]; i++){
                     procBranchOrderOPT << proc[i];
                     //procBranchOrderOPT << rank[i];
@@ -257,7 +312,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, DSESettings* dseSettings)
             }
         }
         for(size_t a = 0; a < apps->n_SDFApps(); a++){
-            if(apps->getPeriodConstraint(a) < 0 && settings->doOptimize()){
+            if(apps->getPeriodConstraint(a) < 0 && cfg->doOptimize()){
                 vector<int> branchProc = mapping->sortedByWCETs(a);
                 cout << "      " << apps->getGraphName(a) << " [";
                 for(int i = minA[a]; i <= maxA[a]; i++){
@@ -270,7 +325,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, DSESettings* dseSettings)
         }
         cout << "    procBranchOrderOther: " << endl;
         for(unsigned a = 0; a < apps->n_SDFApps(); a++){
-            if(apps->getPeriodConstraint(a) <= 0 && !settings->doOptimize()){
+            if(apps->getPeriodConstraint(a) <= 0 && !cfg->doOptimize()){
                 cout << "      " << apps->getGraphName(a) << " [";
                 for(int i = minA[a]; i <= maxA[a]; i++){
                     procBranchOrderOther << proc[i];
@@ -326,9 +381,6 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, DSESettings* dseSettings)
         branch(*this, proc, INT_VAR_NONE(), INT_VAL(&valueProc));
         branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN());
     }
-
-    if(settings->IsDebug())
-        cout << debug_strbuf.str();
 }
 
 SDFPROnlineModel::SDFPROnlineModel(bool share, SDFPROnlineModel& s):
@@ -336,7 +388,7 @@ SDFPROnlineModel::SDFPROnlineModel(bool share, SDFPROnlineModel& s):
     apps(s.apps),
     platform(s.platform),
     mapping(s.mapping),
-    settings(s.settings),
+    cfg(s.cfg),
     least_power_est(s.least_power_est){
 
     next.update(*this, share, s.next);

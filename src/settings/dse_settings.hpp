@@ -38,6 +38,13 @@
 using namespace std;
 using namespace DeSyDe;
 
+struct PresolverResults{
+  size_t it_mapping; /**< Informs the CP model how to use oneProcMappings: <.size(): Enforce mapping, >=.size() Forbid all. */
+  vector<vector<tuple<int,int>>> oneProcMappings;
+  vector<vector<int>> periods;
+  vector<int> sys_energys;
+};
+
 class DSESettings
 {
 public:
@@ -68,7 +75,7 @@ public:
     void     setInputsPath(string _inputsPath);
     
     /**
-     * returs 1 if the mode is debug
+     * returns 1 if the mode is debug
      */ 
     int IsDebug();
     /**
@@ -81,9 +88,13 @@ public:
     unsigned long int getTimeout();  
     friend std::ostream& operator<< (std::ostream &out, const DSESettings &dseSettings);
     
+    void setPresolverResults(shared_ptr<PresolverResults> _p);
+    shared_ptr<PresolverResults> getPresolverResults();
+
 private:
     
     Config& cfg;
+    shared_ptr<PresolverResults> pre_results;
     enum     Config::CPModels         model;
     enum     Config::SearchTypes     search;
     enum     Config::OptCriterion    criterion;

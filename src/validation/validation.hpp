@@ -39,7 +39,7 @@ using namespace Gecode;
 //template <class CPModelTemplate>
 class Validation {
 public:
-  Validation(Mapping* _map, DSESettings* settings);
+  Validation(Mapping* _map, Config& cfg);
     
   /**
    * Loops through all solutions and test the schedulability

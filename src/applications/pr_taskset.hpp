@@ -24,6 +24,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 #include "pr_task.hpp"
+#include "../xml/xmldoc.hpp"
 
 using namespace std;
 
@@ -32,12 +33,17 @@ class TaskSet {
 protected:
     vector<PeriodicTask*> tasks;
     clock_t schedulabilityTime;
+    /**
+     * Loads the taskset from an input xml file
+     */
+     void load_xml(XMLdoc& xml);
 
 public:
     enum SchedulingAlgorith {FP, EDF};
     TaskSet();
     ~TaskSet();
     TaskSet(vector<PeriodicTask*> _tasks);
+    TaskSet(XMLdoc& doc);
     SchedulingAlgorith Scheduler;
 
     int getNumberOfTasks();
@@ -83,6 +89,6 @@ public:
     /**
      * Swaps task_i with task_j
      */ 
-    void SwapTasks(int i, int j);
+    void SwapTasks(int i, int j);       
     
 };

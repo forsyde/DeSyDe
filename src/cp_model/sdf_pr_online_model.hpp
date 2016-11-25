@@ -1,3 +1,6 @@
+#ifndef __SDF_PR_ONLINE_MODEL__
+#define __SDF_PR_ONLINE_MODEL__
+
 /**
  * Copyright (c) 2013-2016, Nima Khalilzad   <nkhal@kth.se>
  *                             Kathrin Rosvall  <krosvall@kth.se>
@@ -55,14 +58,14 @@ private:
     Platform*                 platform;    /**< Pointer to the platform object. */
     Mapping*                 mapping;    /**< Pointer to the mapping object. */
     DesignDecisions*         desDec;        /**< Pointer to the design decition object. */
-    DSESettings*             settings;    /**< Pointer to the setting object. */
-
+    //DSESettings*             settings;    /**< Pointer to the setting object. */
+    Config*                  cfg;    /**< Pointer to the config object. */
 
     IntVarArray             next;        /**< static schedule of firings. */
     IntVarArray             rank;
     IntVarArray             proc;        /**< mapping of firings onto processors. */
     IntVarArray             proc_mode;    /**< processor modes: economy, regular and performance. */
-    IntVarArray                tdmaAlloc;    /**< allocation of TDMA slots to processors. */
+    IntVarArray                tdmaAlloc;    /**< allocation of TDMA slots to processors.__PRESOLVER__ */
 
     IntVarArray             sendNext;    /**< a schedule for sent messages on interconnect. */
     IntVarArray             recNext;    /**< a schedule for sent messages on interconnect. */
@@ -91,11 +94,12 @@ private:
     IntVarArray             wcct_s;                    /**< communication delay, send. */
     IntVarArray             wcct_r;                    /**< coummunication delay, receive */
     
+
     int                        least_power_est;        /**< estimated least power consumption. */
   
 public:
 
-    SDFPROnlineModel(Mapping* p_mapping, DSESettings* dseSettings);
+    SDFPROnlineModel(Mapping* p_mapping, Config* _cfg);
 
     SDFPROnlineModel(bool share, SDFPROnlineModel& s);
 
@@ -138,7 +142,7 @@ public:
     {
         const SDFPROnlineModel& b = static_cast<const SDFPROnlineModel&>(_b);
 
-        switch(settings->getOptCriterion())
+        switch(cfg->settings().criteria[0]) //creates the model based on the first criterion
         {
             case(Config::POWER):
                 rel(*this, sys_power < b.sys_power);
@@ -147,7 +151,8 @@ public:
                 for(size_t i=0;i<apps->n_SDFApps();i++)
                 {
                     if(apps->getPeriodConstraint(i) == -1)
-                        {    rel(*this, period[i] < b.period[i]);break;} 
+                    cout << "BAB app: " << i << "period=" << b.period[i] << endl;
+                        {    rel(*this, period[i] < b.period[i]);break;}
                 }
                 break;
             case(Config::LATENCY):
@@ -166,10 +171,11 @@ public:
   
     vector<int> getPeriodResults();
     
-    
     /**
     * Returns the processor number which task i has to be allocated.
     */ 
     static int valueProc(const Space& home, IntVar x, int i);
     typedef int (*IntBranchVal)(const Space& home, IntVar x, int i);    
 };
+
+#endif
