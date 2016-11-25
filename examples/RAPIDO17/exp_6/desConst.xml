@@ -3,7 +3,7 @@
 	<constraint app_name="a_sobel" period="500" latency="8000"></constraint> 
     <constraint app_name="b_susan" period="1200" latency="8000"></constraint> 
     <constraint app_name="c_rasta" period="800" latency="8000"></constraint> 
-    <constraint app_name="d_jpegEnc1" period="-1" latency="8000"></constraint>
+    <constraint app_name="d_jpegEnc1" period="4500" latency="8000"></constraint>
     <constraint app_name="e_vad" period="9500" latency=""></constraint> 	
     <constraint app_name="g10_3_cycl" period="-1" latency="8000"></constraint>
 </designConstraints>

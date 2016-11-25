@@ -50,15 +50,15 @@
       </actor>
       <channel name="ch0" srcActor="a0" srcPort="p2" dstActor="a1" dstPort="p0"/>
       <channel name="ch1" srcActor="a0" srcPort="p1" dstActor="a2" dstPort="p0"/>
-      <channel name="ch2" srcActor="a3" srcPort="p3" dstActor="a1" dstPort="p1"/>
+      <channel name="ch2" srcActor="a3" srcPort="p3" dstActor="a1" dstPort="p1" initialTokens="1"/>
       <channel name="ch3" srcActor="a4" srcPort="p1" dstActor="a3" dstPort="p0"/>
       <channel name="ch4" srcActor="a4" srcPort="p2" dstActor="a5" dstPort="p0"/>
       <channel name="ch5" srcActor="a6" srcPort="p1" dstActor="a0" dstPort="p0" initialTokens="1"/>
       <channel name="ch6" srcActor="a5" srcPort="p2" dstActor="a7" dstPort="p0"/>
       <channel name="ch7" srcActor="a1" srcPort="p3" dstActor="a8" dstPort="p0"/>
       <channel name="ch8" srcActor="a1" srcPort="p2" dstActor="a9" dstPort="p1"/>
-      <channel name="ch9" srcActor="a3" srcPort="p2" dstActor="a8" dstPort="p1"/>
-      <channel name="ch11" srcActor="a3" srcPort="p1" dstActor="a6" dstPort="p0"/>
+      <channel name="ch10" srcActor="a3" srcPort="p1" dstActor="a6" dstPort="p0"/>
+      <channel name="ch11" srcActor="a8" srcPort="p2" dstActor="a4" dstPort="p0"/>
       <channel name="ch12" srcActor="a2" srcPort="p1" dstActor="a5" dstPort="p1"/>
     </sdf>
     <sdfProperties>
@@ -169,7 +169,7 @@
       <channelProperties channel="ch8">
         <tokenSize sz="16"/>
       </channelProperties>
-      <channelProperties channel="ch9">
+      <channelProperties channel="ch10">
         <tokenSize sz="16"/>
       </channelProperties>
       <channelProperties channel="ch11">
