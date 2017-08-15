@@ -140,9 +140,114 @@ if(platform->getInterconnectType() == TDMA_BUS){
     rel(*this, (channelsOnProc[j]>0) >> (tdmaAlloc[j]>0));
   }
   rel(*this, sum(tdmaAlloc) <= platform->tdmaSlots());
+  
+} else if(platform->getInterconnectType() == TDN_NOC){ //TDN-NoC ~~~~~~~
+  vector<tdn_graphNode> tdn_graph = platform->getTDNGraph();
+  LOG_INFO("TDN graph is of size " + tools::toString(tdn_graph.size()));
+  
+  //constraints on TDN (injection and state of NoC) table
+  for(size_t i=0; i<tdn_graph.size(); i++){
+    vector<int> passingProcs(tdn_graph[i].passingProcs.begin(), tdn_graph[i].passingProcs.end());
+    passingProcs.push_back(platform->nodes());
+    IntArgs passingProcsArgs(passingProcs);
+    IntSet passingProcsDomain(passingProcsArgs);
+    
+    dom(*this, tdnTable[i], passingProcsDomain);
+  }
+  
+  for(unsigned int ki=0; ki<channels.size(); ki++){
+    int src_ch1 = channels[ki]->source;
+    int dst_ch1 = channels[ki]->destination;
+    int tok_ch1 = channels[ki]->initTokens;
+    
+    //receiving doesn't take any time on TDN NoC (buffer in receiving node's local memory)
+    rel(*this, wcct_r[ki]==0); 
+    //if src and dst actors are located on same proc, communication doesn't take any time
+    rel(*this, (proc[src_ch1]==proc[dst_ch1]) >> (wcct_b[ki]==0));
+    rel(*this, (proc[src_ch1]==proc[dst_ch1]) >> (wcct_s[ki]==0));
+    rel(*this, (proc[src_ch1]==proc[dst_ch1]) >> (recbufferSz[ki]==1));
+    rel(*this, (proc[src_ch1]==proc[dst_ch1]) >> (sendbufferSz[ki]==0));
+    //if src and dst actors are on different proc, wcct consists of blocking and transfer time
+    rel(*this, (proc[src_ch1]!=proc[dst_ch1]) >> (wcct_b[ki] == blockingTime_s[ki]));
+    rel(*this, (proc[src_ch1]!=proc[dst_ch1]) >> (wcct_s[ki] == transferTime_s[ki]));
+    rel(*this, (proc[src_ch1]!=proc[dst_ch1]) >> (wcct_b[ki] > 0));
+    rel(*this, (proc[src_ch1]!=proc[dst_ch1]) >> (wcct_s[ki] > 0));
+    rel(*this, (proc[src_ch1]!=proc[dst_ch1]) >> (recbufferSz[ki]>=1));
+    rel(*this, (proc[src_ch1]!=proc[dst_ch1]) >> (sendbufferSz[ki]>=1));
+    
+    //blocking and transfer times
+  
+    //order-based scheduling of messages
+    rel(*this, sendNext[ki]!=ki);
+    rel(*this, (sendNext[ki]>=apps->n_programChannels()) >> (sendNext[ki]==apps->n_programChannels()+proc[src_ch1]));
+    rel(*this, recNext[ki]!=ki);
+    rel(*this, (recNext[ki]>=apps->n_programChannels()) >> (recNext[ki]==apps->n_programChannels()+proc[dst_ch1]));
+   
+    for(unsigned int kj=0; kj<channels.size(); kj++){
+      int src_ch2 = channels[kj]->source;
+      int dst_ch2 = channels[kj]->destination;
+      int tok_ch2 = channels[kj]->initTokens;
+      if(ki != kj){
+        //sending
+        rel(*this, (proc[src_ch1]==proc[src_ch2] && rank[src_ch1] < rank[src_ch2]) >> (sendNext[kj]!=ki));
+        rel(*this, (proc[src_ch1]!=proc[src_ch2]) >> (sendNext[kj]!=ki));
+        if(src_ch1==src_ch2){
+          //TODO: think about the role of inital tokens for this case. Intuitively, (if proc[dst_ch1]!=proc[dst_ch2]),
+          //the channel without initial tokens should communicate first. But are there situations where it is
+          //advantageous to not do that?
+          rel(*this, (proc[dst_ch1]==proc[dst_ch2] && rank[dst_ch1] < rank[dst_ch2]) >> (sendNext[kj] != ki)); 
+          if(tok_ch1==tok_ch2){
+            rel(*this, (proc[dst_ch1]!=proc[dst_ch2] && proc[src_ch1]==proc[dst_ch1]) >> (sendNext[kj] != ki)); 
+          }
+          if(apps->dependsOn(dst_ch1,dst_ch2)){ 
+            rel(*this, sendNext[kj] != ki); 
+          }
+        }
+        //receiving
+        //if(tok_ch1==0 && tok_ch2==0)
+        rel(*this, (proc[dst_ch1]==proc[dst_ch2] && rank[dst_ch1] < rank[dst_ch2]) >> (recNext[kj]!=ki));
+        rel(*this, (proc[dst_ch1]!=proc[dst_ch2]) >> (recNext[kj]!=ki));
+        if(dst_ch1==dst_ch2){
+          if(tok_ch1==tok_ch2){ //if both channels have the same amount of initial tokens (none or one)
+            rel(*this, (proc[src_ch1]==proc[src_ch2] && rank[src_ch1] < rank[src_ch2]) >> (recNext[kj] != ki));
+            rel(*this, (proc[src_ch1]!=proc[src_ch2] && proc[src_ch1]==proc[dst_ch1]) >> (recNext[kj] != ki));
+          }else if(tok_ch1<tok_ch2){ //ch1 has no initial token, but ch2 does
+            //TODO: investigate this situation (see more info on TODO list)
+          }
+          //The constraint below, as equivalent to the sending-version, does not make
+          //sense for receiving order. Depending on sending times (token size, tdma allocation), the token from src_ch2
+          //may arrive earlier than the token from src_ch1
+          //if(apps->dependsOn(src_ch1,src_ch2)){ 
+          //  rel(*this, recNext[ki] < recNext[kj]); 
+          //}
+        }
+      }
+    }
+
+    //ordering of dummy nodes
+    for(size_t j=0; j<platform->nodes(); j++){
+      if(j<platform->nodes()-1){
+        rel(*this, (proc[src_ch1]!=j+1) >> (sendNext[apps->n_programChannels()+j]!=ki));
+        rel(*this, (proc[dst_ch1]!=j+1) >> (recNext[apps->n_programChannels()+j]!=ki));
+        rel(*this, sendNext[apps->n_programChannels()+j]<apps->n_programChannels() 
+                   || sendNext[apps->n_programChannels()+j]==apps->n_programChannels()+j+1);
+        rel(*this, recNext[apps->n_programChannels()+j]<apps->n_programChannels() 
+                   || recNext[apps->n_programChannels()+j]==apps->n_programChannels()+j+1);
+      }else{
+        rel(*this, (proc[src_ch1]!=0) >> (sendNext[apps->n_programChannels()+j]!=ki));
+        rel(*this, (proc[dst_ch1]!=0) >> (recNext[apps->n_programChannels()+j]!=ki));
+        rel(*this, sendNext[apps->n_programChannels()+j]<apps->n_programChannels() 
+                   || sendNext[apps->n_programChannels()+j]==apps->n_programChannels());
+        rel(*this, recNext[apps->n_programChannels()+j]<apps->n_programChannels() 
+                   || recNext[apps->n_programChannels()+j]==apps->n_programChannels());
+      }
+    }
+  }
+  circuit(*this, sendNext, ICL_DOM);
+  circuit(*this, recNext, ICL_DOM);
+  
+  //TDN slot allocation (injection table)
 }
-
-
 // *** CONSTRAINTS FORCING THE DESIGN DECISIONS ***
 
 

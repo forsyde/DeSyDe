@@ -10,6 +10,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
     proc(*this, apps->n_programEntities(), 0, platform->nodes()-1),
     proc_mode(*this, platform->nodes(), 0, platform->getMaxModes()),
     tdmaAlloc(*this, platform->nodes(), 0, platform->tdmaSlots()),
+    tdnTable(*this, platform->getTDNGraph().size(), 0, platform->nodes()),
     sendNext(*this, apps->n_programChannels()+platform->nodes(), 0, apps->n_programChannels()+platform->nodes()),
     recNext(*this, apps->n_programChannels()+platform->nodes(), 0, apps->n_programChannels()+platform->nodes()),
     sendbufferSz(*this, apps->n_programChannels(), 0, Int::Limits::max),
@@ -194,7 +195,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
 //#include "presolve.constraints"
 
     if (cfg->is_presolved()) {
-      LOG_INFO("The model is presolved");
+      LOG_INFO("sdf_pr_online_model.cpp: The model is presolved");
       if (cfg->getPresolverResults()->it_mapping < cfg->getPresolverResults()->oneProcMappings.size()) {
         vector<tuple<int, int>> oneProcMapping =
             cfg->getPresolverResults()->oneProcMappings[cfg->getPresolverResults()->it_mapping];
@@ -394,6 +395,7 @@ SDFPROnlineModel::SDFPROnlineModel(bool share, SDFPROnlineModel& s):
     proc.update(*this, share, s.proc);
     proc_mode.update(*this, share, s.proc_mode);
     tdmaAlloc.update(*this, share, s.tdmaAlloc);
+    tdnTable.update(*this, share, s.tdnTable);
     sendNext.update(*this, share, s.sendNext);
     recNext.update(*this, share, s.recNext);
     sendbufferSz.update(*this, share, s.sendbufferSz);
@@ -453,6 +455,12 @@ void SDFPROnlineModel::print(std::ostream& out) const {
     }
     out << endl;
     out << "TDMA slots: " << tdmaAlloc << endl;
+    //print TDN table
+    for(size_t ii = 0; ii < tdnTable.size(); ii++){
+      if(ii!=0 && ii%platform->getTDNCycles()==0){out << endl;}
+      out << tdnTable[ii] << " ";
+    }
+    out << endl;
     out << "S-order: " << sendNext << endl;
     out << "wcct_b: " << wcct_b << endl;
     out << "wcct_s: " << wcct_s << endl;

@@ -408,6 +408,10 @@ vector<tdn_graphNode> Platform::getTDNGraph() const{
   return tdn_graph;  
 }
 
+int Platform::getTDNCycles() const{
+  return interconnect.tdnCycles;
+}
+
 int Platform::tdmaSlots() const{
   return interconnect.tdmaSlots;
 }

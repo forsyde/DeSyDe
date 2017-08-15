@@ -54,18 +54,19 @@ class SDFPROnlineModel : public Space
 {
   
 private:
-    Applications*             apps;         /**< Pointer to the application object. */  
-    Platform*                 platform;    /**< Pointer to the platform object. */
-    Mapping*                 mapping;    /**< Pointer to the mapping object. */
-    DesignDecisions*         desDec;        /**< Pointer to the design decition object. */
+    Applications*           apps;         /**< Pointer to the application object. */  
+    Platform*               platform;    /**< Pointer to the platform object. */
+    Mapping*                mapping;    /**< Pointer to the mapping object. */
+    DesignDecisions*        desDec;        /**< Pointer to the design decition object. */
     //DSESettings*             settings;    /**< Pointer to the setting object. */
-    Config*                  cfg;    /**< Pointer to the config object. */
+    Config*                 cfg;    /**< Pointer to the config object. */
 
     IntVarArray             next;        /**< static schedule of firings. */
     IntVarArray             rank;
     IntVarArray             proc;        /**< mapping of firings onto processors. */
     IntVarArray             proc_mode;    /**< processor modes: economy, regular and performance. */
-    IntVarArray                tdmaAlloc;    /**< allocation of TDMA slots to processors.__PRESOLVER__ */
+    IntVarArray             tdmaAlloc;    /**< allocation of TDMA slots to processors.*/
+    IntVarArray             tdnTable;     /**< TDN injection and state-of-NoC table.*/
 
     IntVarArray             sendNext;    /**< a schedule for sent messages on interconnect. */
     IntVarArray             recNext;    /**< a schedule for sent messages on interconnect. */
@@ -79,17 +80,17 @@ private:
     IntVarArray             period;                    /**< period of all applications (inverse of throughput). */
     IntVarArray             proc_period;            /**< period of the processors. */
     IntVarArray             latency;                /**< initial latency of all applications. */
-    IntVar                     procsUsed;                /**< number of processors used in mapping. */
+    IntVar                  procsUsed;                /**< number of processors used in mapping. */
     IntVarArray             utilization;            /**< utilization of processing nodes. */
     IntVarArray             proc_util_sum;            /**< sum utilization of processing nodes. */
-    IntVar                     sys_utilization;        /**< utilization of all procs. */
-    IntVar                     procsUsed_utilization;    /**< utilization of all used procs */
+    IntVar                  sys_utilization;        /**< utilization of all procs. */
+    IntVar                  procsUsed_utilization;    /**< utilization of all used procs */
     IntVarArray             proc_power;                /**< long-run consumption of each proc. */
-    IntVar                     sys_power;                /**< long-run consumption of system. */
+    IntVar                  sys_power;                /**< long-run consumption of system. */
     IntVarArray             proc_area;                /**< area cost of each proc. */
-    IntVar                     sys_area;                /**< area cost of all procs combined. */
+    IntVar                  sys_area;                /**< area cost of all procs combined. */
     IntVarArray             proc_cost;                /**< monetary cost of each proc. */
-    IntVar                     sys_cost;                /**< monetary cost of all procs combined. */
+    IntVar                  sys_cost;                /**< monetary cost of all procs combined. */
     IntVarArray             wcct_b;                    /**< communication delay, block (pre-send-wait). */
     IntVarArray             wcct_s;                    /**< communication delay, send. */
     IntVarArray             wcct_r;                    /**< coummunication delay, receive */

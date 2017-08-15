@@ -218,6 +218,7 @@ private:
     out.close();
     outFull.close();
     // +++ Now: Create the full model
+    LOG_INFO("Creating full SDFPROnlineModel from Presolver...");
     results->it_mapping = results->oneProcMappings.size();
     settings.setPresolverResults(results);
 

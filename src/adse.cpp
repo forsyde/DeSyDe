@@ -98,8 +98,6 @@ int main(int argc, const char* argv[]) {
 			xml.read(false);
 			platform =  new Platform(xml);
 			cout << *platform << endl;
-      
-      getchar();
 	   }
 	   /// Storing WCET xml path
        size_t found_wcet=path.find("WCETs");
@@ -148,7 +146,7 @@ int main(int argc, const char* argv[]) {
 
     //PRESOLVING +++
 
-    LOG_INFO("Creating PRESOLVING constraint model object ... ");
+    //LOG_INFO("Creating PRESOLVING constraint model object ... ");
     //OneProcModel* pre_model = new OneProcModel(map, cfg);
 
     LOG_INFO("Creating PRESOLVING execution object ... ");
@@ -169,6 +167,8 @@ int main(int argc, const char* argv[]) {
     LOG_INFO("Creating an execution object ... ");
     Execution<SDFPROnlineModel> execObj(model, cfg);
 
+    getchar();
+    
     LOG_INFO("Running the model object ... ");
     execObj.Execute();
 

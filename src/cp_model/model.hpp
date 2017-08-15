@@ -40,6 +40,7 @@ private:
   IntVarArray proc_mode;
   //allocation of TDMA slots to processors
   IntVarArray tdmaAlloc;
+    IntVarArray             tdnTable;     /**< TDN injection and state-of-NoC table.*/
   
   //needed for prediction of communication time
   //a schedule for sent messages on interconnect

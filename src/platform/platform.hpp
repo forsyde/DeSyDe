@@ -267,6 +267,8 @@ public:
   
   // Gives the TDN Graph / Table
   vector<tdn_graphNode> getTDNGraph() const;
+  
+  int getTDNCycles() const;
 
   // Gives the number of tdma slots of the interconnect
   int tdmaSlots() const;
