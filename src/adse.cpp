@@ -98,6 +98,8 @@ int main(int argc, const char* argv[]) {
 			xml.read(false);
 			platform =  new Platform(xml);
 			cout << *platform << endl;
+      
+      getchar();
 	   }
 	   /// Storing WCET xml path
        size_t found_wcet=path.find("WCETs");

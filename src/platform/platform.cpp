@@ -9,24 +9,24 @@ Platform::Platform(size_t p_nodes, int p_cycle, size_t p_memSize, int p_buffer, 
                                vector<int>(1,10),vector<int>(1,1),p_buffer));
   }
 
-  interconnect = Interconnect(p_type, p_dps, p_tdma, p_roundLength, p_nodes, 1);
+  interconnect = Interconnect(p_type, p_dps, p_tdma, p_roundLength, p_nodes, 1,0,0,0);
 }
 
 Platform::Platform(std::vector<PE*> p_nodes, enum InterconnectType p_type, int p_dps, int p_tdma, int p_roundLength){
   compNodes = p_nodes;
-  interconnect = Interconnect(p_type, p_dps, p_tdma, p_roundLength, (int)p_nodes.size(), 1);
+  interconnect = Interconnect(p_type, p_dps, p_tdma, p_roundLength, (int)p_nodes.size(), 1,0,0,0);
 }
 
 Platform::Platform(std::vector<PE*> p_nodes, enum InterconnectType p_type, int p_dps, int p_tdma, int p_roundLength, int p_col, int p_row){
   compNodes = p_nodes;
   if(p_type == NOC){
-    interconnect = Interconnect(p_type, p_dps, p_tdma, p_roundLength, p_col, p_row);
+    interconnect = Interconnect(p_type, p_dps, p_tdma, p_roundLength, p_col, p_row,0,0,0);
   }else{
-    interconnect = Interconnect(p_type, p_dps, p_tdma, p_roundLength, (int)p_nodes.size(), 1);
+    interconnect = Interconnect(p_type, p_dps, p_tdma, p_roundLength, (int)p_nodes.size(), 1,0,0,0);
   }
 }
 
-Platform::Platform(XMLdoc& xml)
+Platform::Platform(XMLdoc& xml) throw (InvalidArgumentException)
 {
     const char* my_xpathString = "///@name";
 	LOG_DEBUG("running xpathString  " + tools::toString(my_xpathString) + " on platform xml ...");
@@ -35,9 +35,12 @@ Platform::Platform(XMLdoc& xml)
 	}
 	load_xml(xml);
     ///Assigning default interconnect
-    interconnect = Interconnect(TDMA_BUS, 32, (int) compNodes.size(), 1, (int)compNodes.size(), 1);    
+    if(interconnect.type == UNASSIGNED){
+      interconnect = Interconnect(TDMA_BUS, 32, (int) compNodes.size(), 1, (int)compNodes.size(), 1,0,0,0);    
+      LOG_DEBUG("No interconnect found in platform XML. Assigning default: TDMA_BUS");
+    }
 }
-void Platform::load_xml(XMLdoc& xml)
+void Platform::load_xml(XMLdoc& xml) throw (InvalidArgumentException)
 {
 	const char* my_xpathString = "///platform/processor";
 	LOG_DEBUG("running xpathString  " + tools::toString(my_xpathString) + " platform xml ...");
@@ -70,7 +73,49 @@ void Platform::load_xml(XMLdoc& xml)
 			proc_id++;
 			compNodes.push_back(pe);
 		}
-	}	
+	}
+  my_xpathString = "///platform/interconnect";
+	LOG_DEBUG("running xpathString  " + tools::toString(my_xpathString) + " platform xml ...");
+	auto xml_interconnects = xml.xpathNodes(my_xpathString);
+  LOG_DEBUG(tools::toString(xml_interconnects.size()) + " interconnect(s) found. \n");
+  //for (const auto& ic : xml_interconnects){
+  string query = "///platform/interconnect/TDN_NoC";
+  auto tdn_noc = xml.xpathNodes(query.c_str());
+  for(auto ic_settings : tdn_noc) {
+    string noc_name = xml.getProp(ic_settings, "name");
+    string noc_topology = xml.getProp(ic_settings, "topology");
+    string noc_columns = xml.getProp(ic_settings, "x-dimension");
+    string noc_rows = xml.getProp(ic_settings, "y-dimension");
+    string noc_routing = xml.getProp(ic_settings, "routing");
+    string noc_flitSize = xml.getProp(ic_settings, "flitSize");
+    string noc_tdnCycles = xml.getProp(ic_settings, "cycles");
+    string noc_cycleLength = xml.getProp(ic_settings, "cycleLength");
+  
+    LOG_DEBUG("Found a " + noc_name + " with " + noc_topology + " topology, "
+                         + noc_routing + " routing, "	
+                         + noc_columns + " columns, "	
+                         + noc_rows + " rows, "	
+                         + noc_flitSize + " bit flit size, "	
+                         + noc_tdnCycles + " tdnCycles, and "	
+                         + noc_cycleLength + " ms cycle length.");	
+    
+    interconnect = Interconnect(TDN_NOC, 0, 0, 0, atoi(noc_columns.c_str()), 
+                                atoi(noc_rows.c_str()), atoi(noc_flitSize.c_str()), 
+                                atoi(noc_tdnCycles.c_str()),
+                                atoi(noc_cycleLength.c_str()));  
+                                
+    int procsInNoC = atoi(noc_rows.c_str()) * atoi(noc_columns.c_str());
+    if(procsInNoC != proc_id){
+       THROW_EXCEPTION(InvalidArgumentException, "size of TDN-Noc does not match with number of processors");
+    }                            
+                                
+                                
+    createTDNGraph();
+  }
+    
+  //}
+  
+  	
 }
 Platform::~Platform(){
   //compNodes (they were potentially created with 'new'')
@@ -79,12 +124,288 @@ Platform::~Platform(){
   }
 }
 
+void Platform::createTDNGraph() throw (InvalidArgumentException){
+  LOG_DEBUG("Creating the TDN graph / table: ");
+  int nodes = interconnect.rows * interconnect.columns;
+  
+  int tdn_nodeId = 0;
+  int corner = 0;
+  int edge = 0;
+  int middle = 0;
+  int totalTDN_nodes;
+  
+  for(int i=0; i<nodes; i++){
+    int yLoc_i = i/interconnect.columns;
+    int xLoc_i = i%interconnect.columns;
+    
+    //cout << "I am processor/NoC-node " << i << ", located at (" << xLoc_i << ", " << yLoc_i << "):";
+    if(xLoc_i % (interconnect.columns-1) == 0 && yLoc_i % (interconnect.rows-1) == 0){
+      //cout << " I am a CORNER node" << endl;
+      corner++;
+    }else if(xLoc_i % (interconnect.columns-1) == 0 || yLoc_i % (interconnect.rows-1) == 0){
+      //cout << " I am an EDGE node" << endl;
+      edge++;
+    }else{
+      //cout << " I am a MIDDLE node" << endl;
+      middle++;
+    }
+  }
+    
+  totalTDN_nodes = (corner*4 + edge*5 + middle*6) * interconnect.tdnCycles;
+  
+  //vector<tdn_graphNode> tdn_graph(totalTDN_nodes);
+  tdn_graph.assign(totalTDN_nodes, tdn_graphNode());
+  LOG_DEBUG("Initialized TDN graph with " +  tools::toString(tdn_graph.size()) + " nodes. Now filling with info...");    
+  
+  LOG_DEBUG("#### OUT FROM NI ###########");  
+  for(int i=0; i<nodes; i++){
+    //int yLoc_i = i/interconnect.columns;
+    //int xLoc_i = i%interconnect.columns;
+    
+    //root nodes of the TDN graph: all links from NIs to switch, for each TDN cycle
+    for(int k=0; k<interconnect.tdnCycles; k++){
+      //cout << "I am node " << tdn_nodeId << " of the TDN graph." << endl;
+      //cout << "\t I represent the link from NI to switch at NoC-node " << i << " (" << xLoc_i << ", " << yLoc_i << ")";
+      //cout << " at TDN cycle " << k << endl;
+      //cout << "==========" << endl;
+      
+      //add node to graph
+      tdn_graph[tdn_nodeId].passingProcs.emplace(i);
+      tdn_graph[tdn_nodeId].link = {-1, i, k};
+      
+      tdn_nodeId++;
+    }
+    //cout << "###############" << endl;
+  }
+  
+  //"middle" nodes of the TDN graph: all links from switch to switch in all cycles
+  //first upwards...
+  LOG_DEBUG("#### UP ###########");
+  for(int col=0; col<interconnect.columns; col++){
+    for(int row=0; row<interconnect.rows-1; row++){
+      int from = row*interconnect.columns+col;
+      int to = (row+1)*interconnect.columns+col;
+      
+      for(int k=0; k<interconnect.tdnCycles; k++){
+        //cout << "I am node " << tdn_nodeId << " of the TDN graph." << endl;
+        //cout << "\t I represent the link from switch " << from << " (" << col << ", " << row << ")" <<  " to switch " << to << " (" << col << ", " << (row+1) << ")";
+        //cout << " at TDN cycle " << k << endl;
+        //cout << "==========" << endl;
+        
+        //add node to graph
+        tdn_graph[tdn_nodeId].link = {from, to, k};
+        
+        tdn_nodeId++;
+      }
+      //cout << "###############" << endl;
+      
+    }
+  }
+  //then downwards...
+  LOG_DEBUG("#### DOWN ###########");
+  for(int col=0; col<interconnect.columns; col++){
+    for(int row=interconnect.rows-1; row>0; row--){
+      int from = row*interconnect.columns+col;
+      int to = (row-1)*interconnect.columns+col;
+      
+      for(int k=0; k<interconnect.tdnCycles; k++){
+        //cout << "I am node " << tdn_nodeId << " of the TDN graph." << endl;
+        //cout << "\t I represent the link from switch " << from << " (" << col << ", " << row << ")" <<  " to switch " << to << " (" << col << ", " << (row-1) << ")";
+        //cout << " at TDN cycle " << k << endl;
+        //cout << "==========" << endl;
+        
+        //add node to graph
+        tdn_graph[tdn_nodeId].link = {from, to, k};
+        
+        tdn_nodeId++;
+      }
+      //cout << "###############" << endl;
+      
+    }
+  }
+  //...then right
+  LOG_DEBUG("#### RIGHT ###########");
+  for(int row=0; row<interconnect.rows; row++){
+    for(int col=0; col<interconnect.columns-1; col++){
+      int from = row*interconnect.columns+col;
+      int to = row*interconnect.columns+col+1;
+      
+      for(int k=0; k<interconnect.tdnCycles; k++){
+        //cout << "I am node " << tdn_nodeId << " of the TDN graph." << endl;
+        //cout << "\t I represent the link from switch " << from << " (" << col << ", " << row << ")" <<  " to switch " << to << " (" << (col+1) << ", " << row << ")";
+        //cout << " at TDN cycle " << k << endl;
+        //cout << "==========" << endl;
+        
+        //add node to graph
+        tdn_graph[tdn_nodeId].link = {from, to, k};
+        
+        tdn_nodeId++;
+      }
+      //cout << "###############" << endl;
+      
+    }
+  }
+  //...and then left
+  LOG_DEBUG("#### LEFT ###########");
+  for(int row=0; row<interconnect.rows; row++){
+    for(int col=interconnect.columns-1; col>0; col--){
+      int from = row*interconnect.columns+col;
+      int to = row*interconnect.columns+col-1;
+      
+      for(int k=0; k<interconnect.tdnCycles; k++){
+        //cout << "I am node " << tdn_nodeId << " of the TDN graph." << endl;
+        //cout << "\t I represent the link from switch " << from << " (" << col << ", " << row << ")" <<  " to switch " << to << " (" << (col-1) << ", " << row << ")";
+        //cout << " at TDN cycle " << k << endl;
+        //cout << "==========" << endl;
+        
+        //add node to graph
+        tdn_graph[tdn_nodeId].link = {from, to, k};
+        
+        tdn_nodeId++;
+      }
+      //cout << "###############" << endl;
+    }
+  }
+  //...and finally back into the NI
+  
+  LOG_DEBUG("#### TO NI ###########");
+  for(int i=0; i<nodes; i++){
+    //int yLoc_i = i/interconnect.columns;
+    //int xLoc_i = i%interconnect.columns;
+    
+    //leaf nodes of the TDN graph: all links from switch to NI, for each TDN cycle
+    for(int k=0; k<interconnect.tdnCycles; k++){
+      //cout << "I am node " << tdn_nodeId << " of the TDN graph." << endl;
+      //cout << "\t I represent the link from switch to NI at NoC-node " << i << " (" << xLoc_i << ", " << yLoc_i << ")";
+      //cout << " at TDN cycle " << k << endl;
+      //cout << "==========" << endl;
+        
+        //add node to graph
+        tdn_graph[tdn_nodeId].link = {i, -1, k};
+        
+      tdn_nodeId++;
+    }
+      //cout << "###############" << endl;
+  }
+  if(tdn_nodeId != totalTDN_nodes){
+    THROW_EXCEPTION(InvalidArgumentException, (tools::toString(tdn_nodeId) + " nodes are in the graph. Should be " + tools::toString(totalTDN_nodes)));
+  }
+    
+  tdn_nodeId = 0;
+  LOG_DEBUG("\n Now, let's travel through the entire NoC...");
+  for(int i=0; i<nodes; i++){
+    int yLoc_i = i/interconnect.columns;
+    int xLoc_i = i%interconnect.columns;
+    
+    
+    for(int k=0; k<interconnect.tdnCycles; k++){
+      int tmp_cycle = k;
+      
+      tdn_nodeId = i * interconnect.tdnCycles + k;
+      int tdn_srcNodeId = tdn_nodeId;
+      
+      
+      
+      //cout << "\n\t starting from NI to switch at NoC-node " << i << " at (" << xLoc_i << ", " << yLoc_i << ")";
+      //cout << " in cycle " << tmp_cycle << " (TDN-Node: "<< tdn_nodeId << ")" << endl;
+      tmp_cycle = (tmp_cycle+1)%interconnect.tdnCycles;
+    
+      for(int j=0; j<nodes; j++){
+        int yLoc_j = j/interconnect.columns;
+        int xLoc_j = j%interconnect.columns;
+        
+        shared_ptr<tdn_route> tmp_tdn_route = make_shared<tdn_route>();
+        
+        int y_inc = (yLoc_i == yLoc_j) ? 0 : ((yLoc_i < yLoc_j) ? 1 : -1);
+        int x_inc = (xLoc_i == xLoc_j) ? 0 : ((xLoc_i < xLoc_j) ? 1 : -1);
+        
+        if(x_inc != 0 || y_inc != 0){
+          tmp_tdn_route->dstProc = j; //{j, vector<int>()};
+          tmp_tdn_route->tdn_nodePath.push_back(tdn_srcNodeId);
+        }
+      
+        int tmp_yLoc = yLoc_i;
+        int tmp_xLoc = xLoc_i;
+        //cout << "\t\t via switch (" << tmp_xLoc << ", " << tmp_yLoc << ")";
+        //cout << " at cycle " << tmp_cycle << endl;
+        while(tmp_yLoc != yLoc_j){
+          //cout << "\t    ...travelling " << ((y_inc == -1) ? "DOWN  " : "UP    ");
+          //cout << " via TDN-node ";
+          if(y_inc == 1){
+            tdn_nodeId = nodes*interconnect.tdnCycles + (tmp_xLoc*interconnect.tdnCycles*(interconnect.rows-1)) + (tmp_yLoc*interconnect.tdnCycles) + tmp_cycle;
+          }else if(y_inc == -1){
+            tdn_nodeId = (2*nodes-interconnect.columns)*interconnect.tdnCycles + (tmp_xLoc*interconnect.tdnCycles*(interconnect.rows-1)) + (((interconnect.rows-1)-tmp_yLoc)*interconnect.tdnCycles) + tmp_cycle;
+          }
+          
+          tdn_graph[tdn_nodeId].passingProcs.emplace(i);
+          tmp_tdn_route->tdn_nodePath.push_back(tdn_nodeId);
+          tdn_graph[tdn_nodeId].tdn_routes.push_back(tmp_tdn_route);
+          
+          //cout << tdn_nodeId << ": from (" <<  tmp_xLoc << ", " << tmp_yLoc << ") to (";
+          tmp_yLoc += y_inc;
+          //cout <<  tmp_xLoc << ", " << tmp_yLoc << "); cycle " << tmp_cycle << endl;
+          tmp_cycle = (tmp_cycle+1)%interconnect.tdnCycles;
+        }
+        
+        while(tmp_xLoc != xLoc_j){
+          //cout << "\t    ...travelling " << ((x_inc == -1) ? "LEFT  " : "RIGHT ");
+          //cout << " via TDN-node ";
+          if(x_inc == 1){
+            tdn_nodeId = (3*nodes-2*interconnect.columns)*interconnect.tdnCycles + (tmp_yLoc*interconnect.tdnCycles*(interconnect.columns-1)) + (tmp_xLoc*interconnect.tdnCycles) + tmp_cycle;
+          }else if(x_inc == -1){
+            tdn_nodeId = (4*nodes-2*interconnect.columns-interconnect.rows)*interconnect.tdnCycles + (tmp_yLoc*interconnect.tdnCycles*(interconnect.columns-1)) + (((interconnect.columns-1)-tmp_xLoc)*interconnect.tdnCycles) + tmp_cycle;
+          }
+          
+          tdn_graph[tdn_nodeId].passingProcs.emplace(i);
+          tmp_tdn_route->tdn_nodePath.push_back(tdn_nodeId);
+          tdn_graph[tdn_nodeId].tdn_routes.push_back(tmp_tdn_route);
+          
+          //cout << tdn_nodeId << ": from (" <<  tmp_xLoc << ", " << tmp_yLoc << ") to (";
+          tmp_xLoc += x_inc;
+          //cout <<  tmp_xLoc << ", " << tmp_yLoc << "); cycle " << tmp_cycle << endl;
+          tmp_cycle = (tmp_cycle+1)%interconnect.tdnCycles;
+          //cout << "(" << tmp_xLoc << ", " << tmp_yLoc << ");";
+          //cout << " cycle " << tmp_cycle << endl;
+        }
+        
+        //from switch to NI at destination NoC-node
+        if(x_inc != 0 || y_inc !=0){
+          tdn_nodeId = (5*nodes-2*interconnect.columns-2*interconnect.rows)*interconnect.tdnCycles + j * interconnect.tdnCycles + tmp_cycle;
+          //cout << "\t arriving at NI from switch at NoC-node " << j << " at (" << tmp_xLoc << ", " << tmp_yLoc << ")";
+          //cout << " in cycle " << tmp_cycle << " (TDN-Node: "<< tdn_nodeId << ")" << endl;
+          
+          tdn_graph[tdn_nodeId].passingProcs.emplace(i);
+          tmp_tdn_route->tdn_nodePath.push_back(tdn_nodeId);
+          tdn_graph[tdn_nodeId].tdn_routes.push_back(tmp_tdn_route);
+          tdn_graph[tdn_srcNodeId].tdn_routes.push_back(tmp_tdn_route);
+          
+          LOG_DEBUG(tools::toString(i) + " to " + tools::toString(j) + " in cycle " + tools::toString(k) + ":  "
+                     + tools::toString(tmp_tdn_route->tdn_nodePath));
+
+        }
+      }
+    }
+  }
+  
+  for (size_t i=0; i<tdn_graph.size(); i++)
+    LOG_DEBUG("NoC-nodes " + tools::toString(vector<int>(tdn_graph[i].passingProcs.begin(), tdn_graph[i].passingProcs.end())) + " can pass through link (" + tools::toString(tdn_graph[i].link.from)
+               + ", " + tools::toString(tdn_graph[i].link.to) + ")");
+               
+  LOG_DEBUG("### Done with TDN table. ###");
+
+}
+
 size_t Platform::nodes() const {
   return compNodes.size();
 }
 
 InterconnectType Platform::getInterconnectType() const{
   return interconnect.type;
+}
+
+// Gives the TDN Graph / Table
+vector<tdn_graphNode> Platform::getTDNGraph() const{
+  return tdn_graph;  
 }
 
 int Platform::tdmaSlots() const{

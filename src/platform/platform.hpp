@@ -35,9 +35,11 @@
 #include <string.h>
 #include "../xml/xmldoc.hpp"
 
+#include "../exceptions/runtimeexception.h"
+
 using namespace std;
 
-enum InterconnectType { TDMA_BUS, NOC };
+enum InterconnectType { TDMA_BUS, TDN_NOC, NOC, UNASSIGNED };
 
 /**
  * Trivial class to represent a processing element.
@@ -174,10 +176,17 @@ public:
   int roundLength;
   int columns;
   int rows;
+  int flitSize;
+  int tdnCycles;
+  int cycleLength;
+  
 
-  Interconnect() {};
+  Interconnect() {
+    type = UNASSIGNED;
+  };
 
-  Interconnect(InterconnectType p_type, int p_dps, int p_tdma, int p_roundLength, int p_col, int p_row){
+  Interconnect(InterconnectType p_type, int p_dps, int p_tdma, int p_roundLength, 
+               int p_col, int p_row, int p_fs, int p_tdnC, int p_cl){
     type         = p_type;
     dataPerSlot  = p_dps;
     tdmaSlots    = p_tdma;
@@ -185,8 +194,37 @@ public:
     columns      = p_col;
     rows         = p_row;
     dataPerRound = dataPerSlot * tdmaSlots;
+    flitSize = p_fs;
+    tdnCycles = p_tdnC;
+    cycleLength = p_cl;
   }
 };
+
+
+//! Struct to capture the links of the TDN NoC.
+/*! Provides information on which link on the NoC, and at which TDN cycle. */
+struct tdn_link{
+  int from; /*!< Value -1: from NI to switch at NoC-node \ref tdn_link.to */
+  int to; /*!< Value -1: from switch to NI at NoC-node \ref tdn_link.from */
+  int cycle; /*!< TDN cycle */
+};
+
+//! Struct to capture a route through the TDN NoC.
+/*! Combines the destination processor with a path of nodes in the TDN graph.
+ * The \ref tnd_route.tdn_nodePath combines information about location with time (TND cycle). */
+struct tdn_route{
+  int dstProc; /*!< Id of the destination processor / NoC node. */
+  vector<int> tdn_nodePath; /*!< The sequence of node Ids of the TDN-graph nodes, starting with the root node, ending with the node corresponding to \ref tdn_route.dstProc. */
+};
+
+//! Struct to capture a node in the TDN graph.
+/*!  */
+struct tdn_graphNode{
+    set<int> passingProcs; /*!< All processors whose messages can pass this link. */
+    tdn_link link; /*!< The link of the NoC that this node represents. */
+    vector<shared_ptr<tdn_route>> tdn_routes; /*!< All routes that go through this node. */
+};
+
 
 /**
  * This class specifies a platform.
@@ -198,12 +236,15 @@ protected:
 
   std::vector<PE*> compNodes;
   Interconnect interconnect;
+  vector<tdn_graphNode> tdn_graph;
+  
+  void createTDNGraph() throw (InvalidArgumentException);
 
 public:
 
   Platform() {};
   
-  Platform(XMLdoc& doc);
+  Platform(XMLdoc& doc) throw (InvalidArgumentException);
 
   Platform(size_t p_nodes, int p_cycle, size_t p_memSize, int p_buffer, enum InterconnectType p_type, int p_dps, int p_tdma, int p_roundLength);
   
@@ -216,12 +257,16 @@ public:
    */
   ~Platform();
 
-   void load_xml(XMLdoc& xml);
+   void load_xml(XMLdoc& xml) throw (InvalidArgumentException);
+   
   // Gives the number of nodes
   size_t nodes() const;
   
   // Gives the type of interconnect
   InterconnectType getInterconnectType() const;
+  
+  // Gives the TDN Graph / Table
+  vector<tdn_graphNode> getTDNGraph() const;
 
   // Gives the number of tdma slots of the interconnect
   int tdmaSlots() const;
