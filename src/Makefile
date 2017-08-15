@@ -85,7 +85,7 @@ CXXFLAGS += -Wall -Wno-maybe-uninitialized -Wno-unused-result -std=c++11 -g -O1 
             -I/usr/include/boost -I/usr/include/libxml2 -I. \
             -DVERSION=\"$(GIT_VERSION)\"
 LDFLAGS  += 
-LDLIBS   += -L/usr/lib/ -lgecodeint -lgecodeset -lgecodesearch -lgecodekernel \
+LDLIBS   += -L/usr/local/lib/ -lgecodeint -lgecodeset -lgecodesearch -lgecodekernel \
             -lgecodesupport -lgecodeminimodel -lgecodegist -lgecodefloat \
             -lxml2 -lboost_system \
             -lboost_filesystem -lboost_program_options 

@@ -37,6 +37,7 @@
 #include <sstream>
 #include <fstream>
 #include <istream>
+#include <iostream>
 #include <cstdlib>
 #include <list>
 #include <boost/algorithm/string/join.hpp>
