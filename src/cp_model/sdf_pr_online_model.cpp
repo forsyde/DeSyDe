@@ -456,11 +456,15 @@ void SDFPROnlineModel::print(std::ostream& out) const {
     out << endl;
     out << "TDMA slots: " << tdmaAlloc << endl;
     //print TDN table
+    out << endl << "TDN table: " << endl;
     for(size_t ii = 0; ii < tdnTable.size(); ii++){
       if(ii!=0 && ii%platform->getTDNCycles()==0){out << endl;}
       out << tdnTable[ii] << " ";
+      
+      if(ii == platform->getTDNCycles()*platform->nodes()-1)
+        out << endl << "-------------------------------------------";
     }
-    out << endl;
+    out << endl << endl;
     out << "S-order: " << sendNext << endl;
     out << "wcct_b: " << wcct_b << endl;
     out << "wcct_s: " << wcct_s << endl;

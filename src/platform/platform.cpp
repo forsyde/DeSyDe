@@ -299,7 +299,6 @@ void Platform::createTDNGraph() throw (InvalidArgumentException){
     
     
     for(int k=0; k<interconnect.tdnCycles; k++){
-      int tmp_cycle = k;
       
       tdn_nodeId = i * interconnect.tdnCycles + k;
       int tdn_srcNodeId = tdn_nodeId;
@@ -307,12 +306,14 @@ void Platform::createTDNGraph() throw (InvalidArgumentException){
       
       
       //cout << "\n\t starting from NI to switch at NoC-node " << i << " at (" << xLoc_i << ", " << yLoc_i << ")";
-      //cout << " in cycle " << tmp_cycle << " (TDN-Node: "<< tdn_nodeId << ")" << endl;
-      tmp_cycle = (tmp_cycle+1)%interconnect.tdnCycles;
+      //cout << " in cycle " << k << " (TDN-Node: "<< tdn_nodeId << ")" << endl;
     
       for(int j=0; j<nodes; j++){
         int yLoc_j = j/interconnect.columns;
         int xLoc_j = j%interconnect.columns;
+        
+        int tmp_cycle = k;
+        tmp_cycle = (tmp_cycle+1)%interconnect.tdnCycles;
         
         shared_ptr<tdn_route> tmp_tdn_route = make_shared<tdn_route>();
         
@@ -410,6 +411,10 @@ vector<tdn_graphNode> Platform::getTDNGraph() const{
 
 int Platform::getTDNCycles() const{
   return interconnect.tdnCycles;
+}
+
+int Platform::getMaxNoCHops() const{
+ return interconnect.columns + interconnect.rows;  
 }
 
 int Platform::tdmaSlots() const{
