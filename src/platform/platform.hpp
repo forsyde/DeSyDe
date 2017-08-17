@@ -213,6 +213,7 @@ struct tdn_link{
 /*! Combines the destination processor with a path of nodes in the TDN graph.
  * The \ref tnd_route.tdn_nodePath combines information about location with time (TND cycle). */
 struct tdn_route{
+  int srcProc;
   int dstProc; /*!< Id of the destination processor / NoC node. */
   vector<int> tdn_nodePath; /*!< The sequence of node Ids of the TDN-graph nodes, starting with the root node, ending with the node corresponding to \ref tdn_route.dstProc. */
 };

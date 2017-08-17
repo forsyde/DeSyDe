@@ -321,6 +321,7 @@ void Platform::createTDNGraph() throw (InvalidArgumentException){
         int x_inc = (xLoc_i == xLoc_j) ? 0 : ((xLoc_i < xLoc_j) ? 1 : -1);
         
         if(x_inc != 0 || y_inc != 0){
+          tmp_tdn_route->srcProc = i;
           tmp_tdn_route->dstProc = j; //{j, vector<int>()};
           tmp_tdn_route->tdn_nodePath.push_back(tdn_srcNodeId);
         }

@@ -10,7 +10,8 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
     proc(*this, apps->n_programEntities(), 0, platform->nodes()-1),
     proc_mode(*this, platform->nodes(), 0, platform->getMaxModes()),
     tdmaAlloc(*this, platform->nodes(), 0, platform->tdmaSlots()),
-    tdnTable(*this, platform->getTDNGraph().size(), 0, platform->nodes()),
+    tdnTable(*this, platform->getTDNGraph().size(), 0, platform->nodes()+1),
+    chosenRoute(*this, apps->n_programChannels(), 0, platform->getTDNCycles()),
     sendNext(*this, apps->n_programChannels()+platform->nodes(), 0, apps->n_programChannels()+platform->nodes()),
     recNext(*this, apps->n_programChannels()+platform->nodes(), 0, apps->n_programChannels()+platform->nodes()),
     sendbufferSz(*this, apps->n_programChannels(), 0, Int::Limits::max),
@@ -350,10 +351,15 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
             branch(*this, procBranchOrderOther, INT_VAR_NONE(), INT_VAL_MIN());
             branch(*this, proc_mode, INT_VAR_NONE(), INT_VAL_MIN());
         }
+        
+        if(platform->getInterconnectType() == TDN_NOC){
+          branch(*this, chosenRoute, INT_VAR_NONE(), INT_VAL_MIN());  
+        }else if(platform->getInterconnectType() == TDMA_BUS){
+          branch(*this, tdmaAlloc, INT_VAR_NONE(), INT_VAL_MIN());  
+        }
 
         //branch(*this, rank, INT_VAR_NONE(), INT_VAL_MIN());
         branch(*this, next, INT_VAR_NONE(), INT_VAL_MIN());
-        branch(*this, tdmaAlloc, INT_VAR_NONE(), INT_VAL_MIN());
         /**
          * ordering of sending and receiving messages with same
          * source (send) or destination (rec) for unresolved cases
@@ -396,6 +402,7 @@ SDFPROnlineModel::SDFPROnlineModel(bool share, SDFPROnlineModel& s):
     proc_mode.update(*this, share, s.proc_mode);
     tdmaAlloc.update(*this, share, s.tdmaAlloc);
     tdnTable.update(*this, share, s.tdnTable);
+    chosenRoute.update(*this, share, s.chosenRoute);
     sendNext.update(*this, share, s.sendNext);
     recNext.update(*this, share, s.recNext);
     sendbufferSz.update(*this, share, s.sendbufferSz);
@@ -456,9 +463,16 @@ void SDFPROnlineModel::print(std::ostream& out) const {
     out << endl;
     out << "TDMA slots: " << tdmaAlloc << endl;
     //print TDN table
+    out << endl << "Chosen routes: " << chosenRoute << endl;
+    
+    vector<tdn_graphNode> tdn_graph = platform->getTDNGraph();
     out << endl << "TDN table: " << endl;
     for(size_t ii = 0; ii < tdnTable.size(); ii++){
       if(ii!=0 && ii%platform->getTDNCycles()==0){out << endl;}
+      if(ii%platform->getTDNCycles()==0){
+        out << ((tdn_graph[ii].link.from==-1)?"NI":("SW"+tools::toString(tdn_graph[ii].link.from))) << " -> ";
+        out << ((tdn_graph[ii].link.to==-1)?"NI":("SW"+tools::toString(tdn_graph[ii].link.to))) << ": ";
+      }
       out << tdnTable[ii] << " ";
       
       if(ii == platform->getTDNCycles()*platform->nodes()-1)

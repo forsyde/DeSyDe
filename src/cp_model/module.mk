@@ -28,7 +28,7 @@
 # MODULE PATH AND FILES
 #=======================
 
-CPP_FILES := model.cpp schedulability.cpp sdf_pr_online_model.cpp
+CPP_FILES := schedulability.cpp sdf_pr_online_model.cpp
 
 
 
