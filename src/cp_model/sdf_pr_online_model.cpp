@@ -353,7 +353,8 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
         }
         
         if(platform->getInterconnectType() == TDN_NOC){
-          branch(*this, chosenRoute, INT_VAR_NONE(), INT_VAL_MIN());  
+          branch(*this, chosenRoute, INT_VAR_NONE(), INT_VAL_MIN()); 
+          assign(*this, tdnTable, INT_ASSIGN_MAX()); 
         }else if(platform->getInterconnectType() == TDMA_BUS){
           branch(*this, tdmaAlloc, INT_VAR_NONE(), INT_VAL_MIN());  
         }
@@ -473,7 +474,12 @@ void SDFPROnlineModel::print(std::ostream& out) const {
         out << ((tdn_graph[ii].link.from==-1)?"NI":("SW"+tools::toString(tdn_graph[ii].link.from))) << " -> ";
         out << ((tdn_graph[ii].link.to==-1)?"NI":("SW"+tools::toString(tdn_graph[ii].link.to))) << ": ";
       }
-      out << tdnTable[ii] << " ";
+      if(tdnTable[ii].assigned() && tdnTable[ii].val()==platform->nodes()){
+        out << "_";
+      }else{
+        out << tdnTable[ii];
+      }
+      out << " ";
       
       if(ii == platform->getTDNCycles()*platform->nodes()-1)
         out << endl << "-------------------------------------------";

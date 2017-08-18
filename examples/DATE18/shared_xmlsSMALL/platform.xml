@@ -10,7 +10,7 @@
     </processor>
     <interconnect>
         <TDN_NoC name="2x3TDN" topology="mesh" x-dimension="2"
-                 y-dimension="3" routing="Y-X" flitSize="32"
+                 y-dimension="3" routing="Y-X" flitSize="128"
                  cycles="4" cycleLength="10"/>
     </interconnect>
 </platform>

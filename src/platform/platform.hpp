@@ -271,7 +271,11 @@ public:
   
   int getTDNCycles() const;
   
+  int getTDNCycleLength() const;
+  
   int getMaxNoCHops() const;
+  
+  int getFlitSize() const;
 
   // Gives the number of tdma slots of the interconnect
   int tdmaSlots() const;

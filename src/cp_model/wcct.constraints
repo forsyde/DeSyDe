@@ -1,5 +1,9 @@
 // *** GENERAL CONSTRAINTS ***
-
+//find maximum message size (should be in application class in the future)
+int maxMessageSize = 0;
+for(unsigned int ki=0; ki<channels.size(); ki++){
+  if(maxMessageSize < channels[ki]->messageSize) maxMessageSize = channels[ki]->messageSize;
+}
 
 if(platform->getInterconnectType() == TDMA_BUS){
   for(unsigned int ki=0; ki<channels.size(); ki++){
@@ -141,7 +145,7 @@ if(platform->getInterconnectType() == TDMA_BUS){
   }
   rel(*this, sum(tdmaAlloc) <= platform->tdmaSlots());
   
-} else if(platform->getInterconnectType() == TDN_NOC){ //TDN-NoC ~~~~~~~
+} else if(platform->getInterconnectType() == TDN_NOC){ //TDN-NoC ###############################################################################
   vector<tdn_graphNode> tdn_graph = platform->getTDNGraph();
   LOG_INFO("TDN graph is of size " + tools::toString(tdn_graph.size()));
   //for the TDN table, values 0...platform->nodes()-1 means location is assigned to processor with that id
@@ -151,6 +155,7 @@ if(platform->getInterconnectType() == TDMA_BUS){
   IntVarArgs hops(*this, apps->n_programChannels(), 0, platform->getMaxNoCHops());
   //IntVarArgs chosenRoute(*this, apps->n_programChannels(), 0, platform->getTDNCycles());
   IntVarArgs tdnSlots(*this, platform->nodes(), 0, platform->getTDNCycles());
+  IntVarArgs maxMsgSizeFromProc(*this, platform->nodes(), 0, maxMessageSize);
   
   //initial constraints on TDN (injection and state of NoC) table:
   //which process can access which link
@@ -243,6 +248,7 @@ if(platform->getInterconnectType() == TDMA_BUS){
   for(unsigned int ki=0; ki<channels.size(); ki++){
     int src_ch = channels[ki]->source;
     int dst_ch = channels[ki]->destination;
+    
     for(size_t j=0; j<platform->nodes(); j++){
       rel(*this, (proc[src_ch]==j && proc[src_ch]!=proc[dst_ch]) >> (sendingProcs[ki]==j));
     }
@@ -250,10 +256,33 @@ if(platform->getInterconnectType() == TDMA_BUS){
   }
   count(*this, sendingProcs, channelsOnProc);
   
+  for(unsigned int j=0; j<platform->nodes(); j++){
+    //find the largest message sent from proc j
+    IntVarArgs msgSizeProcJ(*this, channels.size(), 0, maxMessageSize);
+    for(unsigned int ki=0; ki<channels.size(); ki++){
+      int src_ch = channels[ki]->source;
+      int dst_ch = channels[ki]->destination;
+      int msgSize = channels[ki]->messageSize;
+      
+      rel(*this, (proc[src_ch]==j && proc[src_ch]!=proc[dst_ch]) >> (msgSizeProcJ[ki]==msgSize));
+      rel(*this, (proc[src_ch]==proc[dst_ch] || proc[src_ch]!=j) >> (msgSizeProcJ[ki]==0));
+    }
+    rel(*this, maxMsgSizeFromProc[j]==max(msgSizeProcJ));
+    
+    //the number of slots allocated to a processor should not exceed the number required to 
+    //send the largest message from that proc (making decision space smaller)
+    rel(*this, ((tdnSlots[j]>0) && ((tdnSlots[j]*platform->getFlitSize())>=maxMsgSizeFromProc[j])) 
+                >> ((((tdnSlots[j]-1)*platform->getFlitSize())<maxMsgSizeFromProc[j])));
+  }
+  
   for(size_t j=0; j<platform->nodes(); j++){
     //if there is trafik from j, then at least one TDN cycle must
     //be assigned to j
     rel(*this, (channelsOnProc[j]>0) >> (min(tdnTableM.row(j))==j));
+    
+    //if TDN slots per processor is restricted to one
+    rel(*this, (channelsOnProc[j]>0) >> (tdnSlots[j]==1));
+    
     for(size_t t=0; t<tdn_graph.size(); t++){
       //if there are no sending channels on j, remove j from TDN table
       rel(*this, (channelsOnProc[j]==0) >> (tdnTable[t]!=j));
@@ -294,11 +323,15 @@ if(platform->getInterconnectType() == TDMA_BUS){
     rel(*this, (proc[src_ch1]!=proc[dst_ch1]) >> (wcct_s[ki] == (hops[ki])));
     for(size_t j=0; j<platform->nodes(); j++){
       rel(*this, ((proc[src_ch1]!=proc[dst_ch1]) && (proc[src_ch1]==j)) 
-                  >> (wcct_b[ki] == (platform->getTDNCycles()-tdnSlots[j])));
+                  >> (wcct_b[ki] == ((platform->getTDNCycles()-(tdnSlots[j]-1))*platform->getTDNCycleLength())));
     }
     
     //receiving doesn't take any time on TDN NoC (buffer in receiving node's local memory)
     rel(*this, wcct_r[ki]==0); 
+    //max blocking time depends on number of tdn slots and cycle length
+    rel(*this, wcct_b[ki] <= (platform->getTDNCycles())*platform->getTDNCycleLength());
+    //max sending time depends on max number of hops, cycle length and max number of flits per message
+    rel(*this, wcct_s[ki] <= platform->getMaxNoCHops()*platform->getTDNCycleLength());
     //if src and dst actors are located on same proc, communication doesn't take any time
     rel(*this, (proc[src_ch1]==proc[dst_ch1]) >> (wcct_b[ki]==0));
     rel(*this, (proc[src_ch1]==proc[dst_ch1]) >> (wcct_s[ki]==0));

@@ -414,8 +414,16 @@ int Platform::getTDNCycles() const{
   return interconnect.tdnCycles;
 }
 
+int Platform::getTDNCycleLength() const{
+  return interconnect.cycleLength;
+}
+
 int Platform::getMaxNoCHops() const{
  return interconnect.columns + interconnect.rows;  
+}
+
+int Platform::getFlitSize() const{
+  return interconnect.flitSize;
 }
 
 int Platform::tdmaSlots() const{
