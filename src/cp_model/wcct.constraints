@@ -157,6 +157,9 @@ if(platform->getInterconnectType() == TDMA_BUS){
   IntVarArgs tdnSlots(*this, platform->nodes(), 0, platform->getTDNCycles());
   IntVarArgs maxMsgSizeFromProc(*this, platform->nodes(), 0, maxMessageSize);
   
+  IntVar cycleLength(*this, 0, Int::Limits::max); //depends on chosen NoC-mode
+  element(*this, IntArgs(platform->getTDNCycleLengths()), noc_mode, cycleLength);
+  
   //initial constraints on TDN (injection and state of NoC) table:
   //which process can access which link
   for(size_t t=0; t<tdn_graph.size(); t++){
@@ -323,7 +326,7 @@ if(platform->getInterconnectType() == TDMA_BUS){
     rel(*this, (proc[src_ch1]!=proc[dst_ch1]) >> (wcct_s[ki] == (hops[ki])));
     for(size_t j=0; j<platform->nodes(); j++){
       rel(*this, ((proc[src_ch1]!=proc[dst_ch1]) && (proc[src_ch1]==j)) 
-                  >> (wcct_b[ki] == ((platform->getTDNCycles()-(tdnSlots[j]-1))*platform->getTDNCycleLength())));
+                  >> (wcct_b[ki] == ((platform->getTDNCycles()-(tdnSlots[j]-1))*cycleLength)));
     }
     
     //receiving doesn't take any time on TDN NoC (buffer in receiving node's local memory)

@@ -5,24 +5,24 @@ using namespace std;
 Platform::Platform(size_t p_nodes, int p_cycle, size_t p_memSize, int p_buffer, enum InterconnectType p_type, int p_dps, int p_tdma, int p_roundLength){
   for (size_t i=0; i<p_nodes; i++){
     compNodes.push_back(new PE("pe"+i,"gp",vector<double>(1,p_cycle),
-                               vector<int>(1,p_memSize), vector<int>(1,10),
+                               vector<int>(1,p_memSize), vector<int>(1,10), vector<int>(1,10),
                                vector<int>(1,10),vector<int>(1,1),p_buffer));
   }
 
-  interconnect = Interconnect(p_type, p_dps, p_tdma, p_roundLength, p_nodes, 1,0,0,0);
+  interconnect = Interconnect(p_type, "", p_dps, p_tdma, p_roundLength, p_nodes, 1,0,0);
 }
 
 Platform::Platform(std::vector<PE*> p_nodes, enum InterconnectType p_type, int p_dps, int p_tdma, int p_roundLength){
   compNodes = p_nodes;
-  interconnect = Interconnect(p_type, p_dps, p_tdma, p_roundLength, (int)p_nodes.size(), 1,0,0,0);
+  interconnect = Interconnect(p_type, "", p_dps, p_tdma, p_roundLength, (int)p_nodes.size(), 1,0,0);
 }
 
 Platform::Platform(std::vector<PE*> p_nodes, enum InterconnectType p_type, int p_dps, int p_tdma, int p_roundLength, int p_col, int p_row){
   compNodes = p_nodes;
   if(p_type == NOC){
-    interconnect = Interconnect(p_type, p_dps, p_tdma, p_roundLength, p_col, p_row,0,0,0);
+    interconnect = Interconnect(p_type, "NoC", p_dps, p_tdma, p_roundLength, p_col, p_row,0,0);
   }else{
-    interconnect = Interconnect(p_type, p_dps, p_tdma, p_roundLength, (int)p_nodes.size(), 1,0,0,0);
+    interconnect = Interconnect(p_type, "TDMA-bus", p_dps, p_tdma, p_roundLength, (int)p_nodes.size(), 1,0,0);
   }
 }
 
@@ -36,10 +36,11 @@ Platform::Platform(XMLdoc& xml) throw (InvalidArgumentException)
 	load_xml(xml);
     ///Assigning default interconnect
     if(interconnect.type == UNASSIGNED){
-      interconnect = Interconnect(TDMA_BUS, 32, (int) compNodes.size(), 1, (int)compNodes.size(), 1,0,0,0);    
+      interconnect = Interconnect(TDMA_BUS, "TDMA-bus",32, (int) compNodes.size(), 1, (int)compNodes.size(), 1,0,0);    
       LOG_DEBUG("No interconnect found in platform XML. Assigning default: TDMA_BUS");
     }
 }
+
 void Platform::load_xml(XMLdoc& xml) throw (InvalidArgumentException)
 {
 	const char* my_xpathString = "///platform/processor";
@@ -61,11 +62,12 @@ void Platform::load_xml(XMLdoc& xml) throw (InvalidArgumentException)
               string mode_name = xml.getProp(mode, "name");
               string mode_cycle = xml.getProp(mode, "cycle");
               string mode_mem = xml.getProp(mode, "mem");
-              string mode_power = xml.getProp(mode, "power");
+              string mode_dynPower = xml.getProp(mode, "dynPower");
+              string mode_staticPower = xml.getProp(mode, "staticPower");
               string mode_area = xml.getProp(mode, "area");
               string mode_monetary = xml.getProp(mode, "monetary");
               pe->AddMode(atof(mode_cycle.c_str()), atoi(mode_mem.c_str()),
-                        atoi(mode_power.c_str()), atoi(mode_area.c_str()),
+                        atoi(mode_dynPower.c_str()), atoi(mode_staticPower.c_str()), atoi(mode_area.c_str()),
                         atoi(mode_monetary.c_str()));
               LOG_DEBUG("Reading processor mode: " + mode_name + "...");		
             }
@@ -89,27 +91,56 @@ void Platform::load_xml(XMLdoc& xml) throw (InvalidArgumentException)
     string noc_routing = xml.getProp(ic_settings, "routing");
     string noc_flitSize = xml.getProp(ic_settings, "flitSize");
     string noc_tdnCycles = xml.getProp(ic_settings, "cycles");
-    string noc_cycleLength = xml.getProp(ic_settings, "cycleLength");
+    //string noc_cycleLength = xml.getProp(ic_settings, "cycleLength");
   
+    interconnect = Interconnect(TDN_NOC, noc_name, 0, 0, 0, atoi(noc_columns.c_str()), 
+                                atoi(noc_rows.c_str()), atoi(noc_flitSize.c_str()), 
+                                atoi(noc_tdnCycles.c_str()));
+                                //atoi(noc_cycleLength.c_str()));  
+                                
+    query = "///platform/interconnect/TDN_NoC/mode";
+    auto ic_modes = xml.xpathNodes(query.c_str());
+    for(auto ic_mode : ic_modes) {
+      string mode_name = xml.getProp(ic_mode, "name");
+      string mode_cycleLength = xml.getProp(ic_mode, "cycleLength");
+      string mode_dynPowerCons = xml.getProp(ic_mode, "dynPower");
+      string mode_staticPow_link = xml.getProp(ic_mode, "staticPower_link");
+      string mode_staticPow_NI = xml.getProp(ic_mode, "staticPower_NI");
+      string mode_staticPow_switch = xml.getProp(ic_mode, "staticPower_switch");
+      string mode_area_link = xml.getProp(ic_mode, "area_link");
+      string mode_area_NI = xml.getProp(ic_mode, "area_NI");
+      string mode_area_switch = xml.getProp(ic_mode, "area_switch");
+      string mode_monetary_link = xml.getProp(ic_mode, "monetary_link");
+      string mode_monetary_NI = xml.getProp(ic_mode, "monetary_NI");
+      string mode_monetary_switch = xml.getProp(ic_mode, "monetary_switch");
+      
+      interconnect.addMode(mode_name, atoi(mode_cycleLength.c_str()),
+                            atoi(mode_dynPowerCons.c_str()),
+                            atoi(mode_staticPow_link.c_str()),
+                            atoi(mode_staticPow_NI.c_str()),
+                            atoi(mode_staticPow_switch.c_str()),
+                            atoi(mode_area_link.c_str()),
+                            atoi(mode_area_NI.c_str()),
+                            atoi(mode_area_switch.c_str()),
+                            atoi(mode_monetary_link.c_str()),
+                            atoi(mode_monetary_NI.c_str()),
+                            atoi(mode_monetary_switch.c_str()));
+    }
+                                
     LOG_DEBUG("Found a " + noc_name + " with " + noc_topology + " topology, "
                          + noc_routing + " routing, "	
                          + noc_columns + " columns, "	
                          + noc_rows + " rows, "	
                          + noc_flitSize + " bit flit size, "	
                          + noc_tdnCycles + " tdnCycles, and "	
-                         + noc_cycleLength + " ms cycle length.");	
-    
-    interconnect = Interconnect(TDN_NOC, 0, 0, 0, atoi(noc_columns.c_str()), 
-                                atoi(noc_rows.c_str()), atoi(noc_flitSize.c_str()), 
-                                atoi(noc_tdnCycles.c_str()),
-                                atoi(noc_cycleLength.c_str()));  
+                         + tools::toString(interconnect.modes.size()) + " modes.");	
                                 
     int procsInNoC = atoi(noc_rows.c_str()) * atoi(noc_columns.c_str());
     if(procsInNoC != proc_id){
        THROW_EXCEPTION(InvalidArgumentException, "size of TDN-Noc does not match with number of processors");
     }                            
-                                
-                                
+
+
     createTDNGraph();
   }
     
@@ -414,8 +445,135 @@ int Platform::getTDNCycles() const{
   return interconnect.tdnCycles;
 }
 
+size_t Platform::getInterconnectModes() const{
+  return interconnect.modes.size();
+}
+
+//TODO fix for modes
 int Platform::getTDNCycleLength() const{
-  return interconnect.cycleLength;
+  return interconnect.modes[0].cycleLength;
+}
+
+/*! Gets the cycle length, depending on the NoC mode. */
+vector<int> Platform::getTDNCycleLengths() const{
+  vector<int> tmp;
+  for(int i=0; i<interconnect.modes.size(); i++){
+    tmp.push_back(interconnect.modes[i].cycleLength);
+  }
+  
+  return tmp;
+}
+
+/*! Gets the dynamic power consumption - but for what? The link, the NoC, ... */
+vector<int> Platform::getDynPowerCons() const{
+  vector<int> tmp; 
+  for(int i=0; i<interconnect.modes.size(); i++){
+    tmp.push_back(interconnect.modes[i].dynPowerCons);
+  }
+  
+  return tmp;  
+}
+
+/*! Gets the static power consumption of the entire NoC for each mode. */
+vector<int> Platform::getStaticPowerCons() const{
+  vector<int> tmp; 
+  int nodes = interconnect.rows * interconnect.columns;
+  size_t corner, edge, middle = 0;
+  
+  for(size_t i=0; i<nodes; i++){
+    int yLoc_i = i/interconnect.columns;
+    int xLoc_i = i%interconnect.columns;
+    
+    //cout << "I am processor/NoC-node " << i << ", located at (" << xLoc_i << ", " << yLoc_i << "):";
+    if(xLoc_i % (interconnect.columns-1) == 0 && yLoc_i % (interconnect.rows-1) == 0){
+      //cout << " I am a CORNER node" << endl;
+      corner++;
+    }else if(xLoc_i % (interconnect.columns-1) == 0 || yLoc_i % (interconnect.rows-1) == 0){
+      //cout << " I am an EDGE node" << endl;
+      edge++;
+    }else{
+      //cout << " I am a MIDDLE node" << endl;
+      middle++;
+    }
+    
+  }
+    
+  for(size_t i=0; i<interconnect.modes.size(); i++){
+    int staticPower_total = nodes*interconnect.modes[i].staticPow_NI +
+                            nodes*interconnect.modes[i].staticPow_switch +
+                            (((corner*4 + edge*5 + middle*6))*interconnect.modes[i].staticPow_link);
+    tmp.push_back(staticPower_total);
+  }
+  
+  return tmp;
+}
+
+/*! Gets the area cost of the NoC, depending on the mode. */
+vector<int> Platform::interconnectAreaCost() const{
+  vector<int> tmp; 
+  int nodes = interconnect.rows * interconnect.columns;
+  size_t corner, edge, middle = 0;
+  
+  for(size_t i=0; i<nodes; i++){
+    int yLoc_i = i/interconnect.columns;
+    int xLoc_i = i%interconnect.columns;
+    
+    //cout << "I am processor/NoC-node " << i << ", located at (" << xLoc_i << ", " << yLoc_i << "):";
+    if(xLoc_i % (interconnect.columns-1) == 0 && yLoc_i % (interconnect.rows-1) == 0){
+      //cout << " I am a CORNER node" << endl;
+      corner++;
+    }else if(xLoc_i % (interconnect.columns-1) == 0 || yLoc_i % (interconnect.rows-1) == 0){
+      //cout << " I am an EDGE node" << endl;
+      edge++;
+    }else{
+      //cout << " I am a MIDDLE node" << endl;
+      middle++;
+    }
+    
+  }
+    
+  for(size_t i=0; i<interconnect.modes.size(); i++){
+    int area_total = nodes*interconnect.modes[i].area_NI +
+                            nodes*interconnect.modes[i].area_switch +
+                            (((corner*4 + edge*5 + middle*6))*interconnect.modes[i].area_link);
+    tmp.push_back(area_total);
+  }
+  
+  return tmp;
+}
+
+/*! Gets the monetary cost of the NoC, depending on the mode. */
+vector<int> Platform::interconnectMonetaryCost() const{
+  vector<int> tmp; 
+  int nodes = interconnect.rows * interconnect.columns;
+  size_t corner, edge, middle = 0;
+  
+  for(size_t i=0; i<nodes; i++){
+    int yLoc_i = i/interconnect.columns;
+    int xLoc_i = i%interconnect.columns;
+    
+    //cout << "I am processor/NoC-node " << i << ", located at (" << xLoc_i << ", " << yLoc_i << "):";
+    if(xLoc_i % (interconnect.columns-1) == 0 && yLoc_i % (interconnect.rows-1) == 0){
+      //cout << " I am a CORNER node" << endl;
+      corner++;
+    }else if(xLoc_i % (interconnect.columns-1) == 0 || yLoc_i % (interconnect.rows-1) == 0){
+      //cout << " I am an EDGE node" << endl;
+      edge++;
+    }else{
+      //cout << " I am a MIDDLE node" << endl;
+      middle++;
+    }
+    
+  }
+    
+  for(size_t i=0; i<interconnect.modes.size(); i++){
+    int monetary_total = nodes*interconnect.modes[i].monetary_NI +
+                            nodes*interconnect.modes[i].monetary_switch +
+                            (((corner*4 + edge*5 + middle*6))*interconnect.modes[i].monetary_link);
+    tmp.push_back(monetary_total);
+  }
+  
+  return tmp;
 }
 
 int Platform::getMaxNoCHops() const{
@@ -529,7 +687,7 @@ vector<int> Platform::getMemorySize(int node) const{
 }
 
 vector<int> Platform::getPowerCons(int node) const{
-  return compNodes[node]->powerCons;
+  return compNodes[node]->dynPowerCons;
 }
 
 vector<int> Platform::getAreaCost(int node) const{
@@ -572,7 +730,7 @@ bool Platform::homogeneousModeNodes(int node0, int node1) const{
   for (auto m=0; m<compNodes[node0]->n_types; m++){
     if(compNodes[node0]->cycle_length[m] != compNodes[node1]->cycle_length[m] ||
        compNodes[node0]->memorySize[m] != compNodes[node1]->memorySize[m] ||
-       compNodes[node0]->powerCons[m] != compNodes[node1]->powerCons[m] ||
+       compNodes[node0]->dynPowerCons[m] != compNodes[node1]->dynPowerCons[m] ||
        compNodes[node0]->areaCost[m] != compNodes[node1]->areaCost[m] ||
        compNodes[node0]->monetaryCost[m] != compNodes[node1]->monetaryCost[m]){
         return false;

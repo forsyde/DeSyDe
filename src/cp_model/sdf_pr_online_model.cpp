@@ -11,6 +11,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
     proc_mode(*this, platform->nodes(), 0, platform->getMaxModes()),
     tdmaAlloc(*this, platform->nodes(), 0, platform->tdmaSlots()),
     tdnTable(*this, platform->getTDNGraph().size(), 0, platform->nodes()+1),
+    noc_mode(*this, 0, platform->getInterconnectModes()-1),
     chosenRoute(*this, apps->n_programChannels(), 0, platform->getTDNCycles()),
     sendNext(*this, apps->n_programChannels()+platform->nodes(), 0, apps->n_programChannels()+platform->nodes()),
     recNext(*this, apps->n_programChannels()+platform->nodes(), 0, apps->n_programChannels()+platform->nodes()),
@@ -24,11 +25,14 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
     sys_utilization(*this, 0, p_mapping->max_utilization),
     procsUsed_utilization(*this, 0, p_mapping->max_utilization),
     proc_power(*this, platform->nodes(), 0, Int::Limits::max),
+    noc_power(*this, 0, Int::Limits::max),
     //sys_power(*this, mapping->getLeastPowerConsumption(), Int::Limits::max),
     sys_power(*this, 0, Int::Limits::max),
     proc_area(*this, platform->nodes(), 0, Int::Limits::max),
+    noc_area(*this, 0, Int::Limits::max),
     sys_area(*this, 0, Int::Limits::max),
     proc_cost(*this, platform->nodes(), 0, Int::Limits::max),
+    noc_cost(*this, 0, Int::Limits::max),
     sys_cost(*this, 0, Int::Limits::max),
     wcct_b(*this, apps->n_programChannels(), 0, Int::Limits::max),
     wcct_s(*this, apps->n_programChannels(), 0, Int::Limits::max),
@@ -355,6 +359,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
         if(platform->getInterconnectType() == TDN_NOC){
           branch(*this, chosenRoute, INT_VAR_NONE(), INT_VAL_MIN()); 
           assign(*this, tdnTable, INT_ASSIGN_MAX()); 
+          branch(*this, noc_mode, INT_VAL_MIN());
         }else if(platform->getInterconnectType() == TDMA_BUS){
           branch(*this, tdmaAlloc, INT_VAR_NONE(), INT_VAL_MIN());  
         }

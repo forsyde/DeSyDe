@@ -67,6 +67,7 @@ private:
     IntVarArray             proc_mode;    /**< processor modes: economy, regular and performance. */
     IntVarArray             tdmaAlloc;    /**< allocation of TDMA slots to processors.*/
     IntVarArray             tdnTable;     /**< TDN injection and state-of-NoC table.*/
+    IntVar                  noc_mode;     /**< assignment of NoC mode. */
     IntVarArray             chosenRoute; /**< Assignment of TDN slot to channel.*/
 
     IntVarArray             sendNext;    /**< a schedule for sent messages on interconnect. */
@@ -87,10 +88,13 @@ private:
     IntVar                  sys_utilization;        /**< utilization of all procs. */
     IntVar                  procsUsed_utilization;    /**< utilization of all used procs */
     IntVarArray             proc_power;                /**< long-run consumption of each proc. */
+    IntVar                  noc_power;                /**< long-run consumption of the NoC. */
     IntVar                  sys_power;                /**< long-run consumption of system. */
     IntVarArray             proc_area;                /**< area cost of each proc. */
+    IntVar                  noc_area;                /**< area cost of the NoC. */
     IntVar                  sys_area;                /**< area cost of all procs combined. */
     IntVarArray             proc_cost;                /**< monetary cost of each proc. */
+    IntVar                  noc_cost;                /**< monetary cost of the NoC. */
     IntVar                  sys_cost;                /**< monetary cost of all procs combined. */
     IntVarArray             wcct_b;                    /**< communication delay, block (pre-send-wait). */
     IntVarArray             wcct_s;                    /**< communication delay, send. */

@@ -53,7 +53,8 @@ public:
   int n_types;
   vector<double> cycle_length;
   vector<int> memorySize;
-  vector<int> powerCons;
+  vector<int> dynPowerCons;
+  vector<int> staticPowerCons;
   vector<int> areaCost;
   vector<int> monetaryCost;
   int NI_bufferSize;
@@ -61,14 +62,15 @@ public:
   PE() {};
 
   PE(std::string p_name, std::string p_type, vector<double> p_cycle,
-     vector<int> p_memSize, vector<int> _power, vector<int> _area, 
+     vector<int> p_memSize, vector<int> _dynPower, vector<int> _staticPower, vector<int> _area, 
      vector<int> _money, int p_buffer){
     name          = p_name; 
     type          = p_type; 
     n_types       = p_cycle.size();
     cycle_length  = p_cycle; 
     memorySize    = p_memSize; 
-    powerCons     = _power;
+    dynPowerCons     = _dynPower;
+    staticPowerCons = _staticPower;
     areaCost      = _area;
     monetaryCost  = _money;
     NI_bufferSize = p_buffer;
@@ -110,7 +112,8 @@ public:
      * need to initialize in case some are not specified in the XML
      */          
     double _cycle_length        = std::numeric_limits<double>::max(); 
-    int _powerCons                      = std::numeric_limits<int>::max() - 1; 
+    int _dynPowerCons                      = std::numeric_limits<int>::max() - 1; 
+    int _staticPowerCons                      = std::numeric_limits<int>::max() - 1; 
     int _areaCost                       = std::numeric_limits<int>::max() - 1; 
     int _monetaryCost           = std::numeric_limits<int>::max() - 1; 
     int _memorySize                     = 0;
@@ -122,8 +125,11 @@ public:
           n_types++; ///each cycle_length is one operational mode
         }
                                 
-        if(strcmp(elements[i], "powerCons") == 0)
-          _powerCons = atoi(values[i]);
+        if(strcmp(elements[i], "dynPowerCons") == 0)
+          _dynPowerCons = atoi(values[i]);
+          
+        if(strcmp(elements[i], "staticPowerCons") == 0)
+          _staticPowerCons = atoi(values[i]);
                                 
         if(strcmp(elements[i], "areaCost") == 0)
           _areaCost = atoi(values[i]);
@@ -138,7 +144,7 @@ public:
         cout << "reading taskset xml file error : " << e.what() << endl;
       }
     }
-    AddMode(_cycle_length, _memorySize, _powerCons, _areaCost, _monetaryCost);
+    AddMode(_cycle_length, _memorySize, _dynPowerCons, _staticPowerCons, _areaCost, _monetaryCost);
   };
 
   friend std::ostream& operator<< (std::ostream &out, const PE &pe) {
@@ -152,14 +158,34 @@ public:
     return out;
   }
 
-  void AddMode(double _cycle_length, int _memorySize, int _powerCons, int _areaCost, int _monetaryCost) {
+  void AddMode(double _cycle_length, int _memorySize, int _dynPowerCons, int _staticPowerCons, int _areaCost, int _monetaryCost) {
       n_types++;///Increase the number of modes
     cycle_length.push_back(_cycle_length);
     memorySize.push_back(_memorySize);
-    powerCons.push_back(_powerCons);
+    dynPowerCons.push_back(_dynPowerCons);
+    staticPowerCons.push_back(_staticPowerCons);
     areaCost.push_back(_areaCost);
     monetaryCost.push_back(_monetaryCost);
   }    
+};
+
+/**
+ * Trivial struct to represent the modes of the Interconnect.
+ */
+struct InterconnectMode {
+  string name;
+  int cycleLength;
+  int dynPowerCons;
+  int staticPow_link;
+  int staticPow_NI;
+  int staticPow_switch;
+  int area_link;
+  int area_NI;
+  int area_switch;
+  int monetary_link;
+  int monetary_NI;
+  int monetary_switch;
+  
 };
 
 
@@ -170,6 +196,7 @@ class Interconnect {
   
 public:
   enum InterconnectType type;
+  string name;
   int dataPerSlot;
   int dataPerRound;
   int tdmaSlots;
@@ -178,25 +205,42 @@ public:
   int rows;
   int flitSize;
   int tdnCycles;
-  int cycleLength;
+  vector<InterconnectMode> modes;
   
 
   Interconnect() {
     type = UNASSIGNED;
   };
 
-  Interconnect(InterconnectType p_type, int p_dps, int p_tdma, int p_roundLength, 
-               int p_col, int p_row, int p_fs, int p_tdnC, int p_cl){
+  Interconnect(InterconnectType p_type, string p_name, int p_dps, int p_tdma, int p_roundLength, 
+               int p_col, int p_row, int p_fs, int p_tdnC){
     type         = p_type;
+    name         = p_name;
     dataPerSlot  = p_dps;
     tdmaSlots    = p_tdma;
     roundLength  = p_roundLength;
     columns      = p_col;
     rows         = p_row;
     dataPerRound = dataPerSlot * tdmaSlots;
-    flitSize = p_fs;
-    tdnCycles = p_tdnC;
-    cycleLength = p_cl;
+    flitSize     = p_fs;
+    tdnCycles    = p_tdnC;
+  }
+  
+  void addMode(string _name,
+               int _cycleLength,
+               int _dynPowerCons,
+               int _staticPow_link,
+               int _staticPow_NI,
+               int _staticPow_switch,
+               int _area_link,
+               int _area_NI,
+               int _area_switch,
+               int _monetary_link,
+               int _monetary_NI,
+               int _monetary_switch){
+    modes.push_back(InterconnectMode{_name, _cycleLength, _dynPowerCons, _staticPow_link,
+                      _staticPow_NI, _staticPow_switch, _area_link, _area_NI,
+                      _area_switch, _monetary_link, _monetary_NI, _monetary_switch});
   }
 };
 
@@ -271,7 +315,24 @@ public:
   
   int getTDNCycles() const;
   
+  size_t getInterconnectModes() const;
+  
   int getTDNCycleLength() const;
+  
+  /*! Gets the cycle length, depending on the NoC mode. */
+  vector<int> getTDNCycleLengths() const;
+  
+  /*! Gets the dynamic power consumption - but for what? The link, the NoC, ... */
+  vector<int> getDynPowerCons() const;
+  
+  /*! Gets the static power consumption of the entire NoC for each mode. */
+  vector<int> getStaticPowerCons() const;
+  
+  /*! Gets the area cost of the NoC, depending on the mode. */
+  vector<int> interconnectAreaCost() const;
+  
+  /*! Gets the monetary cost of the NoC, depending on the mode. */
+  vector<int> interconnectMonetaryCost() const;
   
   int getMaxNoCHops() const;
   

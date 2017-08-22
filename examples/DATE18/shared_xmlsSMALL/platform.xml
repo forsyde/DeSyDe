@@ -1,16 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <platform name="demo_platform">
 	<processor model="small" number="4">	
-        <mode name="default" cycle="1" mem="16000" power="10" area="16" monetary="16"></mode>
-        <mode name="eco" cycle="1.2" mem="16000" power="6" area="8" monetary="8"></mode>
+        <mode name="default" cycle="1" mem="16000" dynPower="10" staticPower="10" area="16" 
+              monetary="16"/>
+        <mode name="eco" cycle="1.2" mem="16000" dynPower="6" staticPower="6" area="8" monetary="8"/>
     </processor>
     <processor model="large" number="2">	
-        <mode name="default" cycle=".7" mem="16000" power="20" area="32" monetary="32"></mode>
-        <mode name="eco" cycle=".9" mem="16000" power="12" area="16" monetary="16"></mode>
+        <mode name="default" cycle=".7" mem="16000" dynPower="20" staticPower="20" area="32" 
+              monetary="32"/>
+        <mode name="eco" cycle=".9" mem="16000" dynPower="12" staticPower="12" area="16" 
+              monetary="16"/>
     </processor>
     <interconnect>
-        <TDN_NoC name="2x3TDN" topology="mesh" x-dimension="2"
-                 y-dimension="3" routing="Y-X" flitSize="128"
-                 cycles="4" cycleLength="10"/>
+        <TDN_NoC name="2x3TDN" topology="mesh" x-dimension="2" y-dimension="3" routing="Y-X" 
+                 flitSize="128" cycles="4">
+          <mode name="slow" cycleLength="18" dynPower="5" 
+                staticPower_link="5" staticPower_NI="5" staticPower_switch="5" 
+                area_link="5" area_NI="5" area_switch="5" 
+                monetary_link="5" monetary_NI="5" monetary_switch="5"/>
+          <mode name="default" cycleLength="10" dynPower="12" 
+                staticPower_link="12" staticPower_NI="12" staticPower_switch="12" 
+                area_link="12" area_NI="12" area_switch="12" 
+                monetary_link="12" monetary_NI="12" monetary_switch="12"/>
+          <mode name="fast" cycleLength="6" dynPower="30" 
+                staticPower_link="30" staticPower_NI="30" staticPower_switch="30" 
+                area_link="30" area_NI="30" area_switch="30" 
+                monetary_link="30" monetary_NI="30" monetary_switch="30"/>
+        </TDN_NoC>
     </interconnect>
 </platform>
