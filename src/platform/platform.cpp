@@ -103,7 +103,9 @@ void Platform::load_xml(XMLdoc& xml) throw (InvalidArgumentException)
     for(auto ic_mode : ic_modes) {
       string mode_name = xml.getProp(ic_mode, "name");
       string mode_cycleLength = xml.getProp(ic_mode, "cycleLength");
-      string mode_dynPowerCons = xml.getProp(ic_mode, "dynPower");
+      string mode_dynPowerCons_link = xml.getProp(ic_mode, "dynPower_link");
+      string mode_dynPowerCons_NI = xml.getProp(ic_mode, "dynPower_NI");
+      string mode_dynPowerCons_switch = xml.getProp(ic_mode, "dynPower_switch");
       string mode_staticPow_link = xml.getProp(ic_mode, "staticPower_link");
       string mode_staticPow_NI = xml.getProp(ic_mode, "staticPower_NI");
       string mode_staticPow_switch = xml.getProp(ic_mode, "staticPower_switch");
@@ -115,7 +117,9 @@ void Platform::load_xml(XMLdoc& xml) throw (InvalidArgumentException)
       string mode_monetary_switch = xml.getProp(ic_mode, "monetary_switch");
       
       interconnect.addMode(mode_name, atoi(mode_cycleLength.c_str()),
-                            atoi(mode_dynPowerCons.c_str()),
+                            atoi(mode_dynPowerCons_link.c_str()),
+                            atoi(mode_dynPowerCons_NI.c_str()),
+                            atoi(mode_dynPowerCons_switch.c_str()),
                             atoi(mode_staticPow_link.c_str()),
                             atoi(mode_staticPow_NI.c_str()),
                             atoi(mode_staticPow_switch.c_str()),
@@ -464,11 +468,29 @@ vector<int> Platform::getTDNCycleLengths() const{
   return tmp;
 }
 
-/*! Gets the dynamic power consumption - but for what? The link, the NoC, ... */
-vector<int> Platform::getDynPowerCons() const{
+/*! Gets the dynamic power consumption of a link */
+vector<int> Platform::getDynPowerCons_link() const{
   vector<int> tmp; 
   for(int i=0; i<interconnect.modes.size(); i++){
-    tmp.push_back(interconnect.modes[i].dynPowerCons);
+    tmp.push_back(interconnect.modes[i].dynPower_link);
+  }
+  
+  return tmp;  
+}
+/*! Gets the dynamic power consumption of a link */
+vector<int> Platform::getDynPowerCons_NI() const{
+  vector<int> tmp; 
+  for(int i=0; i<interconnect.modes.size(); i++){
+    tmp.push_back(interconnect.modes[i].dynPower_NI);
+  }
+  
+  return tmp;  
+}
+/*! Gets the dynamic power consumption of a link */
+vector<int> Platform::getDynPowerCons_switch() const{
+  vector<int> tmp; 
+  for(int i=0; i<interconnect.modes.size(); i++){
+    tmp.push_back(interconnect.modes[i].dynPower_switch);
   }
   
   return tmp;  
@@ -508,6 +530,57 @@ vector<int> Platform::getStaticPowerCons() const{
   return tmp;
 }
 
+
+  
+/*! Gets the dynamic power consumption of the link at node node for each mode. */
+vector<int> Platform::getStaticPowerCons_link(size_t node) const{
+  vector<int> tmp; 
+  
+  int yLoc_node = node/interconnect.columns;
+  int xLoc_node = node%interconnect.columns;
+  
+  //cout << "I am processor/NoC-node " << i << ", located at (" << xLoc_node << ", " << yLoc_node << "):";
+  if(xLoc_node % (interconnect.columns-1) == 0 && yLoc_node % (interconnect.rows-1) == 0){
+    //cout << " I am a CORNER node" << endl;
+    for(size_t i=0; i<interconnect.modes.size(); i++){
+      tmp.push_back(4*interconnect.modes[i].staticPow_link);
+    }
+  }else if(xLoc_node % (interconnect.columns-1) == 0 || yLoc_node % (interconnect.rows-1) == 0){
+    //cout << " I am an EDGE node" << endl;
+    for(size_t i=0; i<interconnect.modes.size(); i++){
+      tmp.push_back(5*interconnect.modes[i].staticPow_link);
+    }
+  }else{
+    //cout << " I am a MIDDLE node" << endl;
+    for(size_t i=0; i<interconnect.modes.size(); i++){
+      tmp.push_back(6*interconnect.modes[i].staticPow_link);
+    }
+  }
+  
+  return tmp;
+}
+
+/*! Gets the dynamic power consumption of the NI at node node for each mode. */
+vector<int> Platform::getStaticPowerCons_NI() const{
+  vector<int> tmp; 
+  for(int i=0; i<interconnect.modes.size(); i++){
+    tmp.push_back(interconnect.modes[i].staticPow_NI);
+  }
+  
+  return tmp;  
+}
+
+/*! Gets the dynamic power consumption of the switch at node node for each mode. */
+vector<int> Platform::getStaticPowerCons_switch() const{
+  vector<int> tmp; 
+  for(int i=0; i<interconnect.modes.size(); i++){
+    tmp.push_back(interconnect.modes[i].staticPow_switch);
+  }
+  
+  return tmp;  
+}
+  
+
 /*! Gets the area cost of the NoC, depending on the mode. */
 vector<int> Platform::interconnectAreaCost() const{
   vector<int> tmp; 
@@ -541,7 +614,54 @@ vector<int> Platform::interconnectAreaCost() const{
   
   return tmp;
 }
+  
+/*! Gets the area cost of the links at node node for each mode. */
+vector<int> Platform::interconnectAreaCost_link(size_t node) const{
+  vector<int> tmp; 
+  
+  int yLoc_node = node/interconnect.columns;
+  int xLoc_node = node%interconnect.columns;
+  
+  //cout << "I am processor/NoC-node " << i << ", located at (" << xLoc_node << ", " << yLoc_node << "):";
+  if(xLoc_node % (interconnect.columns-1) == 0 && yLoc_node % (interconnect.rows-1) == 0){
+    //cout << " I am a CORNER node" << endl;
+    for(size_t i=0; i<interconnect.modes.size(); i++){
+      tmp.push_back(4*interconnect.modes[i].area_link);
+    }
+  }else if(xLoc_node % (interconnect.columns-1) == 0 || yLoc_node % (interconnect.rows-1) == 0){
+    //cout << " I am an EDGE node" << endl;
+    for(size_t i=0; i<interconnect.modes.size(); i++){
+      tmp.push_back(5*interconnect.modes[i].area_link);
+    }
+  }else{
+    //cout << " I am a MIDDLE node" << endl;
+    for(size_t i=0; i<interconnect.modes.size(); i++){
+      tmp.push_back(6*interconnect.modes[i].area_link);
+    }
+  }
+  
+  return tmp;
+}
 
+/*! Gets the area cost of an NI for each mode. */
+vector<int> Platform::interconnectAreaCost_NI() const{
+  vector<int> tmp; 
+  for(int i=0; i<interconnect.modes.size(); i++){
+    tmp.push_back(interconnect.modes[i].area_NI);
+  }
+  
+  return tmp;  
+}
+
+/*! Gets the area cost of a switch for each mode. */
+vector<int> Platform::interconnectAreaCost_switch() const{
+  vector<int> tmp; 
+  for(int i=0; i<interconnect.modes.size(); i++){
+    tmp.push_back(interconnect.modes[i].area_switch);
+  }
+  
+  return tmp;  
+}
 /*! Gets the monetary cost of the NoC, depending on the mode. */
 vector<int> Platform::interconnectMonetaryCost() const{
   vector<int> tmp; 
@@ -574,6 +694,54 @@ vector<int> Platform::interconnectMonetaryCost() const{
   }
   
   return tmp;
+}
+  
+/*! Gets the monetary cost of the links at node node for each mode. */
+vector<int> Platform::interconnectMonetaryCost_link(size_t node) const{
+  vector<int> tmp; 
+  
+  int yLoc_node = node/interconnect.columns;
+  int xLoc_node = node%interconnect.columns;
+  
+  //cout << "I am processor/NoC-node " << i << ", located at (" << xLoc_node << ", " << yLoc_node << "):";
+  if(xLoc_node % (interconnect.columns-1) == 0 && yLoc_node % (interconnect.rows-1) == 0){
+    //cout << " I am a CORNER node" << endl;
+    for(size_t i=0; i<interconnect.modes.size(); i++){
+      tmp.push_back(4*interconnect.modes[i].monetary_link);
+    }
+  }else if(xLoc_node % (interconnect.columns-1) == 0 || yLoc_node % (interconnect.rows-1) == 0){
+    //cout << " I am an EDGE node" << endl;
+    for(size_t i=0; i<interconnect.modes.size(); i++){
+      tmp.push_back(5*interconnect.modes[i].monetary_link);
+    }
+  }else{
+    //cout << " I am a MIDDLE node" << endl;
+    for(size_t i=0; i<interconnect.modes.size(); i++){
+      tmp.push_back(6*interconnect.modes[i].monetary_link);
+    }
+  }
+  
+  return tmp;
+}
+
+/*! Gets the monetary cost of a NI for each mode. */
+vector<int> Platform::interconnectMonetaryCost_NI() const{
+  vector<int> tmp; 
+  for(int i=0; i<interconnect.modes.size(); i++){
+    tmp.push_back(interconnect.modes[i].monetary_NI);
+  }
+  
+  return tmp;  
+}
+
+/*! Gets the monetary cost of a switch for each mode. */
+vector<int> Platform::interconnectMonetaryCost_switch() const{
+  vector<int> tmp; 
+  for(int i=0; i<interconnect.modes.size(); i++){
+    tmp.push_back(interconnect.modes[i].monetary_switch);
+  }
+  
+  return tmp;  
 }
 
 int Platform::getMaxNoCHops() const{

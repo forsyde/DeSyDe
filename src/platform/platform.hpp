@@ -175,7 +175,9 @@ public:
 struct InterconnectMode {
   string name;
   int cycleLength;
-  int dynPowerCons;
+  int dynPower_link;
+  int dynPower_NI;
+  int dynPower_switch;
   int staticPow_link;
   int staticPow_NI;
   int staticPow_switch;
@@ -228,7 +230,9 @@ public:
   
   void addMode(string _name,
                int _cycleLength,
-               int _dynPowerCons,
+               int _dynPower_link,
+               int _dynPower_NI,
+               int _dynPower_switch,
                int _staticPow_link,
                int _staticPow_NI,
                int _staticPow_switch,
@@ -238,9 +242,11 @@ public:
                int _monetary_link,
                int _monetary_NI,
                int _monetary_switch){
-    modes.push_back(InterconnectMode{_name, _cycleLength, _dynPowerCons, _staticPow_link,
-                      _staticPow_NI, _staticPow_switch, _area_link, _area_NI,
-                      _area_switch, _monetary_link, _monetary_NI, _monetary_switch});
+    modes.push_back(InterconnectMode{_name, _cycleLength, 
+                      _dynPower_link, _dynPower_NI, _dynPower_switch,
+                      _staticPow_link, _staticPow_NI, _staticPow_switch, 
+                      _area_link, _area_NI, _area_switch, 
+                      _monetary_link, _monetary_NI, _monetary_switch});
   }
 };
 
@@ -322,17 +328,50 @@ public:
   /*! Gets the cycle length, depending on the NoC mode. */
   vector<int> getTDNCycleLengths() const;
   
-  /*! Gets the dynamic power consumption - but for what? The link, the NoC, ... */
-  vector<int> getDynPowerCons() const;
+  /*! Gets the dynamic power consumption of a link for each mode. */
+  vector<int> getDynPowerCons_link() const;
+  
+  /*! Gets the dynamic power consumption of an NI for each mode. */
+  vector<int> getDynPowerCons_NI() const;
+  
+  /*! Gets the dynamic power consumption of a switch for each mode. */
+  vector<int> getDynPowerCons_switch() const;
   
   /*! Gets the static power consumption of the entire NoC for each mode. */
   vector<int> getStaticPowerCons() const;
   
+  /*! Gets the dynamic power consumption of the link at node node for each mode. */
+  vector<int> getStaticPowerCons_link(size_t node) const;
+  
+  /*! Gets the dynamic power consumption of a NI for each mode. */
+  vector<int> getStaticPowerCons_NI() const;
+  
+  /*! Gets the dynamic power consumption of a switch for each mode. */
+  vector<int> getStaticPowerCons_switch() const;
+  
   /*! Gets the area cost of the NoC, depending on the mode. */
   vector<int> interconnectAreaCost() const;
   
+  /*! Gets the area cost of the links at node node for each mode. */
+  vector<int> interconnectAreaCost_link(size_t node) const;
+  
+  /*! Gets the area cost of an NI for each mode. */
+  vector<int> interconnectAreaCost_NI() const;
+  
+  /*! Gets the area cost of a switch for each mode. */
+  vector<int> interconnectAreaCost_switch() const;
+  
   /*! Gets the monetary cost of the NoC, depending on the mode. */
   vector<int> interconnectMonetaryCost() const;
+  
+  /*! Gets the monetary cost of the links at node node for each mode. */
+  vector<int> interconnectMonetaryCost_link(size_t node) const;
+  
+  /*! Gets the monetary cost of a NI for each mode. */
+  vector<int> interconnectMonetaryCost_NI() const;
+  
+  /*! Gets the monetary cost of a switch for each mode. */
+  vector<int> interconnectMonetaryCost_switch() const;
   
   int getMaxNoCHops() const;
   

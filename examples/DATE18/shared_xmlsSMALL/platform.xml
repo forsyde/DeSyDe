@@ -14,15 +14,18 @@
     <interconnect>
         <TDN_NoC name="2x3TDN" topology="mesh" x-dimension="2" y-dimension="3" routing="Y-X" 
                  flitSize="128" cycles="4">
-          <mode name="slow" cycleLength="18" dynPower="5" 
+          <mode name="slow" cycleLength="18" 
+                dynPower_link="5" dynPower_NI="5" dynPower_switch="5"
                 staticPower_link="5" staticPower_NI="5" staticPower_switch="5" 
                 area_link="5" area_NI="5" area_switch="5" 
                 monetary_link="5" monetary_NI="5" monetary_switch="5"/>
-          <mode name="default" cycleLength="10" dynPower="12" 
+          <mode name="default" cycleLength="10" 
+                dynPower_link="12" dynPower_NI="12" dynPower_switch="12" 
                 staticPower_link="12" staticPower_NI="12" staticPower_switch="12" 
                 area_link="12" area_NI="12" area_switch="12" 
                 monetary_link="12" monetary_NI="12" monetary_switch="12"/>
-          <mode name="fast" cycleLength="6" dynPower="30" 
+          <mode name="fast" cycleLength="6" 
+                dynPower_link="30" dynPower_NI="30" dynPower_switch="30"
                 staticPower_link="30" staticPower_NI="30" staticPower_switch="30" 
                 area_link="30" area_NI="30" area_switch="30" 
                 monetary_link="30" monetary_NI="30" monetary_switch="30"/>
