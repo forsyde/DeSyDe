@@ -157,6 +157,12 @@ if(platform->getInterconnectType() == TDMA_BUS){
   IntVarArgs tdnSlots(*this, platform->nodes(), 0, platform->getTDNCycles());
   IntVarArgs maxMsgSizeFromProc(*this, platform->nodes(), 0, maxMessageSize);
   
+  //for NoC power model
+  size_t messages = channels.size(); 
+  size_t links = tdn_graph.size()/platform->getTDNCycles();
+  IntVarArgs flitsPerLink(*this, messages*links, 0, Int::Limits::max); //derive flits per switch and flits per NI from this
+  IntVarArgs powerPerLink(*this, links, 0, Int::Limits::max);
+  
   IntVar cycleLength(*this, 0, Int::Limits::max); //depends on chosen NoC-mode
   element(*this, IntArgs(platform->getTDNCycleLengths()), noc_mode, cycleLength);
   

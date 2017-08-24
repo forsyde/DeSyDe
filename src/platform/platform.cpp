@@ -146,6 +146,8 @@ void Platform::load_xml(XMLdoc& xml) throw (InvalidArgumentException)
 
 
     createTDNGraph();
+    createRouteTable();
+    getchar();
   }
     
   //}
@@ -430,6 +432,92 @@ void Platform::createTDNGraph() throw (InvalidArgumentException){
                
   LOG_DEBUG("### Done with TDN table. ###");
 
+}
+
+void Platform::createRouteTable(){
+  int nodes = interconnect.rows * interconnect.columns;
+  
+  for(int i=0; i<nodes; i++){
+    int yLoc_i = i/interconnect.columns;
+    int xLoc_i = i%interconnect.columns;
+    
+    int srcLinkId = i;
+    int linkId;
+        
+    for(int j=0; j<nodes; j++){
+      int yLoc_j = j/interconnect.columns;
+      int xLoc_j = j%interconnect.columns;
+      
+      tdn_route tmp_route;
+      
+      int y_inc = (yLoc_i == yLoc_j) ? 0 : ((yLoc_i < yLoc_j) ? 1 : -1);
+      int x_inc = (xLoc_i == xLoc_j) ? 0 : ((xLoc_i < xLoc_j) ? 1 : -1);
+      
+      if(x_inc != 0 || y_inc != 0){
+        tmp_route.srcProc = i;
+        tmp_route.dstProc = j; //{j, vector<int>()};
+        tmp_route.tdn_nodePath.push_back(srcLinkId);
+        
+        
+        //cout << "\t starting from NI to switch at NoC-node " << i << " at (" << xLoc_i << ", " << yLoc_i << ")";
+        //cout << " (linkId: "<< srcLinkId << ")" << endl;
+        cout << srcLinkId << ": from NI to (" <<  xLoc_i << ", " << yLoc_i << ")" << endl;
+      }
+    
+      int tmp_yLoc = yLoc_i;
+      int tmp_xLoc = xLoc_i;
+      //cout << "\t\t via switch (" << tmp_xLoc << ", " << tmp_yLoc << ")" << endl;
+      while(tmp_yLoc != yLoc_j){
+        //cout << "\t    ...travelling " << ((y_inc == -1) ? "DOWN  " : "UP    ");
+        //cout << " via TDN-node ";
+        if(y_inc == 1){
+          linkId = nodes + (tmp_xLoc*(interconnect.rows-1)) + (tmp_yLoc);
+        }else if(y_inc == -1){
+          linkId = (2*nodes-interconnect.columns) + (tmp_xLoc*(interconnect.rows-1)) + (((interconnect.rows-1)-tmp_yLoc));
+        }
+        
+        tmp_route.tdn_nodePath.push_back(linkId);
+        
+        cout << linkId << ": from (" <<  tmp_xLoc << ", " << tmp_yLoc << ") to (";
+        tmp_yLoc += y_inc;
+        cout <<  tmp_xLoc << ", " << tmp_yLoc << ")" << endl;
+      }
+      
+      while(tmp_xLoc != xLoc_j){
+        //cout << "\t    ...travelling " << ((x_inc == -1) ? "LEFT  " : "RIGHT ");
+        //cout << " via TDN-node ";
+        if(x_inc == 1){
+          linkId = (3*nodes-2*interconnect.columns) + (tmp_yLoc*(interconnect.columns-1)) + (tmp_xLoc);
+        }else if(x_inc == -1){
+          linkId = (4*nodes-2*interconnect.columns-interconnect.rows) + (tmp_yLoc*(interconnect.columns-1)) + (((interconnect.columns-1)-tmp_xLoc));
+        }
+        
+        tmp_route.tdn_nodePath.push_back(linkId);
+        
+        cout << linkId << ": from (" <<  tmp_xLoc << ", " << tmp_yLoc << ") to (";
+        tmp_xLoc += x_inc;
+        cout <<  tmp_xLoc << ", " << tmp_yLoc << ")" << endl;
+      }
+      
+      //from switch to NI at destination NoC-node
+      if(x_inc != 0 || y_inc !=0){
+        linkId = (5*nodes-2*interconnect.columns-2*interconnect.rows) + j ;
+        //cout << "\t arriving at NI from switch at NoC-node " << j << " at (" << tmp_xLoc << ", " << tmp_yLoc << ")";
+        //cout << " (linkId: "<< linkId << ")" << endl;
+        cout << linkId << ": from (" <<  tmp_xLoc << ", " << tmp_yLoc << ") to NI" << endl << endl;
+        
+        tmp_route.tdn_nodePath.push_back(linkId);
+        interconnect.all_routes.push_back(tmp_route);
+        
+      }
+    }
+  }
+  
+  for(int i=0; i<interconnect.all_routes.size(); i++){
+    cout << i << " (from " << interconnect.all_routes[i].srcProc << " to " << interconnect.all_routes[i].dstProc;
+    cout << ") " << tools::toString(interconnect.all_routes[i].tdn_nodePath) << endl;
+  }
+  
 }
 
 size_t Platform::nodes() const {
