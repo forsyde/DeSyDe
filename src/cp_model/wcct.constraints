@@ -160,8 +160,28 @@ if(platform->getInterconnectType() == TDMA_BUS){
   //for NoC power model
   size_t messages = channels.size(); 
   size_t links = tdn_graph.size()/platform->getTDNCycles();
-  IntVarArgs flitsPerLink(*this, messages*links, 0, Int::Limits::max); //derive flits per switch and flits per NI from this
+  //IntVarArgs flitsPerLink(*this, messages*links, 0, Int::Limits::max); 
+  Matrix<IntVarArray> flitsPerLinkM(flitsPerLink, links, messages);//derive flits per switch and flits per NI from this
   IntVarArgs powerPerLink(*this, links, 0, Int::Limits::max);
+  
+  vector<tdn_route> all_routes = platform->getAllRoutes();
+  for(unsigned int ki=0; ki<channels.size(); ki++){
+    int src_ch = channels[ki]->source;
+    int dst_ch = channels[ki]->destination;
+    int noOfFlits = ceil(((double)channels[ki]->messageSize)/platform->getFlitSize());
+    
+    for(size_t r=0; r<all_routes.size(); r++){
+      for(size_t ri=0; ri<all_routes[r].tdn_nodePath.size(); ri++){
+        rel(*this, ((proc[src_ch]==all_routes[r].srcProc) && (proc[dst_ch]==all_routes[r].dstProc)) 
+                    >> (flitsPerLinkM(all_routes[r].tdn_nodePath[ri], ki) == noOfFlits));
+      }
+    }
+  }
+  //for(size_t i=0; i<links; i++){
+  //  rel(*this, powerPerLink[i] == (sum(flitsPerLinkM.col(i))*) //This is incorrect. Channels from different apps can have different iteration periods.
+  //}
+  
+  
   
   IntVar cycleLength(*this, 0, Int::Limits::max); //depends on chosen NoC-mode
   element(*this, IntArgs(platform->getTDNCycleLengths()), noc_mode, cycleLength);
@@ -337,10 +357,10 @@ if(platform->getInterconnectType() == TDMA_BUS){
     
     //receiving doesn't take any time on TDN NoC (buffer in receiving node's local memory)
     rel(*this, wcct_r[ki]==0); 
-    //max blocking time depends on number of tdn slots and cycle length
-    rel(*this, wcct_b[ki] <= (platform->getTDNCycles())*platform->getTDNCycleLength());
-    //max sending time depends on max number of hops, cycle length and max number of flits per message
-    rel(*this, wcct_s[ki] <= platform->getMaxNoCHops()*platform->getTDNCycleLength());
+    //max blocking time depends on number of tdn slots and cycle length TODO: fix
+    //rel(*this, wcct_b[ki] <= (platform->getTDNCycles())*platform->getTDNCycleLength());
+    //max sending time depends on max number of hops, cycle length and max number of flits per message TODO: fix
+    //rel(*this, wcct_s[ki] <= platform->getMaxNoCHops()*platform->getTDNCycleLength());
     //if src and dst actors are located on same proc, communication doesn't take any time
     rel(*this, (proc[src_ch1]==proc[dst_ch1]) >> (wcct_b[ki]==0));
     rel(*this, (proc[src_ch1]==proc[dst_ch1]) >> (wcct_s[ki]==0));

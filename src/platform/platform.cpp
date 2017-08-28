@@ -147,7 +147,6 @@ void Platform::load_xml(XMLdoc& xml) throw (InvalidArgumentException)
 
     createTDNGraph();
     createRouteTable();
-    getchar();
   }
     
   //}
@@ -513,10 +512,10 @@ void Platform::createRouteTable(){
     }
   }
   
-  for(int i=0; i<interconnect.all_routes.size(); i++){
+  /*for(int i=0; i<interconnect.all_routes.size(); i++){
     cout << i << " (from " << interconnect.all_routes[i].srcProc << " to " << interconnect.all_routes[i].dstProc;
     cout << ") " << tools::toString(interconnect.all_routes[i].tdn_nodePath) << endl;
-  }
+  }*/
   
 }
 
@@ -542,8 +541,12 @@ size_t Platform::getInterconnectModes() const{
 }
 
 //TODO fix for modes
-int Platform::getTDNCycleLength() const{
-  return interconnect.modes[0].cycleLength;
+//int Platform::getTDNCycleLength() const{
+//  return interconnect.modes[0].cycleLength;
+//}
+
+vector<tdn_route> Platform::getAllRoutes() const{
+  return interconnect.all_routes;
 }
 
 /*! Gets the cycle length, depending on the NoC mode. */

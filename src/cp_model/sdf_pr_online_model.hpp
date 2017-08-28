@@ -88,6 +88,7 @@ private:
     IntVar                  sys_utilization;        /**< utilization of all procs. */
     IntVar                  procsUsed_utilization;    /**< utilization of all used procs */
     IntVarArray             proc_power;                /**< long-run consumption of each proc. */
+    IntVarArray             flitsPerLink;              /**< flits per link and channel. */
     IntVar                  noc_power;                /**< long-run consumption of the NoC. */
     IntVar                  sys_power;                /**< long-run consumption of system. */
     IntVarArray             proc_area;                /**< area cost of each proc. */

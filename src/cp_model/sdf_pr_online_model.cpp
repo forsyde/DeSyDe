@@ -25,6 +25,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
     sys_utilization(*this, 0, p_mapping->max_utilization),
     procsUsed_utilization(*this, 0, p_mapping->max_utilization),
     proc_power(*this, platform->nodes(), 0, Int::Limits::max),
+    flitsPerLink(*this, apps->n_programChannels()*(platform->getTDNGraph().size()/platform->getTDNCycles()), 0, Int::Limits::max),
     noc_power(*this, 0, Int::Limits::max),
     //sys_power(*this, mapping->getLeastPowerConsumption(), Int::Limits::max),
     sys_power(*this, 0, Int::Limits::max),
@@ -360,6 +361,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
           branch(*this, chosenRoute, INT_VAR_NONE(), INT_VAL_MIN()); 
           assign(*this, tdnTable, INT_ASSIGN_MAX()); 
           branch(*this, noc_mode, INT_VAL_MIN());
+          assign(*this, flitsPerLink, INT_ASSIGN_MIN());
         }else if(platform->getInterconnectType() == TDMA_BUS){
           branch(*this, tdmaAlloc, INT_VAR_NONE(), INT_VAL_MIN());  
         }
@@ -421,6 +423,8 @@ SDFPROnlineModel::SDFPROnlineModel(bool share, SDFPROnlineModel& s):
     sys_utilization.update(*this, share, s.sys_utilization);
     procsUsed_utilization.update(*this, share, s.procsUsed_utilization);
     proc_power.update(*this, share, s.proc_power);
+    noc_power.update(*this, share, s.noc_power);
+    flitsPerLink.update(*this, share, s.flitsPerLink);
     sys_power.update(*this, share, s.sys_power);
     proc_area.update(*this, share, s.proc_area);
     sys_area.update(*this, share, s.sys_area);
@@ -447,6 +451,7 @@ void SDFPROnlineModel::print(std::ostream& out) const {
     out << "Sys utilization: " << sys_utilization << endl;
     out << "ProcsUsed utilization: " << procsUsed_utilization << endl;
     out << "proc power: " << proc_power << endl;
+    out << "noc power: " << noc_power << endl;
     out << "sys power: " << sys_power << endl;
     out << "least_power_est: " << least_power_est << endl;
     out << "proc area: " << proc_area << endl;
@@ -490,6 +495,18 @@ void SDFPROnlineModel::print(std::ostream& out) const {
         out << endl << "-------------------------------------------";
     }
     out << endl << endl;
+   
+    out << "Flits per link: " << endl;
+    size_t links = tdn_graph.size()/platform->getTDNCycles();
+    for(size_t ii=0; ii<flitsPerLink.size(); ii++){
+      int msg = ii/links;
+      if(ii!=0 && ii%links==0) out << endl;
+      if(msg<10 && ii%links == 0) out << "Ch_0" << msg << ": ";
+      if(msg>=10 && ii%links == 0) out << "Ch_" << msg << ": ";
+      out << flitsPerLink[ii] << " ";
+    }
+    out << endl << endl;
+    
     out << "S-order: " << sendNext << endl;
     out << "wcct_b: " << wcct_b << endl;
     out << "wcct_s: " << wcct_s << endl;

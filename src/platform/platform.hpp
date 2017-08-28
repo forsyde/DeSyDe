@@ -327,7 +327,9 @@ public:
   
   size_t getInterconnectModes() const;
   
-  int getTDNCycleLength() const;
+  //int getTDNCycleLength() const;
+  
+  vector<tdn_route> getAllRoutes() const;
   
   /*! Gets the cycle length, depending on the NoC mode. */
   vector<int> getTDNCycleLengths() const;
