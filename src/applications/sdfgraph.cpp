@@ -135,6 +135,27 @@ void SDFGraph::transform(){
   //Initiate corresponding transformation method
   bool isHSDF = all_of(rep_vec.begin(), rep_vec.end(), [](int i){return i==1;});
   isHSDF ? transformFromHSDF() : transformFromSDF(rep_vec);
+  
+  //print graph into debug log file
+  LOG_DEBUG("All " + tools::toString(actors.size()) + " actors of graph " + graphName +":");
+  for(auto i : actors){
+    LOG_DEBUG("actor " + tools::toString(i->id) + ": " + i->name
+              + ", parent(id): " + i->parent_name + "(" + tools::toString(i->parent_id) +")"
+              + "; code size: " + tools::toString(i->codeSize) 
+              + "; data size: " + tools::toString(i->dataSize));
+  }
+  
+  LOG_DEBUG("All " + tools::toString(channels.size()) + " channels of graph " + graphName +":");
+  for(auto i: channels){
+    LOG_DEBUG("channel " + tools::toString(i->id) + ": " + i->name
+              +" from " + i->src_name + "(" + tools::toString(i->source) + ")"
+              + " \[prod: " + tools::toString(i->prod) + "\]"
+              +" to " + i->dst_name + "(" + tools::toString(i->destination) + ")"
+              + " \[cons: " + tools::toString(i->cons) + "\]"
+              + "; initial tokens: " + tools::toString(i->initTokens)
+              + "; token size: " + tools::toString(i->tokenSize)
+              + "; message size: "+ tools::toString(i->messageSize));
+  }
 }
 
 size_t newIndex(size_t actor, const vector<int> &repVector){

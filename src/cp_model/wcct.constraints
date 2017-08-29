@@ -160,8 +160,12 @@ if(platform->getInterconnectType() == TDMA_BUS){
   //for NoC power model
   size_t messages = channels.size(); 
   size_t links = tdn_graph.size()/platform->getTDNCycles();
+  cout << "messages: " << messages << " & links: " << links << endl;
   //IntVarArgs flitsPerLink(*this, messages*links, 0, Int::Limits::max); 
   Matrix<IntVarArray> flitsPerLinkM(flitsPerLink, links, messages);//derive flits per switch and flits per NI from this
+  IntVarArgs linkNrg(*this, apps->n_SDFApps(), 0, Int::Limits::max);
+  IntVarArgs switchNrg(*this, apps->n_SDFApps(), 0, Int::Limits::max);
+  IntVarArgs niNrg(*this, apps->n_SDFApps(), 0, Int::Limits::max);
   IntVarArgs powerPerLink(*this, links, 0, Int::Limits::max);
   
   vector<tdn_route> all_routes = platform->getAllRoutes();
@@ -203,18 +207,18 @@ if(platform->getInterconnectType() == TDMA_BUS){
   for(size_t ji=0; ji<platform->nodes(); ji++){
     count(*this, tdnTableM.row(ji), ji, IRT_EQ, tdnSlots[ji]);
     
-    cout << "I am processor " << ji << ". I can travel to..." << endl;
+    //cout << "I am processor " << ji << ". I can travel to..." << endl;
     int dst = 0;
     for(size_t jj=0; jj<platform->nodes(); jj++){
     //for(size_t r=0; r<tdn_graph[t].tdn_routes.size(); r++){
       if(ji!=jj){
         IntVarArgs routes;
         int routeHops;
-        cout << "... processor " << jj << endl;
+        //cout << "... processor " << jj << endl;
         for(size_t k=0; k<platform->getTDNCycles(); k++){
           int t = ji * platform->getTDNCycles() + k;
           routeHops = tdn_graph[t].tdn_routes[dst]->tdn_nodePath.size();
-          cout << "\t like this: " << tools::toString(tdn_graph[t].tdn_routes[dst]->tdn_nodePath) << endl;
+          //cout << "\t like this: " << tools::toString(tdn_graph[t].tdn_routes[dst]->tdn_nodePath) << endl;
         }
         
         for(unsigned int ki=0; ki<channels.size(); ki++){
@@ -246,10 +250,10 @@ if(platform->getInterconnectType() == TDMA_BUS){
   }
   
   for(int t=platform->getTDNCycles()*platform->nodes(); t<tdn_graph.size()-platform->getTDNCycles()*platform->nodes(); t++){
-    cout << "Routes going through TDN graph node " << t << ": [";
-    cout << tdn_graph[t].link.from << " -> " << tdn_graph[t].link.to << " @" << tdn_graph[t].link.cycle << "]"  << endl;
+    //cout << "Routes going through TDN graph node " << t << ": [";
+    //cout << tdn_graph[t].link.from << " -> " << tdn_graph[t].link.to << " @" << tdn_graph[t].link.cycle << "]"  << endl;
     for(size_t r=0; r<tdn_graph[t].tdn_routes.size(); r++){
-      cout << "\t" << tools::toString(tdn_graph[t].tdn_routes[r]->tdn_nodePath) << endl;
+      //cout << "\t" << tools::toString(tdn_graph[t].tdn_routes[r]->tdn_nodePath) << endl;
       //if the current location t is assigned to a proc, then all routes
       //through this location that start from a different proc p
       //cannot be used, i.e. all following locations != p
@@ -259,8 +263,8 @@ if(platform->getInterconnectType() == TDMA_BUS){
       for(size_t np=pos+1; np<tdn_graph[t].tdn_routes[r]->tdn_nodePath.size(); np++){
        rel(*this, (tdnTable[t]!=tdn_graph[t].tdn_routes[r]->srcProc)
                    >> (tdnTable[tdn_graph[t].tdn_routes[r]->tdn_nodePath[np]]!=tdn_graph[t].tdn_routes[r]->srcProc));
-      cout << "rel(*this, (tdnTable[" << t << "] != " << tdn_graph[t].tdn_routes[r]->srcProc << ")";
-      cout << " >> (tdnTable[" << tdn_graph[t].tdn_routes[r]->tdn_nodePath[np] << "] != " << tdn_graph[t].tdn_routes[r]->srcProc << "))"<< endl; 
+      //cout << "rel(*this, (tdnTable[" << t << "] != " << tdn_graph[t].tdn_routes[r]->srcProc << ")";
+      //cout << " >> (tdnTable[" << tdn_graph[t].tdn_routes[r]->tdn_nodePath[np] << "] != " << tdn_graph[t].tdn_routes[r]->srcProc << "))"<< endl; 
       }
       //if each proc can only have one TDN slot
       /*for(size_t np=0; np<pos; np++){
