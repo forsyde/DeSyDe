@@ -157,6 +157,8 @@ if(platform->getInterconnectType() == TDMA_BUS){
   IntVarArgs tdnSlots(*this, platform->nodes(), 0, platform->getTDNCycles());
   IntVarArgs maxMsgSizeFromProc(*this, platform->nodes(), 0, maxMessageSize);
   
+  IntVar cycleLength(*this, 0, Int::Limits::max); //depends on chosen NoC-mode
+  
   //for NoC power model
   size_t messages = channels.size(); 
   size_t links = tdn_graph.size()/platform->getTDNCycles();
@@ -166,7 +168,21 @@ if(platform->getInterconnectType() == TDMA_BUS){
   IntVarArgs linkNrg(*this, apps->n_SDFApps(), 0, Int::Limits::max);
   IntVarArgs switchNrg(*this, apps->n_SDFApps(), 0, Int::Limits::max);
   IntVarArgs niNrg(*this, apps->n_SDFApps(), 0, Int::Limits::max);
-  IntVarArgs powerPerLink(*this, links, 0, Int::Limits::max);
+  IntVar dynPower_link(*this, 0, Int::Limits::max);
+  IntVar dynPower_switch(*this, 0, Int::Limits::max);
+  IntVar dynPower_NI(*this, 0, Int::Limits::max);
+  //IntVar statPower_link(*this, 0, Int::Limits::max);
+  IntVar statPower_switch(*this, 0, Int::Limits::max);
+  IntVar statPower_NI(*this, 0, Int::Limits::max);
+  
+  //effects of chosen NoC mode:
+  element(*this, IntArgs(platform->getTDNCycleLengths()), noc_mode, cycleLength);
+  element(*this, IntArgs(platform->getDynPowerCons_link()), noc_mode, dynPower_link);
+  element(*this, IntArgs(platform->getDynPowerCons_switch()), noc_mode, dynPower_switch);
+  element(*this, IntArgs(platform->getDynPowerCons_NI()), noc_mode, dynPower_NI);
+  //element(*this, IntArgs(platform->getStaticPowerCons_link()), noc_mode, statPower_link);
+  element(*this, IntArgs(platform->getStaticPowerCons_switch()), noc_mode, statPower_switch);
+  element(*this, IntArgs(platform->getStaticPowerCons_NI()), noc_mode, statPower_NI);
   
   vector<tdn_route> all_routes = platform->getAllRoutes();
   for(unsigned int ki=0; ki<channels.size(); ki++){
@@ -181,14 +197,20 @@ if(platform->getInterconnectType() == TDMA_BUS){
       }
     }
   }
+  int min_ch = 0;
+  for(size_t a=0; a<apps->n_SDFApps(); a++){
+    rel(*this, linkNrg[a] == (sum(flitsPerLinkM.slice(0, links, min_ch, apps->getMaxChannelId(a)+1)) * dynPower_link * cycleLength));
+    rel(*this, switchNrg[a] == (sum(flitsPerLinkM.slice(0, links-platform->nodes(), min_ch, apps->getMaxChannelId(a)+1)) 
+                                * dynPower_switch * cycleLength));
+    rel(*this, niNrg[a] == ((sum(flitsPerLinkM.slice(0, platform->nodes(), min_ch, apps->getMaxChannelId(a)+1)) 
+                             + sum(flitsPerLinkM.slice(links-platform->nodes(), links, min_ch, apps->getMaxChannelId(a)+1)))
+                                * dynPower_NI * cycleLength));
+    
+    min_ch = apps->getMaxChannelId(a)+1;
+  }
   //for(size_t i=0; i<links; i++){
   //  rel(*this, powerPerLink[i] == (sum(flitsPerLinkM.col(i))*) //This is incorrect. Channels from different apps can have different iteration periods.
   //}
-  
-  
-  
-  IntVar cycleLength(*this, 0, Int::Limits::max); //depends on chosen NoC-mode
-  element(*this, IntArgs(platform->getTDNCycleLengths()), noc_mode, cycleLength);
   
   //initial constraints on TDN (injection and state of NoC) table:
   //which process can access which link

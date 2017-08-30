@@ -91,6 +91,10 @@ public:
   size_t n_programEntities();
   //get total number of program channels
   size_t n_programChannels();
+  //get the id of the last channel of application app
+  size_t getMaxChannelId(size_t app) const;
+  //get id of the application that channel ch belongs to
+  size_t getAppIdForChannel(size_t ch) const;
   //Maximum code size of all program entities (firings + tasks)
   size_t getMaxCodeSize();
 

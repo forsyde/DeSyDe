@@ -216,6 +216,26 @@ size_t Applications::n_programChannels(){
   return n_sdfChannels;
 }
 
+size_t Applications::getMaxChannelId(size_t app) const{
+  if(app==0 && sdfApps.size()>0) return sdfApps[0]->n_channels()-1;
+  
+  int id = 0;
+  for(size_t i=0; i<=app; i++){
+    id += sdfApps[i]->n_channels();
+  }
+  return id-1;
+  
+}
+
+size_t Applications::getAppIdForChannel(size_t ch) const{
+  int id = 0;
+  for(size_t i=0; i<sdfApps.size(); i++){
+    id += sdfApps[i]->n_channels();
+    if(ch < id) return i;
+  }
+  return -1;
+}
+
 //Maximum code size of all program entities (actors + tasks)
 size_t Applications::getMaxCodeSize(){
   size_t maxCodeSize = 0;
