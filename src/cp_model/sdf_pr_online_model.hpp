@@ -90,6 +90,7 @@ private:
     IntVarArray             proc_power;                /**< long-run consumption of each proc. */
     IntVarArray             flitsPerLink;              /**< flits per link and channel. */
     IntVar                  noc_power;                /**< long-run consumption of the NoC. */
+    IntVar                  nocUsed_power;            /**< long-run consumption of the NoC. */
     IntVar                  sys_power;                /**< long-run consumption of system. */
     IntVarArray             proc_area;                /**< area cost of each proc. */
     IntVar                  noc_area;                /**< area cost of the NoC. */

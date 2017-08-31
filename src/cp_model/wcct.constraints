@@ -168,19 +168,29 @@ if(platform->getInterconnectType() == TDMA_BUS){
   IntVarArgs linkNrg(*this, apps->n_SDFApps(), 0, Int::Limits::max);
   IntVarArgs switchNrg(*this, apps->n_SDFApps(), 0, Int::Limits::max);
   IntVarArgs niNrg(*this, apps->n_SDFApps(), 0, Int::Limits::max);
+  IntVarArgs dynPower_noc(*this, apps->n_SDFApps(), 0, Int::Limits::max);
   IntVar dynPower_link(*this, 0, Int::Limits::max);
   IntVar dynPower_switch(*this, 0, Int::Limits::max);
   IntVar dynPower_NI(*this, 0, Int::Limits::max);
-  //IntVar statPower_link(*this, 0, Int::Limits::max);
+  IntVar statPower_noc(*this, 0, Int::Limits::max);
+  IntVarArgs statPower_linkAtNode(*this, platform->nodes(), 0, Int::Limits::max);
+  IntVar statPower_link(*this, 0, Int::Limits::max);
   IntVar statPower_switch(*this, 0, Int::Limits::max);
   IntVar statPower_NI(*this, 0, Int::Limits::max);
+  IntVarArgs statPower_NIs(*this, platform->nodes(), 0, Int::Limits::max);
+  IntVarArgs statPower_switches(*this, platform->nodes(), 0, Int::Limits::max);
+  IntVarArgs statPower_links(*this, links-2*platform->nodes(), 0, Int::Limits::max);
   
   //effects of chosen NoC mode:
   element(*this, IntArgs(platform->getTDNCycleLengths()), noc_mode, cycleLength);
   element(*this, IntArgs(platform->getDynPowerCons_link()), noc_mode, dynPower_link);
   element(*this, IntArgs(platform->getDynPowerCons_switch()), noc_mode, dynPower_switch);
   element(*this, IntArgs(platform->getDynPowerCons_NI()), noc_mode, dynPower_NI);
-  //element(*this, IntArgs(platform->getStaticPowerCons_link()), noc_mode, statPower_link);
+  element(*this, IntArgs(platform->getStaticPowerCons()), noc_mode, statPower_noc);
+  for(int p=0; p<platform->nodes(); p++){
+    element(*this, IntArgs(platform->getStaticPowerCons_link(p)), noc_mode, statPower_linkAtNode[p]);
+  }
+  element(*this, IntArgs(platform->getStaticPowerCons_link()), noc_mode, statPower_link);
   element(*this, IntArgs(platform->getStaticPowerCons_switch()), noc_mode, statPower_switch);
   element(*this, IntArgs(platform->getStaticPowerCons_NI()), noc_mode, statPower_NI);
   
@@ -205,12 +215,33 @@ if(platform->getInterconnectType() == TDMA_BUS){
     rel(*this, niNrg[a] == ((sum(flitsPerLinkM.slice(0, platform->nodes(), min_ch, apps->getMaxChannelId(a)+1)) 
                              + sum(flitsPerLinkM.slice(links-platform->nodes(), links, min_ch, apps->getMaxChannelId(a)+1)))
                                 * dynPower_NI * cycleLength));
-    
     min_ch = apps->getMaxChannelId(a)+1;
+    
+    //TODO put the scaling factor into settings (= length of fractional part for power values: [1=none, 10=one,...])
+    rel(*this, dynPower_noc[a] == (((linkNrg[a]+switchNrg[a]+niNrg[a])*100)/period[a]));
   }
-  //for(size_t i=0; i<links; i++){
-  //  rel(*this, powerPerLink[i] == (sum(flitsPerLinkM.col(i))*) //This is incorrect. Channels from different apps can have different iteration periods.
-  //}
+  rel(*this, noc_power == sum(dynPower_noc)+statPower_noc);
+  rel(*this, nocUsed_power == sum(dynPower_noc)+sum(statPower_NIs)+sum(statPower_switches)); //"active" links included in switches & NIs
+  
+  for(size_t j=0; j<platform->nodes(); j++){
+    rel(*this, (nEntitiesOnProc[j]>0) >> (statPower_NIs[j]==(statPower_NI+2*statPower_link)));
+    rel(*this, (nEntitiesOnProc[j]==0) >> (statPower_NIs[j]==0));
+    
+    vector<neighborNode> neighbors = platform->getNeighborNodes(j);
+    IntVarArgs activeLinks(*this, neighbors.size(), 0, 1);
+    IntVarArgs activeNeighbors(*this, neighbors.size(), 0, 1);
+    for(int n=0; n<neighbors.size(); n++){
+      rel(*this, ((max(flitsPerLinkM.col(neighbors[n].link_to))==0)
+                   && (max(flitsPerLinkM.col(neighbors[n].link_from))==0)) >> (activeLinks[n]==0));
+      rel(*this, ((max(flitsPerLinkM.col(neighbors[n].link_to))>0)
+                   || (max(flitsPerLinkM.col(neighbors[n].link_from))>0)) >> (activeLinks[n]==1));
+      rel(*this, (statPower_switches[neighbors[n].node_id]==0) >> (activeNeighbors[n]==0));
+      rel(*this, (statPower_switches[neighbors[n].node_id]>0) >> (activeNeighbors[n]==1));
+    }
+    rel(*this, (max(activeLinks)==0) >> (statPower_switches[j]==0));
+    rel(*this, (max(activeLinks)>0) >> (statPower_switches[j]==statPower_switch + sum(activeNeighbors)*statPower_link));
+  }
+
   
   //initial constraints on TDN (injection and state of NoC) table:
   //which process can access which link
@@ -374,11 +405,24 @@ if(platform->getInterconnectType() == TDMA_BUS){
     }
     
     //blocking and transfer times: 
-    //TODO put cycle length and message / flit size in here
-    rel(*this, (proc[src_ch1]!=proc[dst_ch1]) >> (wcct_s[ki] == (hops[ki])));
+    int slotsNeeded = ceil(((double)channels[ki]->messageSize)/platform->getFlitSize());
+    vector<int> fullRoundsNeeded;
+    fullRoundsNeeded.push_back(0); //for 0 tdn slots assigned
+    fullRoundsNeeded.push_back(slotsNeeded-1); //for 1 tdn slots assigned
+    for(int s=2; s<=platform->getTDNCycles(); s++){
+      int tmp_roundsNeeded = floor(((double)slotsNeeded)/s);
+      if(slotsNeeded%s==0) tmp_roundsNeeded -= 1; //for making sending time less conservative, depending on which slots are assigned
+      fullRoundsNeeded.push_back(tmp_roundsNeeded);
+    }
     for(size_t j=0; j<platform->nodes(); j++){
+      IntVar tdn_rounds(*this, 0, Int::Limits::max);
+      element(*this, IntArgs(fullRoundsNeeded), tdnSlots[j], tdn_rounds);
       rel(*this, ((proc[src_ch1]!=proc[dst_ch1]) && (proc[src_ch1]==j)) 
                   >> (wcct_b[ki] == ((platform->getTDNCycles()-(tdnSlots[j]-1))*cycleLength)));
+      rel(*this, ((proc[src_ch1]!=proc[dst_ch1]) && (proc[src_ch1]==j)) >> 
+                                 (wcct_s[ki] == ((tdn_rounds*platform->getTDNCycles()*cycleLength)
+                                                 +((platform->getTDNCycles()+hops[ki])*cycleLength)))); //for last tdn round (TODO: make less conservative, 
+                                                                                                        //considering slot assignment)
     }
     
     //receiving doesn't take any time on TDN NoC (buffer in receiving node's local memory)

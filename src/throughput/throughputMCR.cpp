@@ -1431,7 +1431,7 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
 //cout << "receivingTime.assigned(): " << receivingTime.assigned() << endl;
 //cout << "receivingNext.assigned(): " << receivingNext.assigned() << endl;
 
-//cout << "all_assigned: " << all_assigned << " with period = " << wc_period << endl;
+//cout << "all_assigned: " << all_assigned  << endl;
 
   bool all_ch_local = true;
   for(int i = 0; i < n_channels; i++){

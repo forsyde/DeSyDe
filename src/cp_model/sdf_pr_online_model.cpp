@@ -27,6 +27,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
     proc_power(*this, platform->nodes(), 0, Int::Limits::max),
     flitsPerLink(*this, apps->n_programChannels()*(platform->getTDNGraph().size()/platform->getTDNCycles()), 0, Int::Limits::max),
     noc_power(*this, 0, Int::Limits::max),
+    nocUsed_power(*this, 0, Int::Limits::max),
     //sys_power(*this, mapping->getLeastPowerConsumption(), Int::Limits::max),
     sys_power(*this, 0, Int::Limits::max),
     proc_area(*this, platform->nodes(), 0, Int::Limits::max),
@@ -424,6 +425,7 @@ SDFPROnlineModel::SDFPROnlineModel(bool share, SDFPROnlineModel& s):
     procsUsed_utilization.update(*this, share, s.procsUsed_utilization);
     proc_power.update(*this, share, s.proc_power);
     noc_power.update(*this, share, s.noc_power);
+    nocUsed_power.update(*this, share, s.nocUsed_power);
     flitsPerLink.update(*this, share, s.flitsPerLink);
     sys_power.update(*this, share, s.sys_power);
     proc_area.update(*this, share, s.proc_area);
@@ -452,6 +454,7 @@ void SDFPROnlineModel::print(std::ostream& out) const {
     out << "ProcsUsed utilization: " << procsUsed_utilization << endl;
     out << "proc power: " << proc_power << endl;
     out << "noc power: " << noc_power << endl;
+    out << "noc power (only used parts): " << nocUsed_power << endl;
     out << "sys power: " << sys_power << endl;
     out << "least_power_est: " << least_power_est << endl;
     out << "proc area: " << proc_area << endl;

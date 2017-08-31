@@ -276,6 +276,13 @@ public:
   }
 };
 
+//! Struct to capture the links to and from a switch.
+/*!  */
+struct neighborNode{
+    int node_id; /*!< Id of the neighbor node. */
+    int link_to; /*!< Id of the link to the neighbor node. */
+    int link_from; /*!< Id of the link from the node. */
+};
 
 
 
@@ -331,6 +338,8 @@ public:
   
   vector<tdn_route> getAllRoutes() const;
   
+  vector<neighborNode> getNeighborNodes(size_t node) const;
+  
   /*! Gets the cycle length, depending on the NoC mode. */
   vector<int> getTDNCycleLengths() const;
   
@@ -348,6 +357,9 @@ public:
   
   /*! Gets the dynamic power consumption of the link at node node for each mode. */
   vector<int> getStaticPowerCons_link(size_t node) const;
+  
+  /*! Gets the dynamic power consumption of a link for each mode. */
+  vector<int> getStaticPowerCons_link() const;
   
   /*! Gets the dynamic power consumption of a NI for each mode. */
   vector<int> getStaticPowerCons_NI() const;

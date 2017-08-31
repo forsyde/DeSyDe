@@ -549,6 +549,68 @@ vector<tdn_route> Platform::getAllRoutes() const{
   return interconnect.all_routes;
 }
 
+
+vector<neighborNode> Platform::getNeighborNodes(size_t node) const{
+  vector<neighborNode> tmp;
+  
+  int yLoc_node = node/interconnect.columns;
+  int xLoc_node = node%interconnect.columns;
+  int xLoc_neighbor;
+  int yLoc_neighbor;
+  int nodes = interconnect.rows * interconnect.columns;
+  
+  //west
+  if(xLoc_node>0){
+    xLoc_neighbor = xLoc_node - 1;
+    yLoc_neighbor = yLoc_node;
+    neighborNode tmp_n;
+    tmp_n.node_id = (yLoc_neighbor*interconnect.columns)+xLoc_neighbor;
+    //x_inc == -1 from xLoc_node
+    tmp_n.link_to = (4*nodes-2*interconnect.columns-interconnect.rows) + (yLoc_node*(interconnect.columns-1)) + (((interconnect.columns-1)-xLoc_node));
+    //x_inc == 1 from xLoc_neighbor
+    tmp_n.link_from = (3*nodes-2*interconnect.columns) + (yLoc_neighbor*(interconnect.columns-1)) + (xLoc_neighbor);
+    tmp.push_back(tmp_n);
+  }
+  //north
+  if(yLoc_node<interconnect.rows-1){
+    xLoc_neighbor = xLoc_node;
+    yLoc_neighbor = yLoc_node + 1;
+    neighborNode tmp_n;
+    tmp_n.node_id = (yLoc_neighbor*interconnect.columns)+xLoc_neighbor;
+    //y_inc == 1 from yLoc_node
+    tmp_n.link_to = nodes + (xLoc_node*(interconnect.rows-1)) + (yLoc_node);
+    //y_inc == -1 from yLoc_neighbor
+    tmp_n.link_from = (2*nodes-interconnect.columns) + (xLoc_neighbor*(interconnect.rows-1)) + (((interconnect.rows-1)-yLoc_neighbor));
+    tmp.push_back(tmp_n);
+  }
+  //east
+  if(xLoc_node<interconnect.columns-1){
+    xLoc_neighbor = xLoc_node + 1;
+    yLoc_neighbor = yLoc_node;
+    neighborNode tmp_n;
+    tmp_n.node_id = (yLoc_neighbor*interconnect.columns)+xLoc_neighbor;
+    //x_inc == 1 from xLoc_node
+    tmp_n.link_to = (3*nodes-2*interconnect.columns) + (yLoc_node*(interconnect.columns-1)) + (xLoc_node);
+    //x_inc == -1 from xLoc_neighbor
+    tmp_n.link_from = (4*nodes-2*interconnect.columns-interconnect.rows) + (yLoc_neighbor*(interconnect.columns-1)) + (((interconnect.columns-1)-xLoc_neighbor));
+    tmp.push_back(tmp_n);
+  }
+  //south
+  if(yLoc_node>0){
+    xLoc_neighbor = xLoc_node;
+    yLoc_neighbor = yLoc_node - 1;
+    neighborNode tmp_n;
+    tmp_n.node_id = (yLoc_neighbor*interconnect.columns)+xLoc_neighbor;
+    //y_inc == -1 from yLoc_node
+    tmp_n.link_to = (2*nodes-interconnect.columns) + (xLoc_node*(interconnect.rows-1)) + (((interconnect.rows-1)-yLoc_node));
+    //y_inc == 1 from yLoc_neighbor
+    tmp_n.link_from = nodes + (xLoc_neighbor*(interconnect.rows-1)) + (yLoc_neighbor);
+    tmp.push_back(tmp_n);
+  }
+  
+  return tmp;
+}
+
 /*! Gets the cycle length, depending on the NoC mode. */
 vector<int> Platform::getTDNCycleLengths() const{
   vector<int> tmp;
@@ -591,7 +653,9 @@ vector<int> Platform::getDynPowerCons_switch() const{
 vector<int> Platform::getStaticPowerCons() const{
   vector<int> tmp; 
   int nodes = interconnect.rows * interconnect.columns;
-  size_t corner, edge, middle = 0;
+  int corner = 0;
+  int edge = 0;
+  int middle = 0;
   
   for(size_t i=0; i<nodes; i++){
     int yLoc_i = i/interconnect.columns;
@@ -610,7 +674,7 @@ vector<int> Platform::getStaticPowerCons() const{
     }
     
   }
-    
+  
   for(size_t i=0; i<interconnect.modes.size(); i++){
     int staticPower_total = nodes*interconnect.modes[i].staticPow_NI +
                             nodes*interconnect.modes[i].staticPow_switch +
@@ -634,24 +698,34 @@ vector<int> Platform::getStaticPowerCons_link(size_t node) const{
   if(xLoc_node % (interconnect.columns-1) == 0 && yLoc_node % (interconnect.rows-1) == 0){
     //cout << " I am a CORNER node" << endl;
     for(size_t i=0; i<interconnect.modes.size(); i++){
-      tmp.push_back(4*interconnect.modes[i].staticPow_link);
+      tmp.push_back(2*interconnect.modes[i].staticPow_link); //without links to and from NI
     }
   }else if(xLoc_node % (interconnect.columns-1) == 0 || yLoc_node % (interconnect.rows-1) == 0){
     //cout << " I am an EDGE node" << endl;
     for(size_t i=0; i<interconnect.modes.size(); i++){
-      tmp.push_back(5*interconnect.modes[i].staticPow_link);
+      tmp.push_back(3*interconnect.modes[i].staticPow_link); //without links to and from NI
     }
   }else{
     //cout << " I am a MIDDLE node" << endl;
     for(size_t i=0; i<interconnect.modes.size(); i++){
-      tmp.push_back(6*interconnect.modes[i].staticPow_link);
+      tmp.push_back(4*interconnect.modes[i].staticPow_link); //without links to and from NI
     }
   }
   
   return tmp;
 }
 
-/*! Gets the dynamic power consumption of the NI at node node for each mode. */
+/*! Gets the dynamic power consumption of a link at node node for each mode. */
+vector<int> Platform::getStaticPowerCons_link() const{
+  vector<int> tmp; 
+  for(int i=0; i<interconnect.modes.size(); i++){
+    tmp.push_back(interconnect.modes[i].staticPow_link);
+  }
+  
+  return tmp;  
+}
+
+/*! Gets the dynamic power consumption of an NI for each mode. */
 vector<int> Platform::getStaticPowerCons_NI() const{
   vector<int> tmp; 
   for(int i=0; i<interconnect.modes.size(); i++){
@@ -661,7 +735,7 @@ vector<int> Platform::getStaticPowerCons_NI() const{
   return tmp;  
 }
 
-/*! Gets the dynamic power consumption of the switch at node node for each mode. */
+/*! Gets the dynamic power consumption of a switch for each mode. */
 vector<int> Platform::getStaticPowerCons_switch() const{
   vector<int> tmp; 
   for(int i=0; i<interconnect.modes.size(); i++){
