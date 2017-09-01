@@ -1,0 +1,64 @@
+<WCET_table>
+    <mapping task_type="a0">
+        <wcet processor="small" mode="default" wcet="30"/>
+        <wcet processor="small" mode="eco" wcet="36"/>
+        <wcet processor="large" mode="default" wcet="7"/>
+        <wcet processor="large" mode="eco" wcet="9"/>
+    </mapping>
+    <mapping task_type="a1">
+        <wcet processor="small" mode="default" wcet="10"/>
+        <wcet processor="small" mode="eco" wcet="12"/>
+        <wcet processor="large" mode="default" wcet="7"/>
+        <wcet processor="large" mode="eco" wcet="9"/>
+    </mapping>
+
+<!-- cycle values from platform.xml:
+     small, default: 1
+     small, eco: 1.2
+     large, default: 0.7
+     large, eco: 0.9 -->
+<!--    <mapping task_type="a2" processor="small" wcet="20"></mapping>
+    <mapping task_type="a3" processor="small" wcet="8"></mapping>
+    <mapping task_type="a4" processor="small" wcet="320"></mapping>
+    <mapping task_type="a5" processor="small" wcet="77"></mapping>
+    <mapping task_type="a6" processor="small" wcet="77"></mapping>
+    <mapping task_type="a7" processor="small" wcet="123"></mapping>
+    <mapping task_type="a8" processor="small" wcet="141"></mapping>
+    <mapping task_type="a9" processor="small" wcet="31"></mapping>
+
+
+    <mapping task_type="a2" processor="large" wcet="20"></mapping>
+    <mapping task_type="a3" processor="large" wcet="8"></mapping>
+    <mapping task_type="a4" processor="large" wcet="320"></mapping>
+    <mapping task_type="a5" processor="large" wcet="77"></mapping>
+    <mapping task_type="a6" processor="large" wcet="77"></mapping>
+    <mapping task_type="a7" processor="large" wcet="123"></mapping>
+    <mapping task_type="a8" processor="large" wcet="141"></mapping>
+    <mapping task_type="a9" processor="large" wcet="31"></mapping> -->
+
+<!-- 
+    <mapping task_type="usan" processor="small" wcet="1177"></mapping>
+    <mapping task_type="direction" processor="small" wcet="833"></mapping>
+    <mapping task_type="thin" processor="small" wcet="32"></mapping>
+    <mapping task_type="putImage" processor="small" wcet="15"></mapping>
+    <mapping task_type="usan" processor="large" wcet="1177"></mapping>
+    <mapping task_type="direction" processor="large" wcet="833"></mapping>
+    <mapping task_type="thin" processor="large" wcet="32"></mapping>
+    <mapping task_type="putImage" processor="large" wcet="15"></mapping>
+
+    <mapping task_type="frontEnd" processor="small" wcet="141"></mapping>
+    <mapping task_type="rasta" processor="small" wcet="31"></mapping>
+    <mapping task_type="powspec" processor="small" wcet="235"></mapping>
+    <mapping task_type="audspec" processor="small" wcet="108"></mapping>
+    <mapping task_type="compJah" processor="small" wcet="108"></mapping>
+    <mapping task_type="rastaFilter" processor="small" wcet="194"></mapping>
+    <mapping task_type="backEnd" processor="small" wcet="133"></mapping> 
+
+    <mapping task_type="frontEnd" processor="large" wcet="141"></mapping>
+    <mapping task_type="rasta" processor="large" wcet="31"></mapping>
+    <mapping task_type="powspec" processor="large" wcet="235"></mapping>
+    <mapping task_type="audspec" processor="large" wcet="108"></mapping>
+    <mapping task_type="compJah" processor="large" wcet="108"></mapping>
+    <mapping task_type="rastaFilter" processor="large" wcet="194"></mapping>
+    <mapping task_type="backEnd" processor="large" wcet="133"></mapping> -->
+</WCET_table>
