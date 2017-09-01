@@ -24,18 +24,22 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
     utilization(*this, platform->nodes(), 0, p_mapping->max_utilization),
     sys_utilization(*this, 0, p_mapping->max_utilization),
     procsUsed_utilization(*this, 0, p_mapping->max_utilization),
-    proc_power(*this, platform->nodes(), 0, Int::Limits::max),
+    proc_powerDyn(*this, platform->nodes(), 0, Int::Limits::max),
     flitsPerLink(*this, apps->n_programChannels()*(platform->getTDNGraph().size()/platform->getTDNCycles()), 0, Int::Limits::max),
     noc_power(*this, 0, Int::Limits::max),
     nocUsed_power(*this, 0, Int::Limits::max),
-    //sys_power(*this, mapping->getLeastPowerConsumption(), Int::Limits::max),
     sys_power(*this, 0, Int::Limits::max),
+    sysUsed_power(*this, 0, Int::Limits::max),
     proc_area(*this, platform->nodes(), 0, Int::Limits::max),
     noc_area(*this, 0, Int::Limits::max),
+    nocUsed_area(*this, 0, Int::Limits::max),
     sys_area(*this, 0, Int::Limits::max),
+    sysUsed_area(*this, 0, Int::Limits::max),
     proc_cost(*this, platform->nodes(), 0, Int::Limits::max),
     noc_cost(*this, 0, Int::Limits::max),
+    nocUsed_cost(*this, 0, Int::Limits::max),
     sys_cost(*this, 0, Int::Limits::max),
+    sysUsed_cost(*this, 0, Int::Limits::max),
     wcct_b(*this, apps->n_programChannels(), 0, Int::Limits::max),
     wcct_s(*this, apps->n_programChannels(), 0, Int::Limits::max),
     wcct_r(*this, apps->n_programChannels(), 0, Int::Limits::max),
@@ -156,9 +160,16 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
         IntVarArgs blockingTime_r(*this, apps->n_programChannels(), 0, Int::Limits::max);
         IntVarArgs transferTime_s(*this, apps->n_programChannels(), 0, Int::Limits::max);
         IntVarArgs transferTime_r(*this, apps->n_programChannels(), 0, Int::Limits::max);
+        IntVar cycleLength(*this, 0, Int::Limits::max); //depends on chosen NoC-mode
         //IntVarArgs sendbufferSz(*this, apps->n_programChannels(), 0, Int::Limits::max);                               /**< //sending buffer sizes. */
         //IntVarArgs recbufferSz(*this, apps->n_programChannels(), 1, Int::Limits::max);                                /**< //receiving buffer sizes. */
 #include "wcct.constraints"
+
+        /**
+         * Power consumption
+         */
+        cout << "Inserting power constraints \n";
+#include "power.constraints"
 
         /**
          * Memory
@@ -423,15 +434,22 @@ SDFPROnlineModel::SDFPROnlineModel(bool share, SDFPROnlineModel& s):
     utilization.update(*this, share, s.utilization);
     sys_utilization.update(*this, share, s.sys_utilization);
     procsUsed_utilization.update(*this, share, s.procsUsed_utilization);
-    proc_power.update(*this, share, s.proc_power);
+    proc_powerDyn.update(*this, share, s.proc_powerDyn);
     noc_power.update(*this, share, s.noc_power);
     nocUsed_power.update(*this, share, s.nocUsed_power);
     flitsPerLink.update(*this, share, s.flitsPerLink);
     sys_power.update(*this, share, s.sys_power);
+    sysUsed_power.update(*this, share, s.sysUsed_power);
     proc_area.update(*this, share, s.proc_area);
+    noc_area.update(*this, share, s.noc_area);
+    nocUsed_area.update(*this, share, s.nocUsed_area);
     sys_area.update(*this, share, s.sys_area);
+    sysUsed_area.update(*this, share, s.sysUsed_area);
     proc_cost.update(*this, share, s.proc_cost);
+    noc_cost.update(*this, share, s.noc_cost);
+    nocUsed_cost.update(*this, share, s.nocUsed_cost);
     sys_cost.update(*this, share, s.sys_cost);
+    sysUsed_cost.update(*this, share, s.sysUsed_cost);
     wcct_b.update(*this, share, s.wcct_b);
     wcct_s.update(*this, share, s.wcct_s);
     wcct_r.update(*this, share, s.wcct_r);
@@ -452,15 +470,21 @@ void SDFPROnlineModel::print(std::ostream& out) const {
     out << "Proc utilization: " << utilization << endl;
     out << "Sys utilization: " << sys_utilization << endl;
     out << "ProcsUsed utilization: " << procsUsed_utilization << endl;
-    out << "proc power: " << proc_power << endl;
+    out << "proc power: " << proc_powerDyn << endl;
     out << "noc power: " << noc_power << endl;
     out << "noc power (only used parts): " << nocUsed_power << endl;
     out << "sys power: " << sys_power << endl;
-    out << "least_power_est: " << least_power_est << endl;
+    out << "sys power (only used parts): " << sysUsed_power << endl;
     out << "proc area: " << proc_area << endl;
+    out << "noc area: " << noc_area << endl;
+    out << "noc area (only used parts): " << nocUsed_area << endl;
     out << "sys area: " << sys_area << endl;
+    out << "sys area (only used parts): " << sysUsed_area << endl;
     out << "proc cost: " << proc_cost << endl;
+    out << "noc cost: " << noc_cost << endl;
+    out << "noc cost (only used parts): " << nocUsed_cost << endl;
     out << "sys cost: " << sys_cost << endl;
+    out << "sys cost (only used parts): " << sysUsed_cost << endl;
     out << "Next: ";
     for(size_t ii = 0; ii < apps->n_SDFActors(); ii++){
         out << next[ii] << " ";
@@ -582,7 +606,7 @@ Mapping* SDFPROnlineModel::extractResult() {
         mapping->setProcMode(n, proc_mode[n].val());
         mapping->setProcPeriod(n, proc_period[n].min());
         mapping->setProcUtilization(n, utilization[n].val());
-        mapping->setProcEnergy(n, proc_power[n].val());
+        mapping->setProcEnergy(n, proc_powerDyn[n].val());
         mapping->setProcArea(n, proc_area[n].val());
         mapping->setProcCost(n, proc_cost[n].val());
     }

@@ -977,7 +977,7 @@ int Mapping::getLeastTotalUtilization() {
 int Mapping::getLeastPowerConsumption() {
   int least_proc_power = INT_MAX;
   for (size_t i = 0; i < target->nodes(); i++) {
-    vector<int> powers = target->getPowerCons(i);
+    vector<int> powers = target->getDynPowerCons(i);
     auto minPower = std::min_element(std::begin(powers), std::end(powers));
     if (*minPower < least_proc_power)
       least_proc_power = *minPower;
@@ -1009,7 +1009,7 @@ int Mapping::getLeastPowerForTask(int task) {
   int least_power = INT_MAX;
   for (size_t k = 0; k < target->nodes(); k++) {
     vector<int> utils = getUtilizationModeVector(task, k);
-    vector<int> powers = target->getPowerCons(k);
+    vector<int> powers = target->getDynPowerCons(k);
     vector<int> powers_utils(powers.size(), 0);
     int size_diff = utils.size() - powers.size();
     std::transform(utils.begin(), utils.end() - size_diff, powers.begin(),

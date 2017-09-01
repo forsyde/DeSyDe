@@ -373,6 +373,9 @@ public:
   /*! Gets the area cost of the links at node node for each mode. */
   vector<int> interconnectAreaCost_link(size_t node) const;
   
+    /*! Gets the area cost of a link for each mode. */
+  vector<int> interconnectAreaCost_link() const;
+  
   /*! Gets the area cost of an NI for each mode. */
   vector<int> interconnectAreaCost_NI() const;
   
@@ -384,6 +387,9 @@ public:
   
   /*! Gets the monetary cost of the links at node node for each mode. */
   vector<int> interconnectMonetaryCost_link(size_t node) const;
+  
+    /*! Gets the monetary cost of a link for each mode. */
+  vector<int> interconnectMonetaryCost_link() const;
   
   /*! Gets the monetary cost of a NI for each mode. */
   vector<int> interconnectMonetaryCost_NI() const;
@@ -415,7 +421,8 @@ public:
   size_t getMaxModes()const;
   
   vector<int> getMemorySize(int node)const;
-  vector<int> getPowerCons(int node)const;
+  vector<int> getDynPowerCons(int node)const;
+  vector<int> getStatPowerCons(int node)const;
   vector<int> getAreaCost(int node)const;
   vector<int> getMonetaryCost(int node)const;
 

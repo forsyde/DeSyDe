@@ -791,21 +791,31 @@ vector<int> Platform::interconnectAreaCost_link(size_t node) const{
   if(xLoc_node % (interconnect.columns-1) == 0 && yLoc_node % (interconnect.rows-1) == 0){
     //cout << " I am a CORNER node" << endl;
     for(size_t i=0; i<interconnect.modes.size(); i++){
-      tmp.push_back(4*interconnect.modes[i].area_link);
+      tmp.push_back(2*interconnect.modes[i].area_link);//without links to and from NI
     }
   }else if(xLoc_node % (interconnect.columns-1) == 0 || yLoc_node % (interconnect.rows-1) == 0){
     //cout << " I am an EDGE node" << endl;
     for(size_t i=0; i<interconnect.modes.size(); i++){
-      tmp.push_back(5*interconnect.modes[i].area_link);
+      tmp.push_back(3*interconnect.modes[i].area_link);//without links to and from NI
     }
   }else{
     //cout << " I am a MIDDLE node" << endl;
     for(size_t i=0; i<interconnect.modes.size(); i++){
-      tmp.push_back(6*interconnect.modes[i].area_link);
+      tmp.push_back(4*interconnect.modes[i].area_link);//without links to and from NI
     }
   }
   
   return tmp;
+}
+
+/*! Gets the area cost of a link for each mode. */
+vector<int> Platform::interconnectAreaCost_link() const{
+  vector<int> tmp; 
+  for(int i=0; i<interconnect.modes.size(); i++){
+    tmp.push_back(interconnect.modes[i].area_link);
+  }
+  
+  return tmp;  
 }
 
 /*! Gets the area cost of an NI for each mode. */
@@ -872,21 +882,31 @@ vector<int> Platform::interconnectMonetaryCost_link(size_t node) const{
   if(xLoc_node % (interconnect.columns-1) == 0 && yLoc_node % (interconnect.rows-1) == 0){
     //cout << " I am a CORNER node" << endl;
     for(size_t i=0; i<interconnect.modes.size(); i++){
-      tmp.push_back(4*interconnect.modes[i].monetary_link);
+      tmp.push_back(2*interconnect.modes[i].monetary_link);//without links to and from NI
     }
   }else if(xLoc_node % (interconnect.columns-1) == 0 || yLoc_node % (interconnect.rows-1) == 0){
     //cout << " I am an EDGE node" << endl;
     for(size_t i=0; i<interconnect.modes.size(); i++){
-      tmp.push_back(5*interconnect.modes[i].monetary_link);
+      tmp.push_back(3*interconnect.modes[i].monetary_link);//without links to and from NI
     }
   }else{
     //cout << " I am a MIDDLE node" << endl;
     for(size_t i=0; i<interconnect.modes.size(); i++){
-      tmp.push_back(6*interconnect.modes[i].monetary_link);
+      tmp.push_back(4*interconnect.modes[i].monetary_link);//without links to and from NI
     }
   }
   
   return tmp;
+}
+
+/*! Gets the monetary cost of a link for each mode. */
+vector<int> Platform::interconnectMonetaryCost_link() const{
+  vector<int> tmp; 
+  for(int i=0; i<interconnect.modes.size(); i++){
+    tmp.push_back(interconnect.modes[i].monetary_link);
+  }
+  
+  return tmp;  
 }
 
 /*! Gets the monetary cost of a NI for each mode. */
@@ -1019,8 +1039,12 @@ vector<int> Platform::getMemorySize(int node) const{
   return compNodes[node]->memorySize;
 }
 
-vector<int> Platform::getPowerCons(int node) const{
+vector<int> Platform::getDynPowerCons(int node) const{
   return compNodes[node]->dynPowerCons;
+}
+
+vector<int> Platform::getStatPowerCons(int node) const{
+  return compNodes[node]->staticPowerCons;
 }
 
 vector<int> Platform::getAreaCost(int node) const{

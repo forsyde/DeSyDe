@@ -78,27 +78,9 @@ for(size_t ii=0; ii<apps->n_programEntities(); ii++){
 for(size_t j=0; j<platform->nodes(); j++){
   rel(*this, (proc_period[j]>0 && nSDFAsOnProc[j]>0) >> (utilization[j] == ((proc_SDF_wcet_sum[j]*mapping->max_utilization)/proc_period[j])));
   rel(*this, (nEntitiesOnProc[j]==0) >> (utilization[j]==0));
-  IntArgs proc_pows(platform->getPowerCons(j));
-  cout << "proc_pows of proc " << j << ": ";
-  for(size_t m=0; m<platform->getModes(j); m++){
-    cout << proc_pows[m] << " ";
-    rel(*this, ((proc_mode[j]==m) && (nSDFAsOnProc[j]>0) && ((proc_SDF_wcet_sum[j]*mapping->max_utilization)%proc_period[j]==0))
-        >> (proc_power[j] == proc_pows[m]*utilization[j]));
-    rel(*this, ((proc_mode[j]==m) && (nSDFAsOnProc[j]>0) && ((proc_SDF_wcet_sum[j]*mapping->max_utilization)%proc_period[j]>0))
-        >> (proc_power[j] == proc_pows[m]*(utilization[j]+1)));
-  }
-  cout << endl;
-  rel(*this, (nEntitiesOnProc[j]==0) >> (proc_power[j]==0));
-  IntArgs areas(platform->getAreaCost(j));
-  element(*this, areas, proc_mode[j], proc_area[j]);
-  IntArgs costs(platform->getMonetaryCost(j));
-  element(*this, costs, proc_mode[j], proc_cost[j]);
 }
 rel(*this, sys_utilization == (sum(utilization)/platform->nodes()));
 rel(*this, procsUsed_utilization == (sum(utilization)/procsUsed));
-rel(*this, sys_power == sum(proc_power));
-rel(*this, sys_area == sum(proc_area));
-rel(*this, sys_cost == sum(proc_cost));
 
 //symmetry breaking:
 //if the platform (or a pair of nodes) is homogeneous, then first-scheduled actors on each proc

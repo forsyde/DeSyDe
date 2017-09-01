@@ -1,0 +1,100 @@
+//for cost metrics as area, monetary cost, ...
+// the cost metrics differentiate between the entire platform & used parts of the platform
+
+IntVarArgs procUsed_area(*this, platform->nodes(), 0, Int::Limits::max);
+IntVarArgs procUsed_cost(*this, platform->nodes(), 0, Int::Limits::max);
+
+//for processors:
+for(size_t j=0; j<platform->nodes(); j++){
+  element(*this, IntArgs(platform->getAreaCost(j)), proc_mode[j], proc_area[j]);
+  element(*this, IntArgs(platform->getMonetaryCost(j)), proc_mode[j], proc_cost[j]);
+  
+  rel(*this, (nEntitiesOnProc[j]==0) >> (procUsed_area[j]==0));
+  rel(*this, (nEntitiesOnProc[j]>0) >> (procUsed_area[j]==proc_area[j]));
+  rel(*this, (nEntitiesOnProc[j]==0) >> (procUsed_cost[j]==0));
+  rel(*this, (nEntitiesOnProc[j]>0) >> (procUsed_cost[j]==proc_cost[j]));
+}
+rel(*this, sys_area == sum(proc_area)+noc_area);
+rel(*this, sysUsed_area == sum(procUsed_area)+nocUsed_area);
+rel(*this, sys_cost == sum(proc_cost)+noc_cost);
+rel(*this, sysUsed_cost == sum(procUsed_cost)+nocUsed_cost);
+
+
+//for the NoC
+if(platform->getInterconnectType() == TDN_NOC){
+  //area
+  IntVar area_noc(*this, 0, Int::Limits::max);
+  IntVarArgs area_linkAtNode(*this, platform->nodes(), 0, Int::Limits::max);
+  IntVar area_link(*this, 0, Int::Limits::max);
+  IntVar area_switch(*this, 0, Int::Limits::max);
+  IntVar area_NI(*this, 0, Int::Limits::max);
+  IntVarArgs area_NIs(*this, platform->nodes(), 0, Int::Limits::max);
+  IntVarArgs area_switches(*this, platform->nodes(), 0, Int::Limits::max);
+  IntVarArgs area_links(*this, links-2*platform->nodes(), 0, Int::Limits::max);
+  
+  //effects of chosen NoC mode:
+  element(*this, IntArgs(platform->interconnectAreaCost()), noc_mode, area_noc);
+  for(int p=0; p<platform->nodes(); p++){
+    element(*this, IntArgs(platform->interconnectAreaCost_link(p)), noc_mode, area_linkAtNode[p]);
+  }
+  element(*this, IntArgs(platform->interconnectAreaCost_link()), noc_mode, area_link);
+  element(*this, IntArgs(platform->interconnectAreaCost_switch()), noc_mode, area_switch);
+  element(*this, IntArgs(platform->interconnectAreaCost_NI()), noc_mode, area_NI);
+  
+  for(size_t j=0; j<platform->nodes(); j++){
+    rel(*this, (nEntitiesOnProc[j]>0) >> (area_NIs[j]==(area_NI+2*area_link)));
+    rel(*this, (nEntitiesOnProc[j]==0) >> (area_NIs[j]==0));
+    
+    vector<neighborNode> neighbors = platform->getNeighborNodes(j);
+    IntVarArgs activeLinks(*this, neighbors.size(), 0, 1);
+    IntVarArgs activeNeighbors(*this, neighbors.size(), 0, 1);
+    for(int n=0; n<neighbors.size(); n++){
+      rel(*this, ((max(flitsPerLinkM.col(neighbors[n].link_to))==0)
+                   && (max(flitsPerLinkM.col(neighbors[n].link_from))==0)) >> (activeLinks[n]==0));
+      rel(*this, ((max(flitsPerLinkM.col(neighbors[n].link_to))>0)
+                   || (max(flitsPerLinkM.col(neighbors[n].link_from))>0)) >> (activeLinks[n]==1));
+      rel(*this, (area_switches[neighbors[n].node_id]==0) >> (activeNeighbors[n]==0));
+      rel(*this, (area_switches[neighbors[n].node_id]>0) >> (activeNeighbors[n]==1));
+    }
+    rel(*this, (max(activeLinks)==0) >> (area_switches[j]==0));
+    rel(*this, (max(activeLinks)>0) >> (area_switches[j]==area_switch + sum(activeNeighbors)*area_link));
+  }
+  
+  //monetary
+  IntVar monetary_noc(*this, 0, Int::Limits::max);
+  IntVarArgs monetary_linkAtNode(*this, platform->nodes(), 0, Int::Limits::max);
+  IntVar monetary_link(*this, 0, Int::Limits::max);
+  IntVar monetary_switch(*this, 0, Int::Limits::max);
+  IntVar monetary_NI(*this, 0, Int::Limits::max);
+  IntVarArgs monetary_NIs(*this, platform->nodes(), 0, Int::Limits::max);
+  IntVarArgs monetary_switches(*this, platform->nodes(), 0, Int::Limits::max);
+  IntVarArgs monetary_links(*this, links-2*platform->nodes(), 0, Int::Limits::max);
+  
+  //effects of chosen NoC mode:
+  element(*this, IntArgs(platform->interconnectMonetaryCost()), noc_mode, monetary_noc);
+  for(int p=0; p<platform->nodes(); p++){
+    element(*this, IntArgs(platform->interconnectMonetaryCost_link(p)), noc_mode, monetary_linkAtNode[p]);
+  }
+  element(*this, IntArgs(platform->interconnectMonetaryCost_link()), noc_mode, monetary_link);
+  element(*this, IntArgs(platform->interconnectMonetaryCost_switch()), noc_mode, monetary_switch);
+  element(*this, IntArgs(platform->interconnectMonetaryCost_NI()), noc_mode, monetary_NI);
+  
+  for(size_t j=0; j<platform->nodes(); j++){
+    rel(*this, (nEntitiesOnProc[j]>0) >> (monetary_NIs[j]==(monetary_NI+2*monetary_link)));
+    rel(*this, (nEntitiesOnProc[j]==0) >> (monetary_NIs[j]==0));
+    
+    vector<neighborNode> neighbors = platform->getNeighborNodes(j);
+    IntVarArgs activeLinks(*this, neighbors.size(), 0, 1);
+    IntVarArgs activeNeighbors(*this, neighbors.size(), 0, 1);
+    for(int n=0; n<neighbors.size(); n++){
+      rel(*this, ((max(flitsPerLinkM.col(neighbors[n].link_to))==0)
+                   && (max(flitsPerLinkM.col(neighbors[n].link_from))==0)) >> (activeLinks[n]==0));
+      rel(*this, ((max(flitsPerLinkM.col(neighbors[n].link_to))>0)
+                   || (max(flitsPerLinkM.col(neighbors[n].link_from))>0)) >> (activeLinks[n]==1));
+      rel(*this, (monetary_switches[neighbors[n].node_id]==0) >> (activeNeighbors[n]==0));
+      rel(*this, (monetary_switches[neighbors[n].node_id]>0) >> (activeNeighbors[n]==1));
+    }
+    rel(*this, (max(activeLinks)==0) >> (monetary_switches[j]==0));
+    rel(*this, (max(activeLinks)>0) >> (monetary_switches[j]==monetary_switch + sum(activeNeighbors)*monetary_link));
+  }
+}

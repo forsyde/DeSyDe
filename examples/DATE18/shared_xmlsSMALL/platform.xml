@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <platform name="demo_platform">
 	<processor model="small" number="4">	
-        <mode name="default" cycle="1" mem="16000" dynPower="10" staticPower="10" area="16" 
+        <mode name="default" cycle="1" mem="16000" dynPower="100" staticPower="100" area="16" 
               monetary="16"/>
-        <mode name="eco" cycle="1.2" mem="16000" dynPower="6" staticPower="6" area="8" monetary="8"/>
+        <mode name="eco" cycle="1.2" mem="16000" dynPower="60" staticPower="60" area="8" monetary="8"/>
     </processor>
     <processor model="large" number="2">	
-        <mode name="default" cycle=".7" mem="16000" dynPower="20" staticPower="20" area="32" 
+        <mode name="default" cycle=".7" mem="16000" dynPower="200" staticPower="200" area="32" 
               monetary="32"/>
-        <mode name="eco" cycle=".9" mem="16000" dynPower="12" staticPower="12" area="16" 
+        <mode name="eco" cycle=".9" mem="16000" dynPower="120" staticPower="120" area="16" 
               monetary="16"/>
     </processor>
     <interconnect>

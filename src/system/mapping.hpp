@@ -113,7 +113,7 @@ protected:
 
 public:
 
-  int const max_utilization = 1000;
+  int const max_utilization = 1000; //TODO: add to configuration
 
   Mapping() {};
   Mapping(Applications*, Platform*, XMLdoc&);

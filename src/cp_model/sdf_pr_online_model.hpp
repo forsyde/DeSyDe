@@ -87,17 +87,22 @@ private:
     IntVarArray             proc_util_sum;            /**< sum utilization of processing nodes. */
     IntVar                  sys_utilization;        /**< utilization of all procs. */
     IntVar                  procsUsed_utilization;    /**< utilization of all used procs */
-    IntVarArray             proc_power;                /**< long-run consumption of each proc. */
+    IntVarArray             proc_powerDyn;                /**< long-run consumption of each proc. */
     IntVarArray             flitsPerLink;              /**< flits per link and channel. */
     IntVar                  noc_power;                /**< long-run consumption of the NoC. */
     IntVar                  nocUsed_power;            /**< long-run consumption of the NoC. */
     IntVar                  sys_power;                /**< long-run consumption of system. */
+    IntVar                  sysUsed_power;            /**< long-run consumption of system considering only the used parts. */
     IntVarArray             proc_area;                /**< area cost of each proc. */
     IntVar                  noc_area;                /**< area cost of the NoC. */
-    IntVar                  sys_area;                /**< area cost of all procs combined. */
+    IntVar                  nocUsed_area;                /**< area cost of the NoC, considering only the used parts. */
+    IntVar                  sys_area;                /**< area cost of all procs and noc combined. */
+    IntVar                  sysUsed_area;                /**< area cost of all procs and noc combined, considering only the used parts. */
     IntVarArray             proc_cost;                /**< monetary cost of each proc. */
     IntVar                  noc_cost;                /**< monetary cost of the NoC. */
-    IntVar                  sys_cost;                /**< monetary cost of all procs combined. */
+    IntVar                  nocUsed_cost;                /**< monetary cost of the NoC, considering only the used parts. */
+    IntVar                  sys_cost;                /**< monetary cost of all procs and noc combined. */
+    IntVar                  sysUsed_cost;                /**< monetary cost of all procs and noc combined, considering only the used parts. */
     IntVarArray             wcct_b;                    /**< communication delay, block (pre-send-wait). */
     IntVarArray             wcct_s;                    /**< communication delay, send. */
     IntVarArray             wcct_r;                    /**< coummunication delay, receive */
