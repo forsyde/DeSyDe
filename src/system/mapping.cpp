@@ -70,7 +70,7 @@ Mapping::~Mapping() {
 }
 void Mapping::load_wcets(XMLdoc& xml)
 {
-    const char* my_xpathString = "///WCETs/mapping";
+  const char* my_xpathString = "///WCETs/mapping";
 	LOG_DEBUG("running xpathString  " + tools::toString(my_xpathString) + " on WCET file ...");
 	auto xml_mappings = xml.xpathNodes(my_xpathString);
 	for (const auto& map : xml_mappings)
@@ -78,7 +78,8 @@ void Mapping::load_wcets(XMLdoc& xml)
 		string task_type = xml.getProp(map, "task_type");
 		string proc_type = xml.getProp(map, "processor");
 		string task_wcet = xml.getProp(map, "wcet");
-        setWCETs(task_type, proc_type, atoi(task_wcet.c_str()));
+    
+    setWCETs(task_type, proc_type, atoi(task_wcet.c_str()));
         
 		LOG_DEBUG("Reading mapping for task type: " + task_type + "...");		
 		
