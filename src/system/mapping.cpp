@@ -70,19 +70,28 @@ Mapping::~Mapping() {
 }
 void Mapping::load_wcets(XMLdoc& xml)
 {
-  const char* my_xpathString = "///WCETs/mapping";
+  const char* my_xpathString = "///WCET_table/mapping";
 	LOG_DEBUG("running xpathString  " + tools::toString(my_xpathString) + " on WCET file ...");
 	auto xml_mappings = xml.xpathNodes(my_xpathString);
 	for (const auto& map : xml_mappings)
 	{
 		string task_type = xml.getProp(map, "task_type");
-		string proc_type = xml.getProp(map, "processor");
-		string task_wcet = xml.getProp(map, "wcet");
+    LOG_DEBUG("Reading mapping for task type: " + task_type + "...");
     
-    setWCETs(task_type, proc_type, atoi(task_wcet.c_str()));
+    /// Parsing the modes
+    string query = "///WCET_table/mapping[@task_type=\'" + task_type + "\']/wcet";
+    auto   proc_mappings = xml.xpathNodes(query.c_str());
+    for (auto p : proc_mappings) {
+      
+      string proc_type = xml.getProp(p, "processor");
+      string proc_mode = xml.getProp(p, "mode");
+      string task_wcet = xml.getProp(p, "wcet");
+      
+      setWCETs(task_type, proc_type, proc_mode, atoi(task_wcet.c_str()));
         
-		LOG_DEBUG("Reading mapping for task type: " + task_type + "...");		
-		
+      LOG_DEBUG("Proc: " + proc_type + ", proc_mode: " + proc_mode 
+                 + ", WCET: " + tools::toString(atoi(task_wcet.c_str())));		
+    }
 	}	
     for (size_t i=0; i < wcets.size(); i++)
     {
@@ -96,6 +105,7 @@ void Mapping::load_wcets(XMLdoc& xml)
         }
     }
 }
+
 Applications* Mapping::getApplications() const {
   return program;
 }
@@ -192,16 +202,21 @@ bool Mapping::homogeneousModeNodes(int nodeI, int nodeJ) {
 //}
 
 //fixed
-void Mapping::setWCETs(string taskType, string procModel, int _wcet) {
+void Mapping::setWCETs(string taskType, string procModel, string procMode, int _wcet) {
   for (size_t i = 0; i < program->n_programEntities(); i++) {      
     if (taskType.compare(program->getType(i)) == 0) {
       for (size_t j = 0; j < target->nodes(); j++) {
+        if (wcets[i].size() <= j) {
+          THROW_EXCEPTION(InvalidArgumentException,"wcet out of bound\n");
+        }
         if (procModel.compare(target->getProcModel(j)) == 0) {
-          if (wcets[i].size() <= j) {
-            THROW_EXCEPTION(InvalidArgumentException,"wcet out of bound\n");
-          }
-          for (size_t k=0; k<target->getModes(j); k++){
-            wcets[i][j][k] = ceil(target->speedUp(j,k) *_wcet);
+          for (size_t k=0; k<target->getModes(j); k++){           
+            if (wcets[i][j].size() <= k) {
+              THROW_EXCEPTION(InvalidArgumentException,"wcet out of bound\n");
+            } 
+            if (procMode.compare(target->getProcModelMode(j,k)) == 0) {
+              wcets[i][j][k] = _wcet;
+            }
           }
         }
       }
@@ -210,7 +225,7 @@ void Mapping::setWCETs(string taskType, string procModel, int _wcet) {
 }
 
 void Mapping::setWCETs(vector<char*> elements, vector<char*> values) {
-  string taskType, procModel;
+  string taskType, procModel, procMode;
   int _wcet;
   for (unsigned int i = 0; i < elements.size(); i++) {
     try {
@@ -222,11 +237,14 @@ void Mapping::setWCETs(vector<char*> elements, vector<char*> values) {
 
       if (strcmp(elements[i], "procModel") == 0)
         procModel = string(values[i]);
+        
+      if (strcmp(elements[i], "mode") == 0)
+        procMode = string(values[i]);
     } catch (std::exception const & e) {
       cout << "parsing WCETs xml file error : " << e.what() << endl;
     }
   }
-  setWCETs(taskType, procModel, _wcet);
+  setWCETs(taskType, procModel, procMode, _wcet);
 }
 
 //fixed

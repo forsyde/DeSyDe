@@ -4,7 +4,7 @@ using namespace std;
 
 Platform::Platform(size_t p_nodes, int p_cycle, size_t p_memSize, int p_buffer, enum InterconnectType p_type, int p_dps, int p_tdma, int p_roundLength){
   for (size_t i=0; i<p_nodes; i++){
-    compNodes.push_back(new PE("pe"+i,"gp",vector<double>(1,p_cycle),
+    compNodes.push_back(new PE("pe"+i,"gp", vector<string>(1, "default"), vector<double>(1,p_cycle),
                                vector<int>(1,p_memSize), vector<int>(1,10), vector<int>(1,10),
                                vector<int>(1,10),vector<int>(1,1),p_buffer));
   }
@@ -66,7 +66,7 @@ void Platform::load_xml(XMLdoc& xml) throw (InvalidArgumentException)
               string mode_staticPower = xml.getProp(mode, "staticPower");
               string mode_area = xml.getProp(mode, "area");
               string mode_monetary = xml.getProp(mode, "monetary");
-              pe->AddMode(atof(mode_cycle.c_str()), atoi(mode_mem.c_str()),
+              pe->AddMode(mode_name, atof(mode_cycle.c_str()), atoi(mode_mem.c_str()),
                         atoi(mode_dynPower.c_str()), atoi(mode_staticPower.c_str()), atoi(mode_area.c_str()),
                         atoi(mode_monetary.c_str()));
               LOG_DEBUG("Reading processor mode: " + mode_name + "...");		
@@ -1021,7 +1021,7 @@ size_t Platform::memorySize(int node, int mode) const{
 }
 
 size_t Platform::getModes(int node) const{
-  return compNodes[node]->n_types;
+  return compNodes[node]->n_modes;
 }
 
 size_t Platform::getMaxModes() const
@@ -1061,7 +1061,7 @@ int Platform::bufferSize(int node) const{
 
 bool Platform::isFixed() const{
   for (size_t j = 0; j < nodes(); j++){
-    if(compNodes[j]->n_types > 1) return false;
+    if(compNodes[j]->n_modes > 1) return false;
   }
 
   return true;
@@ -1069,7 +1069,7 @@ bool Platform::isFixed() const{
 
 // True if the nodes are homogeneous
 bool Platform::homogeneousNodes(int node0, int node1) const{
-  if(compNodes[node0]->n_types > 1 || compNodes[node1]->n_types > 1 ||
+  if(compNodes[node0]->n_modes > 1 || compNodes[node1]->n_modes > 1 ||
      compNodes[node0]->type != compNodes[node1]->type ||
      compNodes[node0]->cycle_length != compNodes[node1]->cycle_length ||
      compNodes[node0]->memorySize[0] != compNodes[node1]->memorySize[0]) {
@@ -1080,11 +1080,11 @@ bool Platform::homogeneousNodes(int node0, int node1) const{
 
 
 bool Platform::homogeneousModeNodes(int node0, int node1) const{
-  if(compNodes[node0]->n_types != compNodes[node1]->n_types){
+  if(compNodes[node0]->n_modes != compNodes[node1]->n_modes){
       return false;
   }
 
-  for (auto m=0; m<compNodes[node0]->n_types; m++){
+  for (auto m=0; m<compNodes[node0]->n_modes; m++){
     if(compNodes[node0]->cycle_length[m] != compNodes[node1]->cycle_length[m] ||
        compNodes[node0]->memorySize[m] != compNodes[node1]->memorySize[m] ||
        compNodes[node0]->dynPowerCons[m] != compNodes[node1]->dynPowerCons[m] ||
@@ -1117,6 +1117,14 @@ string Platform::getProcModel(size_t id)
   if(id > compNodes.size())
       THROW_EXCEPTION(InvalidArgumentException,"processor id out of bound\n");  
   return compNodes[id]->model;
+}
+
+string Platform::getProcModelMode(size_t proc_id, size_t mode_id){
+  if(proc_id >= compNodes.size())
+      THROW_EXCEPTION(InvalidArgumentException,"processor id out of bound\n");  
+  if(mode_id >= compNodes[proc_id]->n_modes)
+      THROW_EXCEPTION(InvalidArgumentException,"mode id out of bound\n");  
+  return compNodes[proc_id]->modes[mode_id];
 }
 
 std::ostream& operator<< (std::ostream &out, const Platform &p)

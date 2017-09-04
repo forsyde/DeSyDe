@@ -208,7 +208,7 @@ public:
     @param type of task.
     @param model of the proccessor
     @param wcets of tasktype on procType. */ 
-  void setWCETs(string taskType, string procModel, int _wcet);
+  void setWCETs(string taskType, string procModel, string procMode, int _wcet);
   /** The function parses the vectors read from the xml file and
     calls setWCETs(string taskType, string procModel, int _wcet); */ 
   void setWCETs(vector<char*> elements, vector<char*> values);

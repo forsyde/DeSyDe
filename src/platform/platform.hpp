@@ -50,7 +50,8 @@ public:
   std::string name;
   std::string type;
   std::string model;
-  int n_types;
+  vector<std::string> modes;
+  int n_modes;
   vector<double> cycle_length;
   vector<int> memorySize;
   vector<int> dynPowerCons;
@@ -61,27 +62,28 @@ public:
 
   PE() {};
 
-  PE(std::string p_name, std::string p_type, vector<double> p_cycle,
+  PE(std::string p_name, std::string p_type, vector<std::string> p_modes, vector<double> p_cycle,
      vector<int> p_memSize, vector<int> _dynPower, vector<int> _staticPower, vector<int> _area, 
      vector<int> _money, int p_buffer){
-    name          = p_name; 
-    type          = p_type; 
-    n_types       = p_cycle.size();
-    cycle_length  = p_cycle; 
-    memorySize    = p_memSize; 
-    dynPowerCons     = _dynPower;
+    name            = p_name; 
+    type            = p_type; 
+    modes           = p_modes;
+    n_modes         = p_cycle.size();
+    cycle_length    = p_cycle; 
+    memorySize      = p_memSize; 
+    dynPowerCons    = _dynPower;
     staticPowerCons = _staticPower;
-    areaCost      = _area;
-    monetaryCost  = _money;
-    NI_bufferSize = p_buffer;
+    areaCost        = _area;
+    monetaryCost    = _money;
+    NI_bufferSize   = p_buffer;
   }
    PE(std::string p_model, int id){
-    n_types       = 0;
+    n_modes       = 0;
     name          = p_model + "_" + tools::toString(id); 
     model         = p_model;
   }  
   PE(vector<char*> elements, vector<char*> values, int number)
-    : n_types(0),
+    : n_modes(0),
       NI_bufferSize(0) {
     
     for(unsigned int i=0;i< elements.size();i++) {
@@ -89,8 +91,8 @@ public:
         if(strcmp(elements[i], "NI_bufferSize") == 0)
           NI_bufferSize = atoi(values[i]);
                                         
-        if(strcmp(elements[i], "n_types") == 0)
-          n_types = atoi(values[i]);
+        if(strcmp(elements[i], "n_modes") == 0)
+          n_modes = atoi(values[i]);
 
         if(strcmp(elements[i], "type") == 0)
           type = string(values[i]);
@@ -111,18 +113,24 @@ public:
     /**
      * need to initialize in case some are not specified in the XML
      */          
+    string _mode_name           = "";
     double _cycle_length        = std::numeric_limits<double>::max(); 
-    int _dynPowerCons                      = std::numeric_limits<int>::max() - 1; 
-    int _staticPowerCons                      = std::numeric_limits<int>::max() - 1; 
-    int _areaCost                       = std::numeric_limits<int>::max() - 1; 
+    int _dynPowerCons           = std::numeric_limits<int>::max() - 1; 
+    int _staticPowerCons        = std::numeric_limits<int>::max() - 1; 
+    int _areaCost               = std::numeric_limits<int>::max() - 1; 
     int _monetaryCost           = std::numeric_limits<int>::max() - 1; 
-    int _memorySize                     = 0;
+    int _memorySize             = 0;
                 
     for(unsigned int i=0;i< elements.size();i++) {
       try {   
+        
+        if(strcmp(elements[i], "mode_name") == 0) {
+          _mode_name = values[i];
+          //n_modes++; 
+        }
+        
         if(strcmp(elements[i], "cycle_length") == 0) {
           _cycle_length = atof(values[i]);
-          n_types++; ///each cycle_length is one operational mode
         }
                                 
         if(strcmp(elements[i], "dynPowerCons") == 0)
@@ -144,11 +152,11 @@ public:
         cout << "reading taskset xml file error : " << e.what() << endl;
       }
     }
-    AddMode(_cycle_length, _memorySize, _dynPowerCons, _staticPowerCons, _areaCost, _monetaryCost);
+    AddMode(_mode_name, _cycle_length, _memorySize, _dynPowerCons, _staticPowerCons, _areaCost, _monetaryCost);
   };
 
   friend std::ostream& operator<< (std::ostream &out, const PE &pe) {
-    out << "PE:" << pe.name << "[model=" << pe.model << "], no_types=" << pe.n_types << ", speeds(";
+    out << "PE:" << pe.name << "[model=" << pe.model << "], no_types=" << pe.n_modes << ", speeds(";
     for(unsigned int i=0;i<pe.cycle_length.size();i++)
       {
         i!=0 ? out << ", ": out << "" ;
@@ -158,8 +166,9 @@ public:
     return out;
   }
 
-  void AddMode(double _cycle_length, int _memorySize, int _dynPowerCons, int _staticPowerCons, int _areaCost, int _monetaryCost) {
-      n_types++;///Increase the number of modes
+  void AddMode(string _mode_name, double _cycle_length, int _memorySize, int _dynPowerCons, int _staticPowerCons, int _areaCost, int _monetaryCost) {
+    n_modes++;///Increase the number of modes
+    modes.push_back(_mode_name);
     cycle_length.push_back(_cycle_length);
     memorySize.push_back(_memorySize);
     dynPowerCons.push_back(_dynPowerCons);
@@ -459,6 +468,8 @@ public:
   bool allProcsFixed() const;
   
   string getProcModel(size_t id);
+  
+  string getProcModelMode(size_t proc_id, size_t mode_id);
   
   friend std::ostream& operator<< (std::ostream &out, const Platform &p);
 };
