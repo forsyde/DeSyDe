@@ -750,7 +750,7 @@ vector<int> Platform::getStaticPowerCons_switch() const{
 vector<int> Platform::interconnectAreaCost() const{
   vector<int> tmp; 
   int nodes = interconnect.rows * interconnect.columns;
-  size_t corner, edge, middle = 0;
+  size_t corner=0, edge=0, middle = 0;
   
   for(size_t i=0; i<nodes; i++){
     int yLoc_i = i/interconnect.columns;
@@ -841,7 +841,7 @@ vector<int> Platform::interconnectAreaCost_switch() const{
 vector<int> Platform::interconnectMonetaryCost() const{
   vector<int> tmp; 
   int nodes = interconnect.rows * interconnect.columns;
-  size_t corner, edge, middle = 0;
+  size_t corner=0, edge=0, middle = 0;
   
   for(size_t i=0; i<nodes; i++){
     int yLoc_i = i/interconnect.columns;

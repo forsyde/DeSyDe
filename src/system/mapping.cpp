@@ -274,20 +274,6 @@ vector<vector<int>> Mapping::getWCETs(unsigned actorId) const {
 
 //fixed
 vector<int> Mapping::getWCETs(unsigned actorId, unsigned proc) const {
-  /*vector<int> _wcets;
-    for (size_t i = 0; i < target->getModes(proc); i++) {
-    if (wcets[actorId][proc] != -1)
-    _wcets.push_back(
-    ceil(target->speedUp(proc, i) * wcets[actorId][proc]));
-    else
-    _wcets.push_back(-1);
-    }
-    //if there are less than three modes for proc, fill-up with -1
-    for (unsigned int i = _wcets.size(); i < 3; i++) {
-    _wcets.push_back(-1);
-    }
-
-    return _wcets*/;
   return wcets[actorId][proc];
 }
 

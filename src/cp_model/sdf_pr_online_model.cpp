@@ -42,8 +42,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
     sysUsed_cost(*this, 0, Int::Limits::max),
     wcct_b(*this, apps->n_programChannels(), 0, Int::Limits::max),
     wcct_s(*this, apps->n_programChannels(), 0, Int::Limits::max),
-    wcct_r(*this, apps->n_programChannels(), 0, Int::Limits::max),
-    least_power_est(mapping->getLeastPowerConsumption()){
+    wcct_r(*this, apps->n_programChannels(), 0, Int::Limits::max){
 
     std::ostream debug_stream(nullptr); /**< debuging stream, it is printed only in debug mode. */
     debug_stream << "\n==========\ndebug log:\n..........\n";
@@ -170,6 +169,12 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
          */
         cout << "Inserting power constraints \n";
 #include "power.constraints"
+
+        /**
+         * Cost metrics
+         */
+        cout << "Inserting cost metric constraints \n";
+#include "costMetrics.constraints"
 
         /**
          * Memory
@@ -422,6 +427,7 @@ SDFPROnlineModel::SDFPROnlineModel(bool share, SDFPROnlineModel& s):
     proc_mode.update(*this, share, s.proc_mode);
     tdmaAlloc.update(*this, share, s.tdmaAlloc);
     tdnTable.update(*this, share, s.tdnTable);
+    noc_mode.update(*this, share, s.noc_mode);
     chosenRoute.update(*this, share, s.chosenRoute);
     sendNext.update(*this, share, s.sendNext);
     recNext.update(*this, share, s.recNext);
@@ -463,6 +469,7 @@ void SDFPROnlineModel::print(std::ostream& out) const {
     out << "----------------------------------------" << endl;
     out << "Proc: " << proc << endl;
     out << "proc mode: " << proc_mode << endl;
+    out << "noc mode: " << noc_mode << endl;
     out << "Latency: " << latency << endl;
     out << "Period: " << period << endl;
     out << "Procs used: " << procsUsed << endl;

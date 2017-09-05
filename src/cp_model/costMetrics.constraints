@@ -22,9 +22,12 @@ rel(*this, sysUsed_cost == sum(procUsed_cost)+nocUsed_cost);
 
 //for the NoC
 if(platform->getInterconnectType() == TDN_NOC){
+  vector<tdn_graphNode> tdn_graph = platform->getTDNGraph();
+  size_t links = tdn_graph.size()/platform->getTDNCycles();
+  size_t messages = channels.size(); 
+  Matrix<IntVarArray> flitsPerLinkM(flitsPerLink, links, messages);//derive flits per switch and flits per NI from this
   //area
-  IntVar area_noc(*this, 0, Int::Limits::max);
-  IntVarArgs area_linkAtNode(*this, platform->nodes(), 0, Int::Limits::max);
+  //IntVarArgs area_linkAtNode(*this, platform->nodes(), 0, Int::Limits::max);
   IntVar area_link(*this, 0, Int::Limits::max);
   IntVar area_switch(*this, 0, Int::Limits::max);
   IntVar area_NI(*this, 0, Int::Limits::max);
@@ -33,18 +36,18 @@ if(platform->getInterconnectType() == TDN_NOC){
   IntVarArgs area_links(*this, links-2*platform->nodes(), 0, Int::Limits::max);
   
   //effects of chosen NoC mode:
-  element(*this, IntArgs(platform->interconnectAreaCost()), noc_mode, area_noc);
-  for(int p=0; p<platform->nodes(); p++){
+  element(*this, IntArgs(platform->interconnectAreaCost()), noc_mode, noc_area);
+  /*for(int p=0; p<platform->nodes(); p++){
     element(*this, IntArgs(platform->interconnectAreaCost_link(p)), noc_mode, area_linkAtNode[p]);
-  }
+  }*/
   element(*this, IntArgs(platform->interconnectAreaCost_link()), noc_mode, area_link);
   element(*this, IntArgs(platform->interconnectAreaCost_switch()), noc_mode, area_switch);
   element(*this, IntArgs(platform->interconnectAreaCost_NI()), noc_mode, area_NI);
-  
+
   for(size_t j=0; j<platform->nodes(); j++){
     rel(*this, (nEntitiesOnProc[j]>0) >> (area_NIs[j]==(area_NI+2*area_link)));
     rel(*this, (nEntitiesOnProc[j]==0) >> (area_NIs[j]==0));
-    
+
     vector<neighborNode> neighbors = platform->getNeighborNodes(j);
     IntVarArgs activeLinks(*this, neighbors.size(), 0, 1);
     IntVarArgs activeNeighbors(*this, neighbors.size(), 0, 1);
@@ -57,12 +60,13 @@ if(platform->getInterconnectType() == TDN_NOC){
       rel(*this, (area_switches[neighbors[n].node_id]>0) >> (activeNeighbors[n]==1));
     }
     rel(*this, (max(activeLinks)==0) >> (area_switches[j]==0));
-    rel(*this, (max(activeLinks)>0) >> (area_switches[j]==area_switch + sum(activeNeighbors)*area_link));
+    rel(*this, (max(activeLinks)>0) >> (area_switches[j]==(area_switch + sum(activeNeighbors)*area_link)));
   }
   
+  rel(*this, nocUsed_area == sum(area_NIs)+sum(area_switches)); //"active" links included in switches & NIs
+  
   //monetary
-  IntVar monetary_noc(*this, 0, Int::Limits::max);
-  IntVarArgs monetary_linkAtNode(*this, platform->nodes(), 0, Int::Limits::max);
+  //IntVarArgs monetary_linkAtNode(*this, platform->nodes(), 0, Int::Limits::max);
   IntVar monetary_link(*this, 0, Int::Limits::max);
   IntVar monetary_switch(*this, 0, Int::Limits::max);
   IntVar monetary_NI(*this, 0, Int::Limits::max);
@@ -71,10 +75,10 @@ if(platform->getInterconnectType() == TDN_NOC){
   IntVarArgs monetary_links(*this, links-2*platform->nodes(), 0, Int::Limits::max);
   
   //effects of chosen NoC mode:
-  element(*this, IntArgs(platform->interconnectMonetaryCost()), noc_mode, monetary_noc);
-  for(int p=0; p<platform->nodes(); p++){
+  element(*this, IntArgs(platform->interconnectMonetaryCost()), noc_mode, noc_cost);
+  /*for(int p=0; p<platform->nodes(); p++){
     element(*this, IntArgs(platform->interconnectMonetaryCost_link(p)), noc_mode, monetary_linkAtNode[p]);
-  }
+  }*/
   element(*this, IntArgs(platform->interconnectMonetaryCost_link()), noc_mode, monetary_link);
   element(*this, IntArgs(platform->interconnectMonetaryCost_switch()), noc_mode, monetary_switch);
   element(*this, IntArgs(platform->interconnectMonetaryCost_NI()), noc_mode, monetary_NI);
@@ -95,6 +99,8 @@ if(platform->getInterconnectType() == TDN_NOC){
       rel(*this, (monetary_switches[neighbors[n].node_id]>0) >> (activeNeighbors[n]==1));
     }
     rel(*this, (max(activeLinks)==0) >> (monetary_switches[j]==0));
-    rel(*this, (max(activeLinks)>0) >> (monetary_switches[j]==monetary_switch + sum(activeNeighbors)*monetary_link));
+    rel(*this, (max(activeLinks)>0) >> (monetary_switches[j]== (monetary_switch + sum(activeNeighbors)*monetary_link)));
   }
+  
+  rel(*this, nocUsed_cost == sum(monetary_NIs)+sum(monetary_switches)); //"active" links included in switches & NIs
 }
