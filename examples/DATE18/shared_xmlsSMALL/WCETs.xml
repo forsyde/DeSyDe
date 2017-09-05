@@ -1,15 +1,28 @@
 <WCET_table>
-    <mapping task_type="a0">
-        <wcet processor="small" mode="default" wcet="30"/>
-        <wcet processor="small" mode="eco" wcet="36"/>
-        <wcet processor="large" mode="default" wcet="7"/>
-        <wcet processor="large" mode="eco" wcet="9"/>
+<!-- SOBEL -->
+    <mapping task_type="get_pixel">
+        <wcet processor="small" mode="default" wcet="320"/>
+        <wcet processor="small" mode="eco" wcet="384"/>
+        <wcet processor="large" mode="default" wcet="224"/>
+        <wcet processor="large" mode="eco" wcet="288"/>
     </mapping>
-    <mapping task_type="a1">
-        <wcet processor="small" mode="default" wcet="10"/>
-        <wcet processor="small" mode="eco" wcet="12"/>
-        <wcet processor="large" mode="default" wcet="7"/>
-        <wcet processor="large" mode="eco" wcet="9"/>
+    <mapping task_type="gx">
+        <wcet processor="small" mode="default" wcet="77"/>
+        <wcet processor="small" mode="eco" wcet="93"/>
+        <wcet processor="large" mode="default" wcet="54"/>
+        <wcet processor="large" mode="eco" wcet="69"/>
+    </mapping>
+    <mapping task_type="gy">
+        <wcet processor="small" mode="default" wcet="77"/>
+        <wcet processor="small" mode="eco" wcet="93"/>
+        <wcet processor="large" mode="default" wcet="54"/>
+        <wcet processor="large" mode="eco" wcet="69"/>
+    </mapping>
+    <mapping task_type="abs">
+        <wcet processor="small" mode="default" wcet="123"/>
+        <wcet processor="small" mode="eco" wcet="148"/>
+        <wcet processor="large" mode="default" wcet="86"/>
+        <wcet processor="large" mode="eco" wcet="111"/>
     </mapping>
 <!--SUSAN -->
     <mapping task_type="getImage">
@@ -85,32 +98,176 @@
         <wcet processor="large" mode="default" wcet="93"/>
         <wcet processor="large" mode="eco" wcet="120"/>
     </mapping>
+<!-- JPEG encoder -->
+    <mapping task_type="getImage_0">
+        <wcet processor="small" mode="default" wcet="413"/>
+        <wcet processor="small" mode="eco" wcet="496"/>
+        <wcet processor="large" mode="default" wcet="289"/>
+        <wcet processor="large" mode="eco" wcet="372"/>
+    </mapping>
+    <mapping task_type="CC_0">
+        <wcet processor="small" mode="default" wcet="1101"/>
+        <wcet processor="small" mode="eco" wcet="1322"/>
+        <wcet processor="large" mode="default" wcet="771"/>
+        <wcet processor="large" mode="eco" wcet="991"/>
+    </mapping>
+    <mapping task_type="DCT_0">
+        <wcet processor="small" mode="default" wcet="252"/>
+        <wcet processor="small" mode="eco" wcet="303"/>
+        <wcet processor="large" mode="default" wcet="177"/>
+        <wcet processor="large" mode="eco" wcet="227"/>
+    </mapping>
+    <mapping task_type="Huffman_0">
+        <wcet processor="small" mode="default" wcet="340"/>
+        <wcet processor="small" mode="eco" wcet="408"/>
+        <wcet processor="large" mode="default" wcet="238"/>
+        <wcet processor="large" mode="eco" wcet="306"/>
+    </mapping>
+    <mapping task_type="DCT_1">
+        <wcet processor="small" mode="default" wcet="252"/>
+        <wcet processor="small" mode="eco" wcet="303"/>
+        <wcet processor="large" mode="default" wcet="177"/>
+        <wcet processor="large" mode="eco" wcet="227"/>
+    </mapping>
+    <mapping task_type="Huffman_1">
+        <wcet processor="small" mode="default" wcet="340"/>
+        <wcet processor="small" mode="eco" wcet="408"/>
+        <wcet processor="large" mode="default" wcet="238"/>
+        <wcet processor="large" mode="eco" wcet="306"/>
+    </mapping>
+    <mapping task_type="DCT_2">
+        <wcet processor="small" mode="default" wcet="252"/>
+        <wcet processor="small" mode="eco" wcet="303"/>
+        <wcet processor="large" mode="default" wcet="177"/>
+        <wcet processor="large" mode="eco" wcet="227"/>
+    </mapping>
+    <mapping task_type="Huffman_2">
+        <wcet processor="small" mode="default" wcet="340"/>
+        <wcet processor="small" mode="eco" wcet="408"/>
+        <wcet processor="large" mode="default" wcet="238"/>
+        <wcet processor="large" mode="eco" wcet="306"/>
+    </mapping>
+    <mapping task_type="DCT_3">
+        <wcet processor="small" mode="default" wcet="252"/>
+        <wcet processor="small" mode="eco" wcet="303"/>
+        <wcet processor="large" mode="default" wcet="177"/>
+        <wcet processor="large" mode="eco" wcet="227"/>
+    </mapping>
+    <mapping task_type="Huffman_3">
+        <wcet processor="small" mode="default" wcet="340"/>
+        <wcet processor="small" mode="eco" wcet="408"/>
+        <wcet processor="large" mode="default" wcet="238"/>
+        <wcet processor="large" mode="eco" wcet="306"/>
+    </mapping>
+    <mapping task_type="DCT_4">
+        <wcet processor="small" mode="default" wcet="252"/>
+        <wcet processor="small" mode="eco" wcet="303"/>
+        <wcet processor="large" mode="default" wcet="177"/>
+        <wcet processor="large" mode="eco" wcet="227"/>
+    </mapping>
+    <mapping task_type="Huffman_4">
+        <wcet processor="small" mode="default" wcet="340"/>
+        <wcet processor="small" mode="eco" wcet="408"/>
+        <wcet processor="large" mode="default" wcet="238"/>
+        <wcet processor="large" mode="eco" wcet="306"/>
+    </mapping>
+    <mapping task_type="DCT_5">
+        <wcet processor="small" mode="default" wcet="252"/>
+        <wcet processor="small" mode="eco" wcet="303"/>
+        <wcet processor="large" mode="default" wcet="177"/>
+        <wcet processor="large" mode="eco" wcet="227"/>
+    </mapping>
+    <mapping task_type="Huffman_5">
+        <wcet processor="small" mode="default" wcet="340"/>
+        <wcet processor="small" mode="eco" wcet="408"/>
+        <wcet processor="large" mode="default" wcet="238"/>
+        <wcet processor="large" mode="eco" wcet="306"/>
+    </mapping>
+    <mapping task_type="CS_0">
+        <wcet processor="small" mode="default" wcet="2524"/>
+        <wcet processor="small" mode="eco" wcet="3029"/>
+        <wcet processor="large" mode="default" wcet="1767"/>
+        <wcet processor="large" mode="eco" wcet="2272"/>
+    </mapping>
+    <mapping task_type="writeImage_0">
+        <wcet processor="small" mode="default" wcet="132"/>
+        <wcet processor="small" mode="eco" wcet="159"/>
+        <wcet processor="large" mode="default" wcet="93"/>
+        <wcet processor="large" mode="eco" wcet="119"/>
+    </mapping>
+<!-- Synthetic Cyclic Graph -->
+    <mapping task_type="a0">
+        <wcet processor="small" mode="default" wcet="30"/>
+        <wcet processor="small" mode="eco" wcet="36"/>
+        <wcet processor="large" mode="default" wcet="21"/>
+        <wcet processor="large" mode="eco" wcet="27"/>
+    </mapping>
+    <mapping task_type="a1">
+        <wcet processor="small" mode="default" wcet="10"/>
+        <wcet processor="small" mode="eco" wcet="12"/>
+        <wcet processor="large" mode="default" wcet="7"/>
+        <wcet processor="large" mode="eco" wcet="9"/>
+    </mapping>
+    <mapping task_type="a2">
+        <wcet processor="small" mode="default" wcet="20"/>
+        <wcet processor="small" mode="eco" wcet="24"/>
+        <wcet processor="large" mode="default" wcet="14"/>
+        <wcet processor="large" mode="eco" wcet="18"/>
+    </mapping>
+    <mapping task_type="a3">
+        <wcet processor="small" mode="default" wcet="8"/>
+        <wcet processor="small" mode="eco" wcet="10"/>
+        <wcet processor="large" mode="default" wcet="6"/>
+        <wcet processor="large" mode="eco" wcet="7"/>
+    </mapping>
+    <mapping task_type="a4">
+        <wcet processor="small" mode="default" wcet="320"/>
+        <wcet processor="small" mode="eco" wcet="384"/>
+        <wcet processor="large" mode="default" wcet="224"/>
+        <wcet processor="large" mode="eco" wcet="288"/>
+    </mapping>
+    <mapping task_type="a5">
+        <wcet processor="small" mode="default" wcet="77"/>
+        <wcet processor="small" mode="eco" wcet="92"/>
+        <wcet processor="large" mode="default" wcet="54"/>
+        <wcet processor="large" mode="eco" wcet="69"/>
+    </mapping>
+    <mapping task_type="a6">
+        <wcet processor="small" mode="default" wcet="77"/>
+        <wcet processor="small" mode="eco" wcet="92"/>
+        <wcet processor="large" mode="default" wcet="54"/>
+        <wcet processor="large" mode="eco" wcet="69"/>
+    </mapping>
+    <mapping task_type="a7">
+        <wcet processor="small" mode="default" wcet="123"/>
+        <wcet processor="small" mode="eco" wcet="148"/>
+        <wcet processor="large" mode="default" wcet="86"/>
+        <wcet processor="large" mode="eco" wcet="111"/>
+    </mapping>
+    <mapping task_type="a8">
+        <wcet processor="small" mode="default" wcet="141"/>
+        <wcet processor="small" mode="eco" wcet="169"/>
+        <wcet processor="large" mode="default" wcet="99"/>
+        <wcet processor="large" mode="eco" wcet="127"/>
+    </mapping>
+    <mapping task_type="a9">
+        <wcet processor="small" mode="default" wcet="31"/>
+        <wcet processor="small" mode="eco" wcet="37"/>
+        <wcet processor="large" mode="default" wcet="22"/>
+        <wcet processor="large" mode="eco" wcet="28"/>
+    </mapping>
 
+<!--
+    <mapping task_type="">
+        <wcet processor="small" mode="default" wcet=""/>
+        <wcet processor="small" mode="eco" wcet=""/>
+        <wcet processor="large" mode="default" wcet=""/>
+        <wcet processor="large" mode="eco" wcet=""/>
+    </mapping>
+-->
 <!-- cycle values from platform.xml:
      small, default: 1
      small, eco: 1.2
      large, default: 0.7
      large, eco: 0.9 -->
-<!--    <mapping task_type="a2" processor="small" wcet="20"></mapping>
-    <mapping task_type="a3" processor="small" wcet="8"></mapping>
-    <mapping task_type="a4" processor="small" wcet="320"></mapping>
-    <mapping task_type="a5" processor="small" wcet="77"></mapping>
-    <mapping task_type="a6" processor="small" wcet="77"></mapping>
-    <mapping task_type="a7" processor="small" wcet="123"></mapping>
-    <mapping task_type="a8" processor="small" wcet="141"></mapping>
-    <mapping task_type="a9" processor="small" wcet="31"></mapping>
-
-
-    <mapping task_type="a2" processor="large" wcet="20"></mapping>
-    <mapping task_type="a3" processor="large" wcet="8"></mapping>
-    <mapping task_type="a4" processor="large" wcet="320"></mapping>
-    <mapping task_type="a5" processor="large" wcet="77"></mapping>
-    <mapping task_type="a6" processor="large" wcet="77"></mapping>
-    <mapping task_type="a7" processor="large" wcet="123"></mapping>
-    <mapping task_type="a8" processor="large" wcet="141"></mapping>
-    <mapping task_type="a9" processor="large" wcet="31"></mapping> -->
-
-<!-- 
-
- -->
 </WCET_table>
