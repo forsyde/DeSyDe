@@ -22,10 +22,10 @@ rel(*this, sysUsed_cost == sum(procUsed_cost)+nocUsed_cost);
 
 //for the NoC
 if(platform->getInterconnectType() == TDN_NOC){
-  vector<tdn_graphNode> tdn_graph = platform->getTDNGraph();
-  size_t links = tdn_graph.size()/platform->getTDNCycles();
-  size_t messages = channels.size(); 
-  Matrix<IntVarArray> flitsPerLinkM(flitsPerLink, links, messages);//derive flits per switch and flits per NI from this
+  //vector<tdn_graphNode> tdn_graph = platform->getTDNGraph();
+  //size_t links = tdn_graph.size()/platform->getTDNCycles();
+  //size_t messages = channels.size(); 
+  Matrix<IntVarArgs> flitsPerLinkM(flitsPerLink, links, messages);//derive flits per switch and flits per NI from this
   //area
   //IntVarArgs area_linkAtNode(*this, platform->nodes(), 0, Int::Limits::max);
   IntVar area_link(*this, 0, Int::Limits::max);

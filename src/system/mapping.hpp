@@ -84,6 +84,10 @@ protected:
       div_t.quot: index of the first proc for the application.
       div_t.rem: index of the last proc for the application. */
   vector<div_t> firstMapping;
+  
+  
+  vector<int> mappingRules_do; /*!< Designer-constrained mapping assignment for processors (if -1 -> none specified). */
+  vector<vector<int>> mappingRules_doNot; /*!< Designer-disallowed mapping for processors (if empty -> none specified). */
  
   //for maximum schedule length (transient + periodic phase)
   int maxScheduleLength;
@@ -116,11 +120,13 @@ public:
   int const max_utilization = 100; //TODO: add to configuration
 
   Mapping() {};
-  Mapping(Applications*, Platform*, XMLdoc&);
+  Mapping(Applications*, Platform*, XMLdoc&, XMLdoc&);
   //Mapping(Applications*, Platform*, vector<vector<int>>&, vector<int>&, vector<int>&, vector<vector<SDFChannel*>>&);
 
   ~Mapping();
   void load_wcets(XMLdoc& xml);
+  void load_mappingRules(XMLdoc& xml);
+  void setMappingRules(string task, int _mapOn, vector<int> _notMapOn);
   Applications* getApplications() const;
 
   Platform* getPlatform() const;
@@ -250,6 +256,12 @@ public:
   /** 
       Returns the actor ids in decending order of max WCETs (heaviest first). */
   vector<int> sortedByWCETs();
+  
+  /** Gets the designer-specified rules for mapping. */
+  vector<int> getMappingRules_do() const;
+  
+  /** Gets the designer-specified rules for mapping. */
+  vector<vector<int>> getMappingRules_doNot() const;
   
   void setFixedWCET(int id, int p_wcet);              /*!< Sets the WCET of the actor/task. */
   

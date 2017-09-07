@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <platform name="demo_platform">
 	<processor model="small" number="30">	
+        <mode name="eco" cycle="1.2" mem="16000" dynPower="6" staticPower="6" area="4" monetary="4"/>
         <mode name="default" cycle="1" mem="16000" dynPower="10" staticPower="10" area="8" 
               monetary="8"/>
-        <mode name="eco" cycle="1.2" mem="16000" dynPower="6" staticPower="6" area="4" monetary="4"/>
     </processor>
     <interconnect>
         <TDN_NoC name="2x3TDN" topology="mesh" x-dimension="6" y-dimension="5" routing="Y-X" 
-                 flitSize="128" cycles="6">
+                 flitSize="128" cycles="6" maxCyclesPerProc="1">
           <mode name="slow" cycleLength="18" 
                 dynPower_link="2" dynPower_NI="2" dynPower_switch="2"
                 staticPower_link="2" staticPower_NI="2" staticPower_switch="2" 

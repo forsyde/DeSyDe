@@ -10,7 +10,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
     proc(*this, apps->n_programEntities(), 0, platform->nodes()-1),
     proc_mode(*this, platform->nodes(), 0, platform->getMaxModes()),
     tdmaAlloc(*this, platform->nodes(), 0, platform->tdmaSlots()),
-    tdnTable(*this, platform->getTDNGraph().size(), 0, platform->nodes()+1),
+    injectionTable(*this, platform->nodes()*platform->getTDNCycles(), 0, platform->nodes()+1),
     noc_mode(*this, 0, platform->getInterconnectModes()-1),
     chosenRoute(*this, apps->n_programChannels(), 0, platform->getTDNCycles()),
     sendNext(*this, apps->n_programChannels()+platform->nodes(), 0, apps->n_programChannels()+platform->nodes()),
@@ -25,7 +25,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
     sys_utilization(*this, 0, p_mapping->max_utilization),
     procsUsed_utilization(*this, 0, p_mapping->max_utilization),
     proc_powerDyn(*this, platform->nodes(), 0, Int::Limits::max),
-    flitsPerLink(*this, apps->n_programChannels()*(platform->getTDNGraph().size()/platform->getTDNCycles()), 0, Int::Limits::max),
+    //flitsPerLink(*this, apps->n_programChannels()*(platform->getTDNGraph().size()/platform->getTDNCycles()), 0, Int::Limits::max),
     noc_power(*this, 0, Int::Limits::max),
     nocUsed_power(*this, 0, Int::Limits::max),
     sys_power(*this, 0, Int::Limits::max),
@@ -48,32 +48,35 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
     debug_stream << "\n==========\ndebug log:\n..........\n";
     vector<SDFChannel*> channels = apps->getChannels();
 
-    cout << "Creating Model..." << endl;
-    cout << "  Platform with " << platform->nodes() << " nodes is ";
+    LOG_DEBUG("Creating Model...");
+    string outInfo = "";
+    outInfo += "  Platform with " + tools::toString(platform->nodes()) + " nodes is ";
     if(!mapping->homogeneousPlatform())
-        cout << "not ";
-    cout << "homogeneous." << endl;
+        outInfo += "not ";
+    outInfo += "homogeneous.\n";
     if(!mapping->homogeneousPlatform()){
-        cout << "  Homogeneous nodes: ";
+        outInfo += "  Homogeneous nodes: ";
         for(size_t ji = 0; ji < platform->nodes(); ji++){
             for(size_t jj = ji + 1; jj < platform->nodes(); jj++){
                 if(mapping->homogeneousNodes(ji, jj)){
-                    cout << "{" << ji << ", " << jj << "} ";
+                    outInfo += "{" + tools::toString(ji) + ", " + tools::toString(jj) + "} ";
                 }
             }
         }
-        cout << endl;
-        cout << "  Mode-homogeneous nodes: ";
+        outInfo += "\n";
+        outInfo += "  Mode-homogeneous nodes: ";
         for(size_t ji = 0; ji < platform->nodes(); ji++){
             for(size_t jj = ji + 1; jj < platform->nodes(); jj++){
                 if(mapping->homogeneousModeNodes(ji, jj)){
-                    cout << "{" << ji << ", " << jj << "} ";
+                    outInfo += "{" + tools::toString(ji) + ", " + tools::toString(jj) + "} ";
                 }
             }
         }
-        cout << endl;
+        outInfo += "\n";
     }
-
+    LOG_DEBUG(outInfo);
+    
+    outInfo = "";
     cout << "  Found " << apps->n_programEntities() << " program entities (", cout << apps->n_SDFActors() << " actors of ";
     cout << apps->n_SDFApps() << " SDFGs and ";
     cout << apps->n_IPTTasks() << " ipt tasks)." << endl;
@@ -155,6 +158,10 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
          * Communication
          */
         cout << "Inserting communication constraints \n";
+        vector<tdn_graphNode> tdn_graph = platform->getTDNGraph();
+        size_t messages = channels.size(); 
+        size_t links = tdn_graph.size()/platform->getTDNCycles();
+        IntVarArgs flitsPerLink(*this, messages*links, 0, Int::Limits::max); 
         IntVarArgs blockingTime_s(*this, apps->n_programChannels(), 0, Int::Limits::max);
         IntVarArgs blockingTime_r(*this, apps->n_programChannels(), 0, Int::Limits::max);
         IntVarArgs transferTime_s(*this, apps->n_programChannels(), 0, Int::Limits::max);
@@ -214,10 +221,10 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
     }
 #include "throughput.constraints"
 
-    cout << "Inserting presolver constraints \n";
-//#include "presolve.constraints"
-
-    if (cfg->is_presolved()) {
+//PRESOLVING
+    if (cfg->doPresolve() && cfg->is_presolved()) {
+      cout << "Inserting presolver constraints \n";
+      
       LOG_INFO("sdf_pr_online_model.cpp: The model is presolved");
       if (cfg->getPresolverResults()->it_mapping < cfg->getPresolverResults()->oneProcMappings.size()) {
         vector<tuple<int, int>> oneProcMapping =
@@ -244,28 +251,30 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
         }
       }
     }
-
-    switch (cfg->settings().criteria[0]) {
-    case (Config::POWER):
-      for (size_t i = 0;
-          i < cfg->getPresolverResults()->sys_energys.size(); i++) {
-        rel(*this, sys_power < cfg->getPresolverResults()->sys_energys[i]);
-      }
-      break;
-    case (Config::THROUGHPUT):
-      for (size_t i = 0; i < apps->n_SDFApps(); i++) {
-        if (apps->getPeriodConstraint(i) == -1) {
-          for (size_t j = 0; j < cfg->getPresolverResults()->periods.size(); j++) {
-            rel(*this, period[i] < cfg->getPresolverResults()->periods[j][i]);
-          }
-          break;
+    
+    if (cfg->doPresolve() && cfg->is_presolved()) {
+      switch (cfg->settings().criteria[0]) {
+      case (Config::POWER):
+        for (size_t i = 0;
+            i < cfg->getPresolverResults()->sys_energys.size(); i++) {
+          rel(*this, sys_power < cfg->getPresolverResults()->sys_energys[i]);
         }
+        break;
+      case (Config::THROUGHPUT):
+        for (size_t i = 0; i < apps->n_SDFApps(); i++) {
+          if (apps->getPeriodConstraint(i) == -1) {
+            for (size_t j = 0; j < cfg->getPresolverResults()->periods.size(); j++) {
+              rel(*this, period[i] < cfg->getPresolverResults()->periods[j][i]);
+            }
+            break;
+          }
+        }
+        break;
+      default:
+        cout << "unknown optimization criterion !!!\n";
+        throw 42;
+        break;
       }
-      break;
-    default:
-      cout << "unknown optimization criterion !!!\n";
-      throw 42;
-      break;
     }
 
         for(size_t i = 0; i < channels.size(); i++){
@@ -361,38 +370,55 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
         //branch(*this, next, INT_VAR_NONE(), INT_VAL_MIN());
 
         if(!heaviestFirst && (procBranchOrderSAT.size() > 0 || procBranchOrderOPT.size() > 0)){
-            //branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN());
             branch(*this, procBranchOrderSAT, INT_VAR_NONE(), INT_VAL_MIN());
             branch(*this, procBranchOrderOPT, INT_VAR_NONE(), INT_VAL_MIN());
-            branch(*this, proc_mode, INT_VAR_NONE(), INT_VAL_MIN());
         }else if(heaviestFirst && (procBranchOrderSAT.size() > 0 || procBranchOrderOPT.size() > 0)){
             branch(*this, procBranchOrderSAT, INT_VAR_NONE(), INT_VAL_MIN());
             branch(*this, procBranchOrderOPT, INT_VAR_NONE(), INT_VAL_MIN());
-            branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN());
         }else{
             branch(*this, procBranchOrderOther, INT_VAR_NONE(), INT_VAL_MIN());
-            branch(*this, proc_mode, INT_VAR_NONE(), INT_VAL_MIN());
         }
         
+        //branch(*this, rank, INT_VAR_NONE(), INT_VAL_MIN());
+        branch(*this, next, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN());
+         /**
+         * ordering of sending and receiving messages with same
+         * source (send) or destination (rec) for unresolved cases
+         */
+        branch(*this, sendNext, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN());
+        
         if(platform->getInterconnectType() == TDN_NOC){
-          branch(*this, chosenRoute, INT_VAR_NONE(), INT_VAL_MIN()); 
-          assign(*this, tdnTable, INT_ASSIGN_MAX()); 
-          branch(*this, noc_mode, INT_VAL_MIN());
-          assign(*this, flitsPerLink, INT_ASSIGN_MIN());
+          branch(*this, chosenRoute, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN()); 
+          //assign(*this, injectionTable, INT_ASSIGN_MAX()); 
+          if(cfg->doOptimizeThput()){
+            branch(*this, noc_mode,  INT_VAL_MAX());
+          }else if(cfg->doOptimizePower()){
+            branch(*this, noc_mode, INT_VAL_MIN());
+          }else{
+            branch(*this, noc_mode, INT_VAL_MED());
+          }
+          //assign(*this, flitsPerLink, INT_ASSIGN_MIN());
         }else if(platform->getInterconnectType() == TDMA_BUS){
           branch(*this, tdmaAlloc, INT_VAR_NONE(), INT_VAL_MIN());  
         }
-
-        //branch(*this, rank, INT_VAR_NONE(), INT_VAL_MIN());
-        branch(*this, next, INT_VAR_NONE(), INT_VAL_MIN());
+ 
         /**
-         * ordering of sending and receiving messages with same
+         * ordering of receiving messages with same
          * source (send) or destination (rec) for unresolved cases
          */
         for(size_t k = 0; k < apps->n_programChannels() + platform->nodes(); k++){
             assign(*this, recNext[k], INT_ASSIGN_MIN());
         }
-        branch(*this, sendNext, INT_VAR_NONE(), INT_VAL_MIN());
+        
+        
+        if(cfg->doOptimizeThput()){
+          branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VALUES_MAX());
+        }else if(cfg->doOptimizePower()){
+          branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VALUES_MIN());
+        }else{
+          branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VAL_MED());
+        }
+       
 
         branch(*this, proc, INT_VAR_NONE(), INT_VAL(&valueProc));
     }else{ /**< end of SDF related constraints and branching. */
@@ -409,7 +435,13 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
          * to mimic bestfit algorithm
          */
         branch(*this, proc, INT_VAR_NONE(), INT_VAL(&valueProc));
-        branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN());
+        if(cfg->doOptimizeThput()){
+          branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VALUES_MAX());
+        }else if(cfg->doOptimizePower()){
+          branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VALUES_MIN());
+        }else{
+          branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VAL_MED());
+        }
     }
 }
 
@@ -426,7 +458,7 @@ SDFPROnlineModel::SDFPROnlineModel(bool share, SDFPROnlineModel& s):
     proc.update(*this, share, s.proc);
     proc_mode.update(*this, share, s.proc_mode);
     tdmaAlloc.update(*this, share, s.tdmaAlloc);
-    tdnTable.update(*this, share, s.tdnTable);
+    injectionTable.update(*this, share, s.injectionTable);
     noc_mode.update(*this, share, s.noc_mode);
     chosenRoute.update(*this, share, s.chosenRoute);
     sendNext.update(*this, share, s.sendNext);
@@ -443,7 +475,7 @@ SDFPROnlineModel::SDFPROnlineModel(bool share, SDFPROnlineModel& s):
     proc_powerDyn.update(*this, share, s.proc_powerDyn);
     noc_power.update(*this, share, s.noc_power);
     nocUsed_power.update(*this, share, s.nocUsed_power);
-    flitsPerLink.update(*this, share, s.flitsPerLink);
+    //flitsPerLink.update(*this, share, s.flitsPerLink);
     sys_power.update(*this, share, s.sys_power);
     sysUsed_power.update(*this, share, s.sysUsed_power);
     proc_area.update(*this, share, s.proc_area);
@@ -512,16 +544,16 @@ void SDFPROnlineModel::print(std::ostream& out) const {
     
     vector<tdn_graphNode> tdn_graph = platform->getTDNGraph();
     out << endl << "TDN table: " << endl;
-    for(size_t ii = 0; ii < tdnTable.size(); ii++){
+    for(size_t ii = 0; ii < injectionTable.size(); ii++){
       if(ii!=0 && ii%platform->getTDNCycles()==0){out << endl;}
       if(ii%platform->getTDNCycles()==0){
         out << ((tdn_graph[ii].link.from==-1)?"NI":("SW"+tools::toString(tdn_graph[ii].link.from))) << " -> ";
         out << ((tdn_graph[ii].link.to==-1)?"NI":("SW"+tools::toString(tdn_graph[ii].link.to))) << ": ";
       }
-      if(tdnTable[ii].assigned() && tdnTable[ii].val()==platform->nodes()){
+      if(injectionTable[ii].assigned() && injectionTable[ii].val()==platform->nodes()){
         out << "_";
       }else{
-        out << tdnTable[ii];
+        out << injectionTable[ii];
       }
       out << " ";
       
@@ -532,14 +564,14 @@ void SDFPROnlineModel::print(std::ostream& out) const {
    
     out << "Flits per link: " << endl;
     size_t links = tdn_graph.size()/platform->getTDNCycles();
-    for(size_t ii=0; ii<flitsPerLink.size(); ii++){
+    /*for(size_t ii=0; ii<flitsPerLink.size(); ii++){
       int msg = ii/links;
       if(ii!=0 && ii%links==0) out << endl;
       if(msg<10 && ii%links == 0) out << "Ch_0" << msg << ": ";
       if(msg>=10 && ii%links == 0) out << "Ch_" << msg << ": ";
       out << flitsPerLink[ii] << " ";
     }
-    out << endl << endl;
+    out << endl << endl;*/
     
     out << "S-order: " << sendNext << endl;
     out << "wcct_b: " << wcct_b << endl;
@@ -580,6 +612,22 @@ vector<int> SDFPROnlineModel::getPeriodResults() {
         periods.push_back(period[i].min());
     }
     return periods;
+}
+
+/** returns the values of the parameters that are under optimization */
+vector<int> SDFPROnlineModel::getOptimizationValues(){
+  vector<int> values;
+  
+  if(cfg->doOptimizeThput()){
+    for(auto i : period){
+      if(i.assigned()) values.push_back(i.val());
+    }
+  }else if(cfg->doOptimizePower()){
+    if(sys_power.assigned()) values.push_back(sys_power.val());
+    if(sysUsed_power.assigned()) values.push_back(sysUsed_power.val());
+  }
+  
+  return values;
 }
 
 int SDFPROnlineModel::valueProc(const Space& home, IntVar x, int i) {

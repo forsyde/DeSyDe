@@ -22,10 +22,10 @@ rel(*this, sysUsed_power == sum(proc_powerDyn)+sum(staticPow_usedProcs)+nocUsed_
 
 //power model for the NoC
 if(platform->getInterconnectType() == TDN_NOC){
-  vector<tdn_graphNode> tdn_graph = platform->getTDNGraph();
-  size_t links = tdn_graph.size()/platform->getTDNCycles();
-  size_t messages = channels.size(); 
-  Matrix<IntVarArray> flitsPerLinkM(flitsPerLink, links, messages);//derive flits per switch and flits per NI from this
+  //vector<tdn_graphNode> tdn_graph = platform->getTDNGraph();
+  //size_t links = tdn_graph.size()/platform->getTDNCycles();
+  //size_t messages = channels.size(); 
+  Matrix<IntVarArgs> flitsPerLinkM(flitsPerLink, links, messages);//derive flits per switch and flits per NI from this
   
   IntVarArgs linkNrg(*this, apps->n_SDFApps(), 0, Int::Limits::max);
   IntVarArgs switchNrg(*this, apps->n_SDFApps(), 0, Int::Limits::max);

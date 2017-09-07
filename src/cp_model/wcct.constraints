@@ -146,21 +146,25 @@ if(platform->getInterconnectType() == TDMA_BUS){
   rel(*this, sum(tdmaAlloc) <= platform->tdmaSlots());
   
 } else if(platform->getInterconnectType() == TDN_NOC){ //TDN-NoC ###############################################################################
-  vector<tdn_graphNode> tdn_graph = platform->getTDNGraph();
+  
   LOG_INFO("TDN graph is of size " + tools::toString(tdn_graph.size()));
   //for the TDN table, values 0...platform->nodes()-1 means location is assigned to processor with that id
   //                          platform->nodes() means the location is not used
   //                          platform->nodes()+1 means the route is blocked by another proc
-  Matrix<IntVarArray> tdnTableM(tdnTable, platform->getTDNCycles(), tdn_graph.size()/platform->getTDNCycles());
+  IntVarArgs tdnTable(*this, platform->getTDNGraph().size(), 0, platform->nodes()+1);
+  Matrix<IntVarArgs> tdnTableM(tdnTable, platform->getTDNCycles(), tdn_graph.size()/platform->getTDNCycles());
   IntVarArgs hops(*this, apps->n_programChannels(), 0, platform->getMaxNoCHops());
   //IntVarArgs chosenRoute(*this, apps->n_programChannels(), 0, platform->getTDNCycles());
   IntVarArgs tdnSlots(*this, platform->nodes(), 0, platform->getTDNCycles());
   IntVarArgs maxMsgSizeFromProc(*this, platform->nodes(), 0, maxMessageSize);
   
-  size_t messages = channels.size(); 
-  size_t links = tdn_graph.size()/platform->getTDNCycles();
-  //IntVarArgs flitsPerLink(*this, messages*links, 0, Int::Limits::max); 
-  Matrix<IntVarArray> flitsPerLinkM(flitsPerLink, links, messages);//derive flits per switch and flits per NI from this
+  
+  Matrix<IntVarArgs> flitsPerLinkM(flitsPerLink, links, messages);//derive flits per switch and flits per NI from this
+  
+  //relate injection table with state-of-NoC table
+  for(int i=0; i<injectionTable.size(); i++){
+    rel(*this, injectionTable[i] == tdnTable[i]);
+  }
 
   //effects of chosen NoC mode:
   element(*this, IntArgs(platform->getTDNCycleLengths()), noc_mode, cycleLength);
@@ -171,10 +175,39 @@ if(platform->getInterconnectType() == TDMA_BUS){
     int dst_ch = channels[ki]->destination;
     int noOfFlits = ceil(((double)channels[ki]->messageSize)/platform->getFlitSize());
     
+    
     for(size_t r=0; r<all_routes.size(); r++){
+      vector<int> linksNotUsed;
+      for(int l=0; l<links; l++){
+        std::vector<int>::iterator it;
+        it = find (all_routes[r].tdn_nodePath.begin(), all_routes[r].tdn_nodePath.end(), l);
+        if (it == all_routes[r].tdn_nodePath.end()){ //not found
+          linksNotUsed.push_back(l);
+        }
+      }
       for(size_t ri=0; ri<all_routes[r].tdn_nodePath.size(); ri++){
         rel(*this, ((proc[src_ch]==all_routes[r].srcProc) && (proc[dst_ch]==all_routes[r].dstProc)) 
                     >> (flitsPerLinkM(all_routes[r].tdn_nodePath[ri], ki) == noOfFlits));
+                    
+        
+        //rel(*this, (proc[src_ch]!=all_routes[r].srcProc) 
+        //            >> (flitsPerLinkM(all_routes[r].tdn_nodePath[ri], ki) == 0));
+      }
+      for(size_t l=0; l<linksNotUsed.size(); l++){
+        rel(*this, ((proc[src_ch]==all_routes[r].srcProc) && (proc[dst_ch]==all_routes[r].dstProc)) 
+                    >> (flitsPerLinkM(linksNotUsed[l], ki) == 0));
+          
+      }
+      rel(*this, (proc[dst_ch]!=all_routes[r].dstProc) >> (flitsPerLinkM(all_routes[r].tdn_nodePath.back(), ki) == 0));
+    }
+    
+    rel(*this, (proc[src_ch]==proc[dst_ch]) >> (sum(flitsPerLinkM.row(ki))==0));
+    
+    for(size_t j=0; j<platform->nodes(); j++){
+      for(int l=0; l<links; l++){
+        IntVar j_count(*this, 0, platform->getTDNCycles());
+        count(*this, tdnTableM.row(l), j, IRT_EQ, j_count);
+        rel(*this, ((proc[src_ch]==j) && (j_count==0)) >> (flitsPerLinkM(l,ki)==0));
       }
     }
   }
@@ -221,15 +254,19 @@ if(platform->getInterconnectType() == TDMA_BUS){
           for(size_t k=0; k<platform->getTDNCycles(); k++){
             int t = ji * platform->getTDNCycles() + k;
             
-            //if allocated TDN cycles is restricted to 1
+            //reserve resources in the NoC for chosen "route" (=cycle, route is fixed by routing)
             for(size_t r=0; r<tdn_graph[t].tdn_routes[dst]->tdn_nodePath.size(); r++){
+              //if allocated TDN cycles is restricted to 1, sufficient constraint:
               rel(*this, ((proc[src_ch1]==ji) && (proc[dst_ch1]==jj) && (chosenRoute[ki]==k))
                   >> (tdnTable[tdn_graph[t].tdn_routes[dst]->tdn_nodePath[r]]==ji));
-              //if processor ji does not have TDN slot k, it cannot use the route
-              //if(r>0){
-              //  rel(*this, (tdnTable[tdn_graph[t].tdn_routes[dst]->tdn_nodePath[0]]!=ji)
-              //              >> (tdnTable[tdn_graph[t].tdn_routes[dst]->tdn_nodePath[r]]!=ji));
-              //}
+                  
+              //constraint for general case (one or more than one slot allocated)
+              rel(*this, ((proc[src_ch1]==ji) && (proc[dst_ch1]==jj) && (tdnTableM(k,ji) == ji))
+                  >> (tdnTable[tdn_graph[t].tdn_routes[dst]->tdn_nodePath[r]]==ji));
+                  
+                  
+              rel(*this, ((proc[src_ch1]==ji) && (proc[dst_ch1]==jj) && (tdnTableM(k,ji) != ji))
+                  >> (tdnTable[tdn_graph[t].tdn_routes[dst]->tdn_nodePath[r]]!=ji));
             }
           }
         }
@@ -303,7 +340,11 @@ if(platform->getInterconnectType() == TDMA_BUS){
     rel(*this, (channelsOnProc[j]>0) >> (min(tdnTableM.row(j))==j));
     
     //if TDN slots per processor is restricted to one
-    rel(*this, (channelsOnProc[j]>0) >> (tdnSlots[j]==1));
+    if(platform->getTDNCyclesPerProc() == 1){
+      rel(*this, (channelsOnProc[j]>0) >> (tdnSlots[j]==1));
+    }else{
+      rel(*this, (channelsOnProc[j]>0) >> (tdnSlots[j]<=platform->getTDNCyclesPerProc()));
+    }
     
     for(size_t t=0; t<tdn_graph.size(); t++){
       //if there are no sending channels on j, remove j from TDN table
@@ -325,9 +366,11 @@ if(platform->getInterconnectType() == TDMA_BUS){
       int tok_ch2 = channels[kj]->initTokens;
       
       //if TDN slots per processor is restricted to one
-      rel(*this, ((proc[src_ch1] == proc[src_ch2]) &&
-                  (proc[src_ch1]!=proc[dst_ch1]) &&
-                  (proc[src_ch2]!=proc[dst_ch2])) >> (chosenRoute[ki]==chosenRoute[kj]));
+      if(platform->getTDNCyclesPerProc() == 1){
+        rel(*this, ((proc[src_ch1] == proc[src_ch2]) &&
+                    (proc[src_ch1]!=proc[dst_ch1]) &&
+                    (proc[src_ch2]!=proc[dst_ch2])) >> (chosenRoute[ki]==chosenRoute[kj]));
+      }
       //if a processor can have more than one TDN slot,
       //make sure that all messages sent from each processor
       //can use all allocated slots without collision

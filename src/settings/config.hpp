@@ -74,7 +74,8 @@ public:
   enum OutputPrintFrequency {
       ALL_SOL,
       LAST,
-      EVERY_n
+      EVERY_n,
+      FIRSTandLAST
   };
   enum PresolverModels {
     NO_PRE,
@@ -153,6 +154,9 @@ public:
      * Determines whether optimization is used.
      */
     bool doOptimize() const;
+    bool doOptimizeThput() const;
+    bool doOptimizePower() const;
+    bool doPresolve() const;
     bool is_presolved();
     string get_out_freq() const;
     string get_search_type() const;

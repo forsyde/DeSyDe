@@ -241,6 +241,7 @@ public:
   int rows;
   int flitSize;
   int tdnCycles;
+  int tdnCyclesPerProc;
   vector<InterconnectMode> modes;
   vector<tdn_route> all_routes; //all routes, without time (TDN cycles) - unlink in the tdn graph
   
@@ -250,7 +251,7 @@ public:
   };
 
   Interconnect(InterconnectType p_type, string p_name, int p_dps, int p_tdma, int p_roundLength, 
-               int p_col, int p_row, int p_fs, int p_tdnC){
+               int p_col, int p_row, int p_fs, int p_tdnC, int p_tdnCPP){
     type         = p_type;
     name         = p_name;
     dataPerSlot  = p_dps;
@@ -261,6 +262,7 @@ public:
     dataPerRound = dataPerSlot * tdmaSlots;
     flitSize     = p_fs;
     tdnCycles    = p_tdnC;
+    tdnCyclesPerProc = p_tdnCPP;
   }
   
   void addMode(string _name,
@@ -340,6 +342,8 @@ public:
   vector<tdn_graphNode> getTDNGraph() const;
   
   int getTDNCycles() const;
+  
+  int getTDNCyclesPerProc() const;
   
   size_t getInterconnectModes() const;
   

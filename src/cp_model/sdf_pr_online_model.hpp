@@ -66,7 +66,7 @@ private:
     IntVarArray             proc;        /**< mapping of firings onto processors. */
     IntVarArray             proc_mode;    /**< processor modes: economy, regular and performance. */
     IntVarArray             tdmaAlloc;    /**< allocation of TDMA slots to processors.*/
-    IntVarArray             tdnTable;     /**< TDN injection and state-of-NoC table.*/
+    IntVarArray             injectionTable;     /**< TDN injection and state-of-NoC table.*/
     IntVar                  noc_mode;     /**< assignment of NoC mode. */
     IntVarArray             chosenRoute; /**< Assignment of TDN slot to channel.*/
 
@@ -88,7 +88,7 @@ private:
     IntVar                  sys_utilization;        /**< utilization of all procs. */
     IntVar                  procsUsed_utilization;    /**< utilization of all used procs */
     IntVarArray             proc_powerDyn;                /**< long-run consumption of each proc. */
-    IntVarArray             flitsPerLink;              /**< flits per link and channel. */
+    //IntVarArray             flitsPerLink;              /**< flits per link and channel. */
     IntVar                  noc_power;                /**< long-run consumption of the NoC. */
     IntVar                  nocUsed_power;            /**< long-run consumption of the NoC. */
     IntVar                  sys_power;                /**< long-run consumption of system. */
@@ -182,6 +182,9 @@ public:
     }
   
     vector<int> getPeriodResults();
+    
+    /** returns the values of the parameters that are under optimization */
+    vector<int> getOptimizationValues();
     
     /**
     * Returns the processor number which task i has to be allocated.

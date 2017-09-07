@@ -2,7 +2,7 @@
 
 using namespace std;
 
-Mapping::Mapping(Applications* p_program, Platform* p_target, XMLdoc& xml) {
+Mapping::Mapping(Applications* p_program, Platform* p_target, XMLdoc& p_xml_wcet, XMLdoc& p_xml_mapRules) {
   program = p_program;
   target = p_target;
   n_apps = program->n_SDFApps() + program->n_IPTTasks();
@@ -24,6 +24,9 @@ Mapping::Mapping(Applications* p_program, Platform* p_target, XMLdoc& xml) {
   wcets.insert(wcets.end(), program->n_programEntities(), //[Nima] n_SDFActors-->n_programEntities
                vector<vector<int>>(p_target->nodes(),
                                    vector<int>(p_target->getMaxModes(), std::numeric_limits<int>::max() - 1)));
+                                   
+  mappingRules_do.insert(mappingRules_do.end(), program->n_programEntities(), -1);
+  mappingRules_doNot.insert(mappingRules_doNot.end(), program->n_programEntities(), vector<int>());
   
   //prepare WCETs
   for (size_t i=0; i<program->n_programEntities(); i++){ //all entities
@@ -44,7 +47,8 @@ Mapping::Mapping(Applications* p_program, Platform* p_target, XMLdoc& xml) {
   maxIterationsTransPhChannel.assign(p_program->n_programChannels(), 1);
   
   ///Load WCETs
-  load_wcets(xml);
+  load_wcets(p_xml_wcet);
+  load_mappingRules(p_xml_mapRules);
 }
 
 /*Mapping::Mapping(Applications* p_program, Platform* p_target, 
@@ -68,8 +72,8 @@ Mapping::~Mapping() {
   delete program;
   delete target;
 }
-void Mapping::load_wcets(XMLdoc& xml)
-{
+
+void Mapping::load_wcets(XMLdoc& xml){
   const char* my_xpathString = "///WCET_table/mapping";
 	LOG_DEBUG("running xpathString  " + tools::toString(my_xpathString) + " on WCET file ...");
 	auto xml_mappings = xml.xpathNodes(my_xpathString);
@@ -104,6 +108,50 @@ void Mapping::load_wcets(XMLdoc& xml)
             }
         }
     }
+}
+
+void Mapping::load_mappingRules(XMLdoc& xml){
+  const char* my_xpathString = "///mappingRules/mapping";
+	LOG_DEBUG("running xpathString  " + tools::toString(my_xpathString) + " on mapping rules file ...");
+	auto xml_mappings = xml.xpathNodes(my_xpathString);
+	for (const auto& map : xml_mappings)
+	{
+		string task_type = xml.getProp(map, "task_type");
+		string mapOn = xml.getProp(map, "mapOn");
+		vector<string> notMapOn_s = tools::split(xml.getProp(map, "notMapOn"), ',');
+    vector<int> notMapOn;
+    for(auto i : notMapOn_s){
+      notMapOn.push_back(atoi(i.c_str()));
+    }
+    
+    LOG_DEBUG("Reading mapping rules for task type: " + task_type 
+               + " - map on: " + mapOn 
+               + ", do not map on: " + tools::toString(notMapOn));
+    
+  
+      
+    setMappingRules(task_type, atoi(mapOn.c_str()), notMapOn);
+        
+	}	
+    
+}
+
+void Mapping::setMappingRules(string taskType, int _mapOn, vector<int> _notMapOn){
+  for (size_t i = 0; i < program->n_programEntities(); i++) {      
+    if (taskType.compare(program->getType(i)) == 0) {
+      if (wcets[i].size() <= _mapOn) {
+        THROW_EXCEPTION(InvalidArgumentException,"proc id for doMap of "+ taskType +" out of bound\n");
+      }
+      mappingRules_do[i] = _mapOn;
+      for(j: _notMapOn){
+        if (wcets[i].size() <= j) {
+          THROW_EXCEPTION(InvalidArgumentException,"proc id for doNotMap of "+ taskType +" out of bound\n");
+        }
+        mappingRules_doNot[i].push_back(j);
+      }
+      
+    }
+  }
 }
 
 Applications* Mapping::getApplications() const {
@@ -371,6 +419,16 @@ vector<int> Mapping::sortedByWCETs() {
     result.push_back(tmp[i].rem);
   }
   return result;
+}
+
+/** Gets the designer-specified rules for mapping. */
+vector<int> Mapping::getMappingRules_do() const{
+  return mappingRules_do;
+}
+
+/** Gets the designer-specified rules for mapping. */
+vector<vector<int>> Mapping::getMappingRules_doNot() const{
+  return mappingRules_doNot;
 }
 
 void Mapping::setFirstMapping(vector<div_t>& _firstMapping) {

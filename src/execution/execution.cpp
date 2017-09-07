@@ -46,6 +46,11 @@
 using namespace std;
 using namespace Gecode;
 
+struct SolutionValues{
+  std::chrono::high_resolution_clock::duration time;
+  vector<int> values;
+};
+
 template<class CPModelTemplate>
 class Execution {
 public:
@@ -122,6 +127,8 @@ private:
   ofstream out, outCSV, outMOSTCSV, outMappingCSV; /**< Output file streams: .txt and .csv. */
   typedef std::chrono::high_resolution_clock runTimer; /**< Timer type. */
   runTimer::time_point t_start, t_endAll; /**< Timer objects for start and end of experiment. */
+  vector<SolutionValues> solutionData;
+  
 
   void printMOSTCSV(Mapping* solution, int n, int split) {
     //N_TASKS;N_EDGES;N_PES;N_SLOTS;N_SCHEDS;MAP_PE1;MAP_PE2;FREQ_PE1;FREQ_PE2;MEM_PE1;MEM_PE2;SLOTS_PE1;SLOTS_PE2;MAP_T1;MAP_T2;MAP_T3;TASK_SCHED;COMM_SCHED;cluster;
@@ -299,21 +306,21 @@ private:
         << e->statistics().nogood << " ***\n";
     s->print(out);
     /// Printing CSV format output
-    if(cfg.settings().out_file_type == Config::ALL_OUT ||
+    /*if(cfg.settings().out_file_type == Config::ALL_OUT ||
        cfg.settings().out_file_type == Config::CSV){    
         outCSV << nodes << "," << durAll_ms << ",";
         s->printCSV(outCSV);
         s->printMappingCSV(outMappingCSV);
-    }
+    }*/
     /**
      * Calling printcsv for the MOST tool
      */
-    if(cfg.settings().out_file_type == Config::ALL_OUT ||
+    /*if(cfg.settings().out_file_type == Config::ALL_OUT ||
        cfg.settings().out_file_type == Config::CSV_MOST){
         Mapping* mapping = s->extractResult();
         const int split = -1;
         printMOSTCSV(mapping, nodes, split);
-    }
+    }*/
   }
   ;
 
@@ -339,27 +346,37 @@ private:
         if(cfg.settings().search == Config::FIRST){
           t_endAll = runTimer::now();
           printSolution(e, s);
-          cout << "returning" << endl;
           return;
+        }
+        if(cfg.settings().out_print_freq == Config::FIRSTandLAST){
+          t_endAll = runTimer::now();
+          printSolution(e, s);
         }
       }
       t_endAll = runTimer::now();
+      
+      //cout << nodes << " solutions found." << endl;
+      solutionData.push_back(SolutionValues{t_endAll-t_start, s->getOptimizationValues()});
+      //cout << nodes << " solutions found." << endl;
 
       if(cfg.settings().out_print_freq == Config::ALL_SOL){
           cout << nodes << " solutions found so far." << endl;
           printSolution(e, s);          
-     }
+      }
      /// We want to keep the last solution in case we only print the last one
       if(prev_sol != nullptr)
         delete prev_sol;
       prev_sol = s;
 
-      if(nodes % 1000 == 0){
-        cout << ".";
-        if(nodes % 20000 == 0)
-          cout.flush();
-        if(nodes % 100000 == 0)
-          cout << endl;
+      if(cfg.settings().out_print_freq == Config::FIRSTandLAST ||
+         cfg.settings().out_print_freq == Config::LAST){
+        if(nodes % 100 == 0){
+          cout << ".";
+          if(nodes % 2000 == 0)
+            cout.flush();
+          if(nodes % 10000 == 0)
+            cout << endl;
+        }
       }
 
     }
@@ -380,7 +397,21 @@ private:
     }else if(cfg.settings().out_print_freq == Config::LAST && nodes == 0){
       out << "No (better) solution found." << endl;
     }
-       delete prev_sol;
+    
+    if(cfg.settings().out_print_freq == Config::FIRSTandLAST && nodes > 1){
+      printSolution(e, prev_sol);
+    }else if(cfg.settings().out_print_freq == Config::FIRSTandLAST && nodes == 1){
+      out << "No better solution found." << endl;
+    }
+    delete prev_sol;
+    
+    for(auto i: solutionData){
+      outCSV << std::chrono::duration_cast<std::chrono::milliseconds>(i.time).count() << " ";
+      for(auto j: i.values){
+        outCSV << j << " ";
+      }
+      outCSV << endl;
+    }
 
     out.close();
     outCSV.close();

@@ -140,7 +140,7 @@ protected:
   void constructMSAG();
   //builds the msaGraph based on the current state of the solution
   //the coMapped vector specifies for each application, which MSAG it is part of
-  void constructMSAG(vector<int> &msagMap);
+  vector<bool> constructMSAG(vector<int> &msagMap);
   int getBlockActor(int ch_id) const;
   int getSendActor(int ch_id) const;
   int getRecActor(int ch_id) const;

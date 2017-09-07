@@ -75,6 +75,7 @@ int main(int argc, const char* argv[]) {
 	  Platform* platform;
 	  string WCET_path;
 	  string desConst_path;
+	  string mappingRules_path;
 	  for (const auto& path : cfg.settings().inputs_paths) {
        /// Reading taskset
        size_t found_taskset=path.find("taskset");
@@ -85,9 +86,9 @@ int main(int argc, const char* argv[]) {
 			taskset =  new TaskSet(xml);
 			if (taskset->getNumberOfTasks() > 0) {
 			  taskset->SetRMPriorities();
-			  cout << *taskset;
+			  LOG_INFO(tools::toString(*taskset));
 			} else {
-			  cout << "did not import any periodic tasks!" << endl;
+			  LOG_INFO("did not import any periodic tasks!");
 			}
 	   }
 	   /// Reading platform
@@ -97,7 +98,7 @@ int main(int argc, const char* argv[]) {
 			LOG_INFO("Parsing platform XML files...");
 			xml.read(false);
 			platform =  new Platform(xml);
-			cout << *platform << endl;
+			LOG_INFO(tools::toString(*platform));
 	   }
 	   /// Storing WCET xml path
        size_t found_wcet=path.find("WCETs");
@@ -110,6 +111,12 @@ int main(int argc, const char* argv[]) {
        if(found_desConst != string::npos){
 		   desConst_path = path;
 			LOG_INFO("Storing desConst XML file...");
+	   }
+	   /// Storing mapping rules xml path
+       size_t found_mappingRules=path.find("mappingRules");
+       if(found_mappingRules != string::npos){
+		   mappingRules_path = path;
+			LOG_INFO("Storing mappingRules XML file...");
 	   }
      }
 	
@@ -132,31 +139,39 @@ int main(int argc, const char* argv[]) {
 	xml_const.read(false);
     LOG_INFO("Creating an application object ... ");
     Applications* appset = new Applications(sdfs, taskset, xml_const);
-    cout << *appset;
+    LOG_INFO(tools::toString(*appset));
 
 	LOG_INFO("Creating a mapping object ... " );
     XMLdoc xml_wcet(WCET_path);
     xml_wcet.read(false);
-    Mapping* map = new Mapping(appset, platform, xml_wcet);
+    XMLdoc xml_mapRules(mappingRules_path);
+    xml_mapRules.read(false);
+    Mapping* map = new Mapping(appset, platform, xml_wcet, xml_mapRules);
     
     LOG_INFO("Sorting pr tasks based on utilization ... ");
-    map->PrintWCETs();
+    //map->PrintWCETs();
     map->SortTasksUtilization();
-    cout << *taskset;
+    LOG_INFO(tools::toString(*taskset));
 
     //PRESOLVING +++
+    
+    SDFPROnlineModel* model;
+    
+    if(cfg.doPresolve()){
 
-    //LOG_INFO("Creating PRESOLVING constraint model object ... ");
-    //OneProcModel* pre_model = new OneProcModel(map, cfg);
+      LOG_INFO("Creating PRESOLVING execution object ... ");
+      Presolver presolver(cfg);
 
-    LOG_INFO("Creating PRESOLVING execution object ... ");
-    Presolver presolver(cfg);
+      LOG_INFO("Running PRESOLVING model object ... ");
+      model = (SDFPROnlineModel*)presolver.presolve(map);
 
-    LOG_INFO("Running PRESOLVING model object ... ");
-    SDFPROnlineModel* model = (SDFPROnlineModel*)presolver.presolve(map);
-
-    vector<vector<tuple<int,int>>> mappings = presolver.getMappingResults();
-    cout << "Presolver found " << mappings.size() << " isolated mappings." << endl;
+      vector<vector<tuple<int,int>>> mappings = presolver.getMappingResults();
+      LOG_INFO("Presolver found " + tools::toString(mappings.size()) + " isolated mappings.");
+      
+    }else{
+      LOG_INFO("No PRESOLVER specified.");
+      model = new SDFPROnlineModel(map, &cfg);
+    }
 
 
 //    cout << messageStart + "Creating a constraint model object ... " << endl;
@@ -166,8 +181,6 @@ int main(int argc, const char* argv[]) {
 //
     LOG_INFO("Creating an execution object ... ");
     Execution<SDFPROnlineModel> execObj(model, cfg);
-
-    getchar();
     
     LOG_INFO("Running the model object ... ");
     execObj.Execute();

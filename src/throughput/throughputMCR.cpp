@@ -16,6 +16,7 @@ ThroughputMCR::ThroughputMCR(Space& home, ViewArray<IntView> p_latency, ViewArra
         p_maxIndices) {
 
   sendingTime.subscribe(home, *this, Int::PC_INT_BND);
+  sendingLatency.subscribe(home, *this, Int::PC_INT_BND);
   sendingNext.subscribe(home, *this, Int::PC_INT_VAL);
   next.subscribe(home, *this, Int::PC_INT_VAL);
   wcet.subscribe(home, *this, Int::PC_INT_BND);
@@ -42,6 +43,7 @@ ThroughputMCR::ThroughputMCR(Space& home, ViewArray<IntView> p_latency, ViewArra
 
 size_t ThroughputMCR::dispose(Space& home) {
   sendingTime.cancel(home, *this, Int::PC_INT_BND);
+  sendingLatency.cancel(home, *this, Int::PC_INT_BND);
   sendingNext.cancel(home, *this, Int::PC_INT_VAL);
   next.cancel(home, *this, Int::PC_INT_VAL);
   wcet.cancel(home, *this, Int::PC_INT_BND);
@@ -671,9 +673,11 @@ struct G {
   }
 };
 
-void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
+vector<bool> ThroughputMCR::constructMSAG(vector<int> &msagMap) {
+  
+  vector<bool> allFixed(b_msags.size(), true);
 
-  if(printDebug)
+  //if(printDebug)
     cout << "\tThroughputMCR::constructMSAG(vector<int> &msagMap)" << endl;
 
   msaGraph.clear();
@@ -698,6 +702,13 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
   for(int i = 0; i < n_msagActors; i++){
     msagId.push_back(msagMap[getApp(i)]);
   }
+  
+  for(int i = 0; i < sendingTime.size(); i++){
+    if(!sendingTime[i].assigned()) allFixed[msagId[ch_src[i]]] = false;
+    if(!sendingLatency[i].assigned()) allFixed[msagId[ch_src[i]]] = false;
+    if(!receivingTime[i].assigned()) allFixed[msagId[ch_src[i]]] = false;
+    if(!sendingNext[i].assigned()) allFixed[msagId[ch_src[i]]] = false;
+  }
 
   b::graph_traits<boost_msag>::vertex_descriptor src, dst;
   b::graph_traits<boost_msag>::edge_descriptor _e;
@@ -715,6 +726,7 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
     tie(_e, found) = add_edge(src, src, curr_graph);
     if(n < n_actors){
       b::put(b::edge_weight, curr_graph, _e, wcet[n].min());
+      if(!wcet[n].assigned()) allFixed[msagId[n]] = false;
     } //else{}: delay for communication actors are added further down
     b::put(b::edge_weight2, curr_graph, _e, 1);
   }
@@ -780,6 +792,7 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
       dst = g.getVertex(ch_src[i]);    //b::vertex(ch_src[i], *b_msags[msagId[block_actor]]);
       b::tie(_e, found) = b::add_edge(src, dst, *b_msags[msagId[block_actor]]);
       b::put(b::edge_weight, curr_graph1, _e, wcet[ch_src[i]].min());
+      if(!wcet[ch_src[i]].assigned()) allFixed[msagId[ch_src[i]]] = false;
       b::put(b::edge_weight2, curr_graph1, _e, sendbufferSz[i].max());
 
       n_msagChannels++;
@@ -826,22 +839,22 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
       }
 
       //add the block actor as successor of the send actor, with one token (serialization)
-      SuccessorNode succBS;
+      /*SuccessorNode succBS;
       succBS.successor_key = block_actor;
       succBS.delay = sendingLatency[i].min();
       succBS.min_tok = 1;
       succBS.max_tok = 1;
-      succBS.channel = i;
+      succBS.channel = i;*/
 
       //add to boost-msag
-      boost_msag& curr_graph3 = *b_msags[msagId[send_actor]];
+      /*boost_msag& curr_graph3 = *b_msags[msagId[send_actor]];
       src = g.getVertex(send_actor);   //b::vertex(send_actor, *b_msags[msagId[send_actor]]);
       dst = g.getVertex(block_actor);  //b::vertex(block_actor, *b_msags[msagId[send_actor]]);
       b::tie(_e, found) = b::add_edge(src, dst, *b_msags[msagId[send_actor]]);
       b::put(b::edge_weight, curr_graph3, _e, sendingLatency[i].min());
-      b::put(b::edge_weight2, curr_graph3, _e, 1);
+      b::put(b::edge_weight2, curr_graph3, _e, 1);*/
 
-      n_msagChannels++;
+      /*n_msagChannels++;
       if(printDebug){
         unordered_map<int, vector<SuccessorNode>>::const_iterator it = msaGraph.find(send_actor);
         if(it != msaGraph.end()){ //send actor already has an entry in the map
@@ -851,7 +864,7 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
           succBSv.push_back(succBS);
           msaGraph.insert(pair<int, vector<SuccessorNode>>(send_actor, succBSv));
         }
-      }
+      }*/
 
       //add receiving actor as successor of the send actor, with potential initial tokens
       SuccessorNode dstCh;
@@ -951,6 +964,7 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
         dst = g.getVertex(ch_dst[i]);   //b::vertex(ch_dst[i], *b_msags[msagId[ch_src[i]]]);
         b::tie(_e, found) = b::add_edge(src, dst, curr_graph5);
         b::put(b::edge_weight, curr_graph5, _e, wcet[ch_dst[i]].min());
+      if(!wcet[ch_dst[i]].assigned()) allFixed[msagId[ch_dst[i]]] = false;
         b::put(b::edge_weight2, curr_graph5, _e, tok[i]);
 
         n_msagChannels++;
@@ -981,76 +995,78 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
    cout << endl;*/
 
   //put sendNext relations into the MSAG
-  for(unsigned int i = 1; i < channelMapping.size(); i += 3){ //for all sending actors
-    bool continues = true;
-    bool nextFound = false;
-    int nextCh;
-    int x = channelMapping[i];
-    int tokens = 0; //is channel to add a cycle-closing back-edge?
-    while(!nextFound && continues){
-      if(sendingNext[x].assigned()){
-        nextCh = sendingNext[x].val();
-        if(nextCh >= n_channels){ //end of chain found
-          if(nextCh > n_channels){
-            nextCh = n_channels + ((nextCh - n_channels - 1) % n_procs);
-          }else{
-            nextCh = n_channels + n_procs - 1;
-          }
-          tokens = 1;
-          if(sendingNext[nextCh].assigned()){
-            nextCh = sendingNext[nextCh].val();
+  if(channelMapping.size()){
+    for(unsigned int i = 1; i < channelMapping.size(); i += 3){ //for all sending actors
+      bool continues = true;
+      bool nextFound = false;
+      int nextCh = -1;
+      int x = channelMapping[i];
+      int tokens = 0; //is channel to add a cycle-closing back-edge?
+      while(!nextFound && continues){
+        if(sendingNext[x].assigned()){
+          nextCh = sendingNext[x].val();
+          if(nextCh >= n_channels){ //end of chain found
+            if(nextCh > n_channels){
+              nextCh = n_channels + ((nextCh - n_channels - 1) % n_procs);
+            }else{
+              nextCh = n_channels + n_procs - 1;
+            }
+            tokens = 1;
+            if(sendingNext[nextCh].assigned()){
+              nextCh = sendingNext[nextCh].val();
+              if(sendingTime[nextCh].min() > 0){
+                nextFound = true;
+              }else{
+                x = nextCh;
+              }
+            }else{
+              continues = false;
+            }
+          }else{ //not end of chain (nextCh < n_channels)
             if(sendingTime[nextCh].min() > 0){
               nextFound = true;
+              if(tokens != 1)
+                tokens = 0;
             }else{
-              x = nextCh;
+              x = nextCh; //nextCh is not on interconnect. Continue with nextSend[nextCh].
             }
-          }else{
-            continues = false;
           }
-        }else{ //not end of chain (nextCh < n_channels)
-          if(sendingTime[nextCh].min() > 0){
-            nextFound = true;
-            if(tokens != 1)
-              tokens = 0;
-          }else{
-            x = nextCh; //nextCh is not on interconnect. Continue with nextSend[nextCh].
-          }
+        }else{
+          continues = false;
         }
-      }else{
-        continues = false;
       }
-    }
-    if(nextFound){
-      //add send_actor of channel i -> block_actor of nextCh
-      if(channelMapping[i] != nextCh){ //if found successor is not the channel's own block_actor (then it is already in the graph)
-        int block_actor = getBlockActor(nextCh);
+      if(nextFound){
+        //add send_actor of channel i -> block_actor of nextCh
+        if(channelMapping[i] != nextCh){ //if found successor is not the channel's own block_actor (then it is already in the graph)
+          int block_actor = getBlockActor(nextCh);
 
-        //cout << "Next channel (send_actor of channel " << i << "): " << nextCh << endl;
+          //cout << "Next channel (send_actor of channel " << i << "): " << nextCh << endl;
 
-        SuccessorNode succBS;
-        succBS.successor_key = block_actor;
-        succBS.delay = sendingLatency[nextCh].min();
-        succBS.min_tok = tokens;
-        succBS.max_tok = tokens;
-        succBS.channel = nextCh;
+          SuccessorNode succBS;
+          succBS.successor_key = block_actor;
+          succBS.delay = sendingLatency[nextCh].min();
+          succBS.min_tok = tokens;
+          succBS.max_tok = tokens;
+          succBS.channel = nextCh;
 
-        //add to boost-msag
-        boost_msag& curr_graph6 = *b_msags[msagId[block_actor]];
-        src = g.getVertex(i + n_actors);   //b::vertex(i + n_actors, *b_msags[msagId[block_actor]]);
-        dst = g.getVertex(block_actor);    //b::vertex(block_actor, *b_msags[msagId[block_actor]]);
-        b::tie(_e, found) = b::add_edge(src, dst, curr_graph6);
-        b::put(b::edge_weight, curr_graph6, _e, sendingLatency[nextCh].min());
-        b::put(b::edge_weight2, curr_graph6, _e, tokens);
+          //add to boost-msag
+          boost_msag& curr_graph6 = *b_msags[msagId[block_actor]];
+          src = g.getVertex(i + n_actors);   //b::vertex(i + n_actors, *b_msags[msagId[block_actor]]);
+          dst = g.getVertex(block_actor);    //b::vertex(block_actor, *b_msags[msagId[block_actor]]);
+          b::tie(_e, found) = b::add_edge(src, dst, curr_graph6);
+          b::put(b::edge_weight, curr_graph6, _e, sendingLatency[nextCh].min());
+          b::put(b::edge_weight2, curr_graph6, _e, tokens);
 
-        n_msagChannels++;
-        if(printDebug){
-          unordered_map<int, vector<SuccessorNode>>::const_iterator it = msaGraph.find(i + n_actors);
-          if(it != msaGraph.end()){ //send actor already has an entry in the map
-            msaGraph.at(i + n_actors).push_back(succBS);
-          }else{ //no entry for send_actor i yet
-            vector<SuccessorNode> succBSv;
-            succBSv.push_back(succBS);
-            msaGraph.insert(pair<int, vector<SuccessorNode>>(i + n_actors, succBSv));
+          n_msagChannels++;
+          if(printDebug){
+            unordered_map<int, vector<SuccessorNode>>::const_iterator it = msaGraph.find(i + n_actors);
+            if(it != msaGraph.end()){ //send actor already has an entry in the map
+              msaGraph.at(i + n_actors).push_back(succBS);
+            }else{ //no entry for send_actor i yet
+              vector<SuccessorNode> succBSv;
+              succBSv.push_back(succBS);
+              msaGraph.insert(pair<int, vector<SuccessorNode>>(i + n_actors, succBSv));
+            }
           }
         }
       }
@@ -1108,6 +1124,7 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
     dst = g.getVertex(nextCh == -1 ? ch_dst[channelMapping[i]] : getRecActor(nextCh)); //b::vertex(nextCh == -1 ? ch_dst[channelMapping[i]] : getRecActor(nextCh),*b_msags[msagId[tmp]]);
     b::tie(_e, found) = b::add_edge(src, dst, curr_graph7);
     b::put(b::edge_weight, curr_graph7, _e, nextCh == -1 ? wcet[ch_dst[channelMapping[i]]].min() : receivingTime[nextCh].min());
+    if(!wcet[ch_dst[channelMapping[i]]].assigned()) allFixed[msagId[ch_dst[channelMapping[i]]]] = false;
     b::put(b::edge_weight2, curr_graph7, _e, 0);
 
     n_msagChannels++;
@@ -1124,6 +1141,7 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
   }
 
   for(int i = 0; i < n_actors; i++){
+    if(!next[i].assigned()) allFixed[msagId[i]] = false;
     //Step 2
     if(next[i].assigned() && next[i].val() < n_actors){ //if next[i] is decided, the forward edge goes from i to next[i]
       int nextActor = next[i].val();
@@ -1143,6 +1161,7 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
         dst = g.getVertex(nextActor); //b::vertex(nextActor, *b_msags[msagId[i]]);
         b::tie(_e, found) = b::add_edge(src, dst, curr_graph8);
         b::put(b::edge_weight, curr_graph8, _e, wcet[nextActor].min());
+        if(!wcet[nextActor].assigned()) allFixed[msagId[nextActor]] = false;
         b::put(b::edge_weight2, curr_graph8, _e, 0);
       }else{
         //add edge i -> receivingActor[nextActor]
@@ -1199,6 +1218,7 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
           dst = g.getVertex(firstActor); //b::vertex(firstActor, *b_msags[msagId[i]]);
           b::tie(_e, found) = b::add_edge(src, dst, curr_graph10);
           b::put(b::edge_weight, curr_graph10, _e, wcet[firstActor].min());
+          if(!wcet[firstActor].assigned()) allFixed[msagId[firstActor]] = false;
           b::put(b::edge_weight2, curr_graph10, _e, 1);
         }else{
           //add edge i -> receivingActor[firstActor]
@@ -1231,6 +1251,20 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
       }
     }
   }
+  
+  for(int i=n_actors; i<next.size(); i++){
+    for(int j=0; j<n_actors; j++){
+      if(next[i].in(j)) allFixed[msagId[j]] = false;
+    }
+  }
+  
+  for(int i=n_channels; i<sendingNext.size(); i++){
+    for(int j=0; j<n_channels; j++){
+      if(sendingNext[i].in(j)) allFixed[msagId[ch_src[j]]] = false;
+    }
+  }
+  
+  return allFixed;
 
   if(printDebug){
     //printThroughputGraphAsDot(".");
@@ -1246,12 +1280,13 @@ void checkApp(int app, unordered_map<int, set<int>>& coMappedApps, vector<int>& 
 }
 
 ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
-  if(printDebug)
+  //if(printDebug)
     cout << "\tThroughputMCR::propagate()" << endl;
 
   //auto _start = std::chrono::high_resolution_clock::now(); //timer
   //int time; //runtime of period calculation
-
+  
+  vector<int> appFixed(apps.size(), false);
   vector<int> msagMap(apps.size(), 0);
 
   if(apps.size() > 1){
@@ -1325,7 +1360,8 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
         msagMap[*it] = i;
       }
     }
-    constructMSAG(msagMap);
+    vector<bool> msagFixed = constructMSAG(msagMap);
+    cout << "\t----\n";
 
     if(printDebug){
       if(next.assigned() && wcet.assigned()){
@@ -1373,6 +1409,8 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
     for(size_t i = 0; i < msag_mcrs.size(); i++){
       for(auto r: result[i]){
         wc_period[r] = msag_mcrs[i];
+        appFixed[r] = msagFixed[i];
+        cout << "wc_period[" << r << "] = " << wc_period[r] << ", fixed: " << appFixed[r] << endl;
       }
     }
 
@@ -1389,6 +1427,9 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
     //do MCR analysis
     max_cr = maximum_cycle_ratio(b_msag, vim, ew1, ew2, &cc);
     wc_period[0] = max_cr;
+    appFixed[0] = next.assigned() && wcet.assigned() && sendingTime.assigned() 
+                  && sendingLatency.assigned() && sendingNext.assigned()
+                  && receivingTime.assigned(); 
 
     if(printDebug){
       if(next.assigned() && wcet.assigned()){
@@ -1418,8 +1459,8 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
 //        getchar();
 //    }
 
-  bool all_assigned = next.assigned() && wcet.assigned() && sendingTime.assigned() && sendingLatency.assigned() && sendingNext.assigned()
-      && receivingTime.assigned(); //&&
+  //bool all_assigned = next.assigned() && wcet.assigned() && sendingTime.assigned() && sendingLatency.assigned() && sendingNext.assigned()
+   //   && receivingTime.assigned(); //&&
       //receivingNext.assigned() &&
       //sendbufferSz.assigned() &&
       //recbufferSz.assigned();
@@ -1441,18 +1482,23 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
   }
 
   //propagate latency and period (bounds)
-  for(int i = 0; i < apps.size(); i++){
-    /*if(!all_assigned && all_ch_local && wcet.assigned() && next.assigned()){
-     //GECODE_ME_CHECK(latency[i].eq(home,wc_latency[i][0]));
-     GECODE_ME_CHECK(period[i].eq(home,wc_period[i]));
-     }else*/
-    if(!all_assigned && !all_ch_local){
-//          GECODE_ME_CHECK(latency[i].gq(home, wc_latency[i][0]));
-      GECODE_ME_CHECK(period[i].gq(home, wc_period[i]));
-    }else if(all_assigned){
-//          GECODE_ME_CHECK(latency[i].eq(home, wc_latency[i][0]));
+  for(int i = 0; i < period.size(); i++){
+    cout << "appFixed[" << i <<"] = " << appFixed[i] << endl;
+    if(appFixed[i]){
       GECODE_ME_CHECK(period[i].eq(home, wc_period[i]));
+      cout << "GECODE_ME_CHECK(period["<<i<<"].EQ(home, wc_period["<<i<<"]))" << endl;
+    }else{
+      GECODE_ME_CHECK(period[i].gq(home, wc_period[i]));
+      cout << "GECODE_ME_CHECK(period["<<i<<"].gq(home, wc_period["<<i<<"]))" << endl;
     }
+
+    //if(!all_assigned && !all_ch_local){
+//          GECODE_ME_CHECK(latency[i].gq(home, wc_latency[i][0]));
+      //GECODE_ME_CHECK(period[i].gq(home, wc_period[i]));
+    //}else if(all_assigned){
+//          GECODE_ME_CHECK(latency[i].eq(home, wc_latency[i][0]));
+      //GECODE_ME_CHECK(period[i].eq(home, wc_period[i]));
+    //}
   }
   /*
    //propagate bounds on iterations of entities and channels in time-based schedule
@@ -1495,12 +1541,15 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
 
   if(next.assigned() && wcet.assigned() && sendingTime.assigned() && sendingLatency.assigned() && receivingTime.assigned() && receivingNext.assigned()
       && sendbufferSz.assigned() && recbufferSz.assigned())
+      cout << "return home.ES_SUBSUMED(*this)" << endl;
     return home.ES_SUBSUMED(*this);
 
   if(all_ch_local && wcet.assigned() && next.assigned()){
+    cout << "return home.ES_SUBSUMED(*this)" << endl;
     return home.ES_SUBSUMED(*this);
   }
 
+  cout << "return ES_FIX" << endl;
   return ES_FIX;
 }
 

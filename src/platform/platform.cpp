@@ -9,20 +9,20 @@ Platform::Platform(size_t p_nodes, int p_cycle, size_t p_memSize, int p_buffer, 
                                vector<int>(1,10),vector<int>(1,1),p_buffer));
   }
 
-  interconnect = Interconnect(p_type, "", p_dps, p_tdma, p_roundLength, p_nodes, 1,0,0);
+  interconnect = Interconnect(p_type, "", p_dps, p_tdma, p_roundLength, p_nodes, 1,0,0,0);
 }
 
 Platform::Platform(std::vector<PE*> p_nodes, enum InterconnectType p_type, int p_dps, int p_tdma, int p_roundLength){
   compNodes = p_nodes;
-  interconnect = Interconnect(p_type, "", p_dps, p_tdma, p_roundLength, (int)p_nodes.size(), 1,0,0);
+  interconnect = Interconnect(p_type, "", p_dps, p_tdma, p_roundLength, (int)p_nodes.size(), 1,0,0,0);
 }
 
 Platform::Platform(std::vector<PE*> p_nodes, enum InterconnectType p_type, int p_dps, int p_tdma, int p_roundLength, int p_col, int p_row){
   compNodes = p_nodes;
   if(p_type == NOC){
-    interconnect = Interconnect(p_type, "NoC", p_dps, p_tdma, p_roundLength, p_col, p_row,0,0);
+    interconnect = Interconnect(p_type, "NoC", p_dps, p_tdma, p_roundLength, p_col, p_row,0,0,0);
   }else{
-    interconnect = Interconnect(p_type, "TDMA-bus", p_dps, p_tdma, p_roundLength, (int)p_nodes.size(), 1,0,0);
+    interconnect = Interconnect(p_type, "TDMA-bus", p_dps, p_tdma, p_roundLength, (int)p_nodes.size(), 1,0,0,0);
   }
 }
 
@@ -36,7 +36,7 @@ Platform::Platform(XMLdoc& xml) throw (InvalidArgumentException)
 	load_xml(xml);
     ///Assigning default interconnect
     if(interconnect.type == UNASSIGNED){
-      interconnect = Interconnect(TDMA_BUS, "TDMA-bus",32, (int) compNodes.size(), 1, (int)compNodes.size(), 1,0,0);    
+      interconnect = Interconnect(TDMA_BUS, "TDMA-bus",32, (int) compNodes.size(), 1, (int)compNodes.size(), 1,0,0,0);    
       LOG_DEBUG("No interconnect found in platform XML. Assigning default: TDMA_BUS");
     }
 }
@@ -91,12 +91,11 @@ void Platform::load_xml(XMLdoc& xml) throw (InvalidArgumentException)
     string noc_routing = xml.getProp(ic_settings, "routing");
     string noc_flitSize = xml.getProp(ic_settings, "flitSize");
     string noc_tdnCycles = xml.getProp(ic_settings, "cycles");
-    //string noc_cycleLength = xml.getProp(ic_settings, "cycleLength");
+    string noc_tdnCyclesPP = xml.getProp(ic_settings, "maxCyclesPerProc");
   
     interconnect = Interconnect(TDN_NOC, noc_name, 0, 0, 0, atoi(noc_columns.c_str()), 
                                 atoi(noc_rows.c_str()), atoi(noc_flitSize.c_str()), 
-                                atoi(noc_tdnCycles.c_str()));
-                                //atoi(noc_cycleLength.c_str()));  
+                                atoi(noc_tdnCycles.c_str()), atoi(noc_tdnCyclesPP.c_str()));
                                 
     query = "///platform/interconnect/TDN_NoC/mode";
     auto ic_modes = xml.xpathNodes(query.c_str());
@@ -136,7 +135,8 @@ void Platform::load_xml(XMLdoc& xml) throw (InvalidArgumentException)
                          + noc_columns + " columns, "	
                          + noc_rows + " rows, "	
                          + noc_flitSize + " bit flit size, "	
-                         + noc_tdnCycles + " tdnCycles, and "	
+                         + noc_tdnCycles + " tdnCycles, "	
+                         + noc_tdnCyclesPP + " tdnCycles per proc, and "	
                          + tools::toString(interconnect.modes.size()) + " modes.");	
                                 
     int procsInNoC = atoi(noc_rows.c_str()) * atoi(noc_columns.c_str());
@@ -460,7 +460,7 @@ void Platform::createRouteTable(){
         
         //cout << "\t starting from NI to switch at NoC-node " << i << " at (" << xLoc_i << ", " << yLoc_i << ")";
         //cout << " (linkId: "<< srcLinkId << ")" << endl;
-        cout << srcLinkId << ": from NI to (" <<  xLoc_i << ", " << yLoc_i << ")" << endl;
+        //cout << srcLinkId << ": from NI to (" <<  xLoc_i << ", " << yLoc_i << ")" << endl;
       }
     
       int tmp_yLoc = yLoc_i;
@@ -477,9 +477,9 @@ void Platform::createRouteTable(){
         
         tmp_route.tdn_nodePath.push_back(linkId);
         
-        cout << linkId << ": from (" <<  tmp_xLoc << ", " << tmp_yLoc << ") to (";
+        //cout << linkId << ": from (" <<  tmp_xLoc << ", " << tmp_yLoc << ") to (";
         tmp_yLoc += y_inc;
-        cout <<  tmp_xLoc << ", " << tmp_yLoc << ")" << endl;
+        //cout <<  tmp_xLoc << ", " << tmp_yLoc << ")" << endl;
       }
       
       while(tmp_xLoc != xLoc_j){
@@ -493,9 +493,9 @@ void Platform::createRouteTable(){
         
         tmp_route.tdn_nodePath.push_back(linkId);
         
-        cout << linkId << ": from (" <<  tmp_xLoc << ", " << tmp_yLoc << ") to (";
+        //cout << linkId << ": from (" <<  tmp_xLoc << ", " << tmp_yLoc << ") to (";
         tmp_xLoc += x_inc;
-        cout <<  tmp_xLoc << ", " << tmp_yLoc << ")" << endl;
+        //cout <<  tmp_xLoc << ", " << tmp_yLoc << ")" << endl;
       }
       
       //from switch to NI at destination NoC-node
@@ -503,7 +503,7 @@ void Platform::createRouteTable(){
         linkId = (5*nodes-2*interconnect.columns-2*interconnect.rows) + j ;
         //cout << "\t arriving at NI from switch at NoC-node " << j << " at (" << tmp_xLoc << ", " << tmp_yLoc << ")";
         //cout << " (linkId: "<< linkId << ")" << endl;
-        cout << linkId << ": from (" <<  tmp_xLoc << ", " << tmp_yLoc << ") to NI" << endl << endl;
+        //cout << linkId << ": from (" <<  tmp_xLoc << ", " << tmp_yLoc << ") to NI" << endl << endl;
         
         tmp_route.tdn_nodePath.push_back(linkId);
         interconnect.all_routes.push_back(tmp_route);
@@ -534,6 +534,10 @@ vector<tdn_graphNode> Platform::getTDNGraph() const{
 
 int Platform::getTDNCycles() const{
   return interconnect.tdnCycles;
+}
+
+int Platform::getTDNCyclesPerProc() const{
+  return interconnect.tdnCyclesPerProc;
 }
 
 size_t Platform::getInterconnectModes() const{

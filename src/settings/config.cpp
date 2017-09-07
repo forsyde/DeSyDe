@@ -100,7 +100,7 @@ int Config::parse(int argc, const char** argv) throw (IOException, InvalidArgume
           po::value<string>()->default_value(string("ALL_SOL"))->notifier(
               boost::bind(&Config::setOutputPrintFrequency, this, _1)),
           "Frequency of printing output.\n"
-          "Valid options ALL, LAST, Every_n. ");        
+          "Valid options ALL, LAST, Every_n, FIRSTandLAST. ");        
 
   po::options_description dse("DSE options");
   dse.add_options()
@@ -393,6 +393,7 @@ Config::OutputPrintFrequency stringToPrintFrequency(const string &str) throw (In
   if (str == "ALL_SOL")            return Config::ALL_SOL;
   else if (str == "LAST")      return Config::LAST;
   else if (str == "EVERY_n") return Config::EVERY_n;
+  else if (str == "FIRSTandLAST") return Config::FIRSTandLAST;
   else THROW_EXCEPTION(InvalidFormatException, str, "invalid option");
 }
 
@@ -400,6 +401,7 @@ string printFrequencyToString(Config::OutputPrintFrequency freq) throw (InvalidF
   if (freq == Config::ALL_SOL)     return "ALL_SOL";
   else if (freq == Config::LAST)    return "LAST";
   else if (freq == Config::EVERY_n) return "EVERY_n";
+  else if (freq == Config::FIRSTandLAST) return "FIRSTandLAST";
   else THROW_EXCEPTION(InvalidFormatException, "ouput frequency", "invalid option");
 }
 string Config::get_out_freq() const {
@@ -475,10 +477,36 @@ bool Config::doOptimize() const {
   }
   return false;
 }
+
+bool Config::doOptimizeThput() const{
+  for(auto i: settings_.criteria)
+    if(i==THROUGHPUT) return true;
+  
+  return false;
+}
+
+bool Config::doOptimizePower() const{
+  for(auto i: settings_.criteria)
+    if(i==POWER) return true;
+  
+  return false;
+  
+}
+
+bool Config::doPresolve() const{
+  for(auto i : settings_.pre_models){
+    if(i > NO_PRE) return true;
+  }
+  return false;
+}
+
 bool Config::is_presolved()
 {
+  if(doPresolve()){
     if(pre_results->oneProcMappings.size() > 0)
         return true;
     else
         return false;
+  }
+  return false;
 }
