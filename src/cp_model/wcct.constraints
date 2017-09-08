@@ -352,6 +352,25 @@ if(platform->getInterconnectType() == TDMA_BUS){
     }
   }
   
+  for(size_t j=0; j<platform->nodes(); j++){
+    IntVarArgs chosenRoutesOnJ(*this, channels.size(), 0, platform->getTDNCycles());
+    IntVarArgs cyclesForJ(*this, platform->getTDNCycles()+1, 0, channels.size());
+    count(*this, chosenRoutesOnJ, cyclesForJ);
+    for(unsigned int ki=0; ki<channels.size(); ki++){
+      int src_ch1 = channels[ki]->source;
+      int dst_ch1 = channels[ki]->destination;
+      rel(*this, (proc[src_ch1]==j)
+                    >> (chosenRoutesOnJ[ki] == chosenRoute[ki]));
+      rel(*this, (proc[src_ch1]!=j) 
+                  >> (chosenRoutesOnJ[ki] == platform->getTDNCycles()));
+    }
+    for(size_t c=0; c<platform->getTDNCycles(); c++){
+      rel(*this, (cyclesForJ[c] > 0) 
+                   >> (tdnTable[j*platform->getTDNCycles()+c]==j));
+      rel(*this, (cyclesForJ[c] == 0) 
+                   >> (tdnTable[j*platform->getTDNCycles()+c]==platform->nodes()));
+    }
+  }
   
   for(unsigned int ki=0; ki<channels.size(); ki++){
     int src_ch1 = channels[ki]->source;
@@ -497,6 +516,29 @@ if(platform->getInterconnectType() == TDMA_BUS){
   }
   circuit(*this, sendNext, ICL_DOM);
   circuit(*this, recNext, ICL_DOM);
+  
+  //symmetry breaking for the TDN slot assignment
+  //two cases: allocations of max 1 slot || allocation of more than 1 slots
+  
+  if(platform->getTDNCyclesPerProc() == 1){ 
+  }else{
+    for(unsigned int ki=0; ki<channels.size(); ki++){
+      int src_ch1 = channels[ki]->source;
+      int dst_ch1 = channels[ki]->destination;
+      
+      for(unsigned int kj=0; kj<channels.size(); kj++){
+        int src_ch2 = channels[kj]->source;
+        int dst_ch2 = channels[kj]->destination;
+      
+        if(ki<kj){
+          //avoid permutation of "chosenRoutes" per channel
+          rel(*this, ((proc[src_ch1] == proc[src_ch2]) &&
+                      (proc[src_ch1]!=proc[dst_ch1]) &&
+                      (proc[src_ch2]!=proc[dst_ch2])) >> (chosenRoute[ki]<=chosenRoute[kj]));
+        }
+      }
+    }
+  }
   
   
 }

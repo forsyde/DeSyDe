@@ -76,55 +76,50 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
     }
     LOG_DEBUG(outInfo);
     
-    outInfo = "";
-    cout << "  Found " << apps->n_programEntities() << " program entities (", cout << apps->n_SDFActors() << " actors of ";
-    cout << apps->n_SDFApps() << " SDFGs and ";
-    cout << apps->n_IPTTasks() << " ipt tasks)." << endl;
-    cout << "   --Actors and Tasks------------------\n";
+    
+    LOG_DEBUG("  Found " + tools::toString(apps->n_programEntities()) + " program entities (" 
+                 + tools::toString(apps->n_SDFActors()) + " actors of "
+                 + tools::toString(apps->n_SDFApps()) + " SDFGs and "
+                 + tools::toString(apps->n_IPTTasks()) + " ipt tasks).");
+    
+    LOG_DEBUG("   --Actors and Tasks------------------");
     for(size_t ii = 0; ii < apps->n_programEntities(); ii++){
-        cout << "   " << ii << ": " << apps->getName(ii) << endl;
+        LOG_DEBUG("   " + tools::toString(ii) + ": " + apps->getName(ii) + "");
     }
 
-    cout << "   --Channels------------------\n";
+    LOG_DEBUG("   --Channels------------------");
     for(size_t ki = 0; ki < channels.size(); ki++){
         int src_ch1 = channels[ki]->source;
         int dst_ch1 = channels[ki]->destination;
         int tok_ch1 = channels[ki]->initTokens;
 
-        cout << "   Ch " << ki << ": ";
-        cout << apps->getName(src_ch1) << " -> ";
-        cout << apps->getName(dst_ch1) << "   (";
-        cout << src_ch1 << " -> ";
-        cout << dst_ch1 << ")";
-        if(tok_ch1 > 0)
-            cout << " *";
-        cout << endl;
+        LOG_DEBUG("   Ch " + tools::toString(ki) + ": "
+                  +apps->getName(src_ch1) + " -> "
+                  +apps->getName(dst_ch1) + "   ("
+                  +tools::toString(src_ch1) + " -> "
+                  +tools::toString(dst_ch1) + ")"
+                  + (tok_ch1 > 0 ? " *" : ""));
     }
-    cout << endl;
+    
+    
 
-    cout << "Design Constraints: " << endl;
+    LOG_DEBUG("Design Constraints: ");
     for(size_t a = 0; a < apps->n_SDFApps(); a++){
-        cout << "   SDF " << apps->getGraphName(a) << ":\n \t period const: ";
-        if(apps->getPeriodConstraint(a)!=-1){
-            cout<< apps->getPeriodConstraint(a);
-        }else{
-            cout << "none";
-        }
-        cout << "\n \t latency const: ";
-        if(apps->getLatencyConstraint(a)!=-1){
-            cout<< apps->getLatencyConstraint(a);
-        }else{
-            cout << "none";
-        }
-        cout << endl;
+        LOG_DEBUG("   SDF " + apps->getGraphName(a) + ":\n \t period const: "
+        + ((apps->getPeriodConstraint(a)!=-1)?
+            tools::toString(apps->getPeriodConstraint(a)) :
+            "none")
+        + "\n \t latency const: "
+        +((apps->getLatencyConstraint(a)!=-1)?
+            tools::toString(apps->getLatencyConstraint(a)) :
+            "none"));
     }
-    cout << endl;
 
     if(apps->n_programEntities() <= 0){
-        cout << "No program entities found !!!" << endl;
+        LOG_INFO("No program entities found !!!");
         throw 42;
     }
-    cout << "Inserting mapping constraints \n";
+    LOG_INFO("Inserting mapping constraints ");
 
     /**
      * MAPPING
@@ -138,7 +133,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
     /**
      * Independent periodic tasks
      */
-    cout << "Inserting IPT scheduling constraints \n";
+    LOG_INFO("Inserting IPT scheduling constraints ");
     if(apps->n_IPTTasks() > 0){
         IntVarArgs n_instances(*this, apps->n_IPTTasks(), 0, apps->getMaxNumberOfIPTInstances());
         IntVarArgs instancesOnNode(*this, apps->n_IPTTasks() * platform->nodes(), 0, apps->getMaxNumberOfIPTInstances() * platform->nodes());
@@ -151,13 +146,13 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
      * SDF scheduling, Communication and Throughput
      */
     if(apps->n_SDFActors() > 0){
-        cout << "Inserting scheduling constraints \n";
+        LOG_INFO("Inserting scheduling constraints ");
         //IntVarArgs rank(*this, apps->n_SDFActors(), 0, apps->n_SDFActors()-1);                                                /**< rank of each actor. */
 #include "scheduling.constraints"
         /**
          * Communication
          */
-        cout << "Inserting communication constraints \n";
+        LOG_INFO("Inserting communication constraints ");
         vector<tdn_graphNode> tdn_graph = platform->getTDNGraph();
         size_t messages = channels.size(); 
         size_t links = tdn_graph.size()/platform->getTDNCycles();
@@ -174,25 +169,25 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
         /**
          * Power consumption
          */
-        cout << "Inserting power constraints \n";
+        LOG_INFO("Inserting power constraints ");
 #include "power.constraints"
 
         /**
          * Cost metrics
          */
-        cout << "Inserting cost metric constraints \n";
+        LOG_INFO("Inserting cost metric constraints ");
 #include "costMetrics.constraints"
 
         /**
          * Memory
          */
-        cout << "Inserting memory constraints \n";
+        LOG_INFO("Inserting memory constraints ");
 #include "memory.constraints"
 
         /**
          * Throughput
          */
-        cout << "Inserting throughput constraints \n";
+        LOG_INFO("Inserting throughput constraints ");
         vector<int> maxMinWcet(apps->n_SDFApps(), 0);
         vector<int> maxMinWcetActor(apps->n_SDFActors(), 0);
         vector<int> sumMinWCETs(apps->n_SDFApps(), 0);
@@ -223,7 +218,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
 
 //PRESOLVING
     if (cfg->doPresolve() && cfg->is_presolved()) {
-      cout << "Inserting presolver constraints \n";
+      LOG_INFO("Inserting presolver constraints ");
       
       LOG_INFO("sdf_pr_online_model.cpp: The model is presolved");
       if (cfg->getPresolverResults()->it_mapping < cfg->getPresolverResults()->oneProcMappings.size()) {
@@ -386,21 +381,6 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
          * source (send) or destination (rec) for unresolved cases
          */
         branch(*this, sendNext, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN());
-        
-        if(platform->getInterconnectType() == TDN_NOC){
-          branch(*this, chosenRoute, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN()); 
-          //assign(*this, injectionTable, INT_ASSIGN_MAX()); 
-          if(cfg->doOptimizeThput()){
-            branch(*this, noc_mode,  INT_VAL_MAX());
-          }else if(cfg->doOptimizePower()){
-            branch(*this, noc_mode, INT_VAL_MIN());
-          }else{
-            branch(*this, noc_mode, INT_VAL_MED());
-          }
-          //assign(*this, flitsPerLink, INT_ASSIGN_MIN());
-        }else if(platform->getInterconnectType() == TDMA_BUS){
-          branch(*this, tdmaAlloc, INT_VAR_NONE(), INT_VAL_MIN());  
-        }
  
         /**
          * ordering of receiving messages with same
@@ -410,14 +390,31 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
             assign(*this, recNext[k], INT_ASSIGN_MIN());
         }
         
+        if(platform->getInterconnectType() == TDN_NOC){
+          branch(*this, chosenRoute, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN()); 
+          //assign(*this, injectionTable, INT_ASSIGN_MAX());
+          //assign(*this, flitsPerLink, INT_ASSIGN_MIN());
+        }else if(platform->getInterconnectType() == TDMA_BUS){
+          branch(*this, tdmaAlloc, INT_VAR_NONE(), INT_VAL_MIN());  
+        }
+        
+        if(platform->getInterconnectType() == TDN_NOC){
+          if(cfg->doOptimizeThput()){
+            branch(*this, noc_mode,  INT_VAL_MAX());
+          }else if(cfg->doOptimizePower()){
+            branch(*this, noc_mode, INT_VAL_MIN());
+          }else{
+            branch(*this, noc_mode, INT_VAL_MED());
+          }
+        }
         
         if(cfg->doOptimizeThput()){
-          branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VALUES_MAX());
+          branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VAL_MAX());
         }else if(cfg->doOptimizePower()){
-          branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VALUES_MIN());
+          branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN());
         }else{
           branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VAL_MED());
-        }
+        } 
        
 
         branch(*this, proc, INT_VAR_NONE(), INT_VAL(&valueProc));
@@ -425,7 +422,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
         /**
          * Memory
          */
-        cout << "Inserting memory constraints \n";
+        LOG_INFO("Inserting memory constraints ");
 #include "memory.constraints"
         /**
          * Branching for the periodic tasks
@@ -450,6 +447,7 @@ SDFPROnlineModel::SDFPROnlineModel(bool share, SDFPROnlineModel& s):
     apps(s.apps),
     platform(s.platform),
     mapping(s.mapping),
+    desDec(s.desDec),
     cfg(s.cfg),
     least_power_est(s.least_power_est){
 

@@ -63,8 +63,8 @@
         //this keeps the right order and reduces complexity
         if(apps->getSDFGraph(ii) == apps->getSDFGraph(ij)){
           if(apps->getParentActor(ii)==apps->getParentActor(ij) && ii<ij){
-            cout << "     same parent actor: " << apps->getName(ii) << " & " << apps->getName(ij);
-            cout << " (" << apps->getParentActor(ii) << ": "<< apps->getParentActorName(ii) << ")"<< endl;
+            LOG_DEBUG("     same parent actor: " + apps->getName(ii) + " & " + apps->getName(ij)
+                      + " (" + tools::toString(apps->getParentActor(ii)) + ": "+ apps->getParentActorName(ii) + ")");
             rel(*this, next[ij]!=ii);
             rel(*this, (proc[ii]==proc[ij]) >> (rank[ii]<rank[ij]));
           }

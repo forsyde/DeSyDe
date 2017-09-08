@@ -42,9 +42,9 @@ LOG_INFO("using SSE propagator");
 }
 if(cfg->settings().th_prop == Config::MCR)
 {
-    throughputMCR(*this, latency, period, iterations, iterationsCh,
-           sendbufferSz, recbufferSz, next, wcet.slice(0, 1, apps->n_SDFActors()), wcct_s,
-           wcct_b, sendNext, wcct_r, recNext, ch_src, ch_dst, ch_tok, appIndex);
+    throughputMCR(*this, latency, period, sendbufferSz, recbufferSz, next, 
+                         wcet.slice(0, 1, apps->n_SDFActors()), wcct_s, wcct_b, 
+                         sendNext, wcct_r, recNext, ch_src, ch_dst, ch_tok, appIndex);
     LOG_INFO("using MCR propagator");
 }
 for(size_t a=0; a<apps->n_SDFApps(); a++){
@@ -187,9 +187,9 @@ for(size_t a=0; a<apps->n_SDFApps(); a++){
             for(int ii=minA[b]; ii<=maxA[b]; ii++){
               proc_coMapAB << proc[ii];
             }
-            cout << "co-mapping " << apps->getGraphName(a) << " & " << apps->getGraphName(b) << " needs at least ";
-            cout << (int)ceil(((double)sumMinWCETs[a]+sumMinWCETs[b])/min(apps->getPeriodConstraint(a), apps->getPeriodConstraint(b)));
-            cout << " processors." << endl;
+            LOG_DEBUG("co-mapping " + apps->getGraphName(a) + " & " + apps->getGraphName(b) + " needs at least "
+                      + tools::toString((int)ceil(((double)sumMinWCETs[a]+sumMinWCETs[b])/min(apps->getPeriodConstraint(a), apps->getPeriodConstraint(b))))
+                       + " processors." );
             coMap[a*apps->n_SDFApps()+b] = (int)ceil(((double)sumMinWCETs[a]+sumMinWCETs[b])/min(apps->getPeriodConstraint(a), apps->getPeriodConstraint(b)));
             coMap[b*apps->n_SDFApps()+a] = (int)ceil(((double)sumMinWCETs[a]+sumMinWCETs[b])/min(apps->getPeriodConstraint(a), apps->getPeriodConstraint(b)));
             //nvalues(*this, proc_coMapAB, IRT_GQ, (int)ceil((double)sumMinWCETs[a]+sumMinWCETs[b])/min(apps->getPeriodConstraint(a), apps->getPeriodConstraint(b)));

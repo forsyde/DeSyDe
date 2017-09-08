@@ -116,7 +116,7 @@ int main(int argc, const char* argv[]) {
        size_t found_mappingRules=path.find("mappingRules");
        if(found_mappingRules != string::npos){
 		   mappingRules_path = path;
-			LOG_INFO("Storing mappingRules XML file...");
+			 LOG_INFO("Storing mappingRules XML file...");
 	   }
      }
 	
@@ -142,11 +142,16 @@ int main(int argc, const char* argv[]) {
     LOG_INFO(tools::toString(*appset));
 
 	LOG_INFO("Creating a mapping object ... " );
+    Mapping* map;
     XMLdoc xml_wcet(WCET_path);
     xml_wcet.read(false);
-    XMLdoc xml_mapRules(mappingRules_path);
-    xml_mapRules.read(false);
-    Mapping* map = new Mapping(appset, platform, xml_wcet, xml_mapRules);
+    if(mappingRules_path != ""){
+      XMLdoc xml_mapRules(mappingRules_path);
+      xml_mapRules.read(false);
+      map = new Mapping(appset, platform, xml_wcet, xml_mapRules);
+    }else{
+      map = new Mapping(appset, platform, xml_wcet);
+    }
     
     LOG_INFO("Sorting pr tasks based on utilization ... ");
     //map->PrintWCETs();

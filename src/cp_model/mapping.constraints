@@ -85,7 +85,7 @@ rel(*this, procsUsed_utilization == (sum(utilization)/procsUsed));
 //symmetry breaking:
 //if the platform (or a pair of nodes) is homogeneous, then first-scheduled actors on each proc
 //shall be ordered according to their index
-cout << "Symmetry breaking: " << endl;
+//cout << "Symmetry breaking: " << endl;
 if(platform->getInterconnectType() == TDMA_BUS){
   if(mapping->homogeneousPlatform()){
     for(size_t ji=0; ji<platform->nodes(); ji++){

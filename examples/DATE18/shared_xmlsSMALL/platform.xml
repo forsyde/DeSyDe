@@ -13,7 +13,7 @@
     </processor>
     <interconnect>
         <TDN_NoC name="2x3TDN" topology="mesh" x-dimension="2" y-dimension="3" routing="Y-X" 
-                 flitSize="128" cycles="4">
+                 flitSize="128" cycles="4" maxCyclesPerProc="1">
           <mode name="slow" cycleLength="18" 
                 dynPower_link="5" dynPower_NI="5" dynPower_switch="5"
                 staticPower_link="5" staticPower_NI="5" staticPower_switch="5" 

@@ -298,7 +298,7 @@ private:
    * Prints the solutions in the ofstreams (out and outCSV)
    */
   template<class SearchEngine> void printSolution(SearchEngine *e, CPModelTemplate* s) {
-    cout << nodes << " designs found out of " << e->statistics().node << " nodes so far" << endl;
+    cout << nodes << " solution found in a search tree with " << e->statistics().node << " nodes so far" << endl;
     auto durAll = t_endAll - t_start;
     auto durAll_ms = std::chrono::duration_cast<std::chrono::milliseconds>(durAll).count();
     out << "*** Solution number: " << nodes << ", after " << durAll_ms << " ms" << ", search nodes: " << e->statistics().node << ", fail: "
