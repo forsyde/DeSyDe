@@ -60,9 +60,10 @@ private:
     DesignDecisions*        desDec;        /**< Pointer to the design decition object. */
     //DSESettings*             settings;    /**< Pointer to the setting object. */
     Config*                 cfg;    /**< Pointer to the config object. */
+    Rnd                     rnd;    /**< Random number generator. */
 
     IntVarArray             next;        /**< static schedule of firings. */
-    IntVarArray             rank;
+    //IntVarArray             rank;
     IntVarArray             proc;        /**< mapping of firings onto processors. */
     IntVarArray             proc_mode;    /**< processor modes: economy, regular and performance. */
     IntVarArray             tdmaAlloc;    /**< allocation of TDMA slots to processors.*/
@@ -80,32 +81,31 @@ private:
     * SECONDARY VARIABLES
     */   
     IntVarArray             period;                    /**< period of all applications (inverse of throughput). */
-    IntVarArray             proc_period;            /**< period of the processors. */
-    IntVarArray             latency;                /**< initial latency of all applications. */
-    IntVar                  procsUsed;                /**< number of processors used in mapping. */
-    IntVarArray             utilization;            /**< utilization of processing nodes. */
-    IntVarArray             proc_util_sum;            /**< sum utilization of processing nodes. */
+    //IntVarArray             proc_period;            /**< period of the processors. */
+    //IntVarArray             latency;                /**< initial latency of all applications. */
+    //IntVar                  procsUsed;                /**< number of processors used in mapping. */
+    //IntVarArray             utilization;            /**< utilization of processing nodes. */
     IntVar                  sys_utilization;        /**< utilization of all procs. */
     IntVar                  procsUsed_utilization;    /**< utilization of all used procs */
-    IntVarArray             proc_powerDyn;                /**< long-run consumption of each proc. */
+    //IntVarArray             proc_powerDyn;                /**< long-run consumption of each proc. */
     //IntVarArray             flitsPerLink;              /**< flits per link and channel. */
-    IntVar                  noc_power;                /**< long-run consumption of the NoC. */
-    IntVar                  nocUsed_power;            /**< long-run consumption of the NoC. */
+    //IntVar                  noc_power;                /**< long-run consumption of the NoC. */
+    //IntVar                  nocUsed_power;            /**< long-run consumption of the NoC. */
     IntVar                  sys_power;                /**< long-run consumption of system. */
     IntVar                  sysUsed_power;            /**< long-run consumption of system considering only the used parts. */
-    IntVarArray             proc_area;                /**< area cost of each proc. */
-    IntVar                  noc_area;                /**< area cost of the NoC. */
-    IntVar                  nocUsed_area;                /**< area cost of the NoC, considering only the used parts. */
+    //IntVarArray             proc_area;                /**< area cost of each proc. */
+    //IntVar                  noc_area;                /**< area cost of the NoC. */
+    //IntVar                  nocUsed_area;                /**< area cost of the NoC, considering only the used parts. */
     IntVar                  sys_area;                /**< area cost of all procs and noc combined. */
     IntVar                  sysUsed_area;                /**< area cost of all procs and noc combined, considering only the used parts. */
-    IntVarArray             proc_cost;                /**< monetary cost of each proc. */
-    IntVar                  noc_cost;                /**< monetary cost of the NoC. */
-    IntVar                  nocUsed_cost;                /**< monetary cost of the NoC, considering only the used parts. */
+    //IntVarArray             proc_cost;                /**< monetary cost of each proc. */
+    //IntVar                  noc_cost;                /**< monetary cost of the NoC. */
+    //IntVar                  nocUsed_cost;                /**< monetary cost of the NoC, considering only the used parts. */
     IntVar                  sys_cost;                /**< monetary cost of all procs and noc combined. */
     IntVar                  sysUsed_cost;                /**< monetary cost of all procs and noc combined, considering only the used parts. */
-    IntVarArray             wcct_b;                    /**< communication delay, block (pre-send-wait). */
-    IntVarArray             wcct_s;                    /**< communication delay, send. */
-    IntVarArray             wcct_r;                    /**< coummunication delay, receive */
+    //IntVarArray             wcct_b;                    /**< communication delay, block (pre-send-wait). */
+    //IntVarArray             wcct_s;                    /**< communication delay, send. */
+    //IntVarArray             wcct_r;                    /**< coummunication delay, receive */
     
 
     int                        least_power_est;        /**< estimated least power consumption. */
@@ -167,13 +167,13 @@ public:
                         {    rel(*this, period[i] < b.period[i]);break;}
                 }
                 break;
-            case(Config::LATENCY):
+           /* case(Config::LATENCY):
                 for(size_t i=0;i<apps->n_SDFApps();i++)
                 {
                     if(apps->getLatencyConstraint(i) == -1)
                         {rel(*this, latency[i] < b.latency[i]); break;} 
                 }                
-                break;
+                break;*/
             default:
                 cout << "unknown optimization criterion !!!\n";
                 throw 42;
@@ -189,7 +189,7 @@ public:
     /**
     * Returns the processor number which task i has to be allocated.
     */ 
-    static int valueProc(const Space& home, IntVar x, int i);
+    //static int valueProc(const Space& home, IntVar x, int i);
     typedef int (*IntBranchVal)(const Space& home, IntVar x, int i);    
 };
 

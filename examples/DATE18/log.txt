@@ -1,9 +1,34 @@
 --- Experiments for DATE 2018 ---
 
---- Experiment 5 MCR ...
-fre  8 sep 2017 16:32:57 CEST
+--- Experiment 2, run 1 ...
+mån 11 sep 2017 15:27:49 CEST
 a_sobel.hsdf.xml
 b_susan.hsdf.xml
 c_rasta.hsdf.xml
 d_jpegEnc1.hsdf.xml
 g10_3_cycl.sdf.xml
+0 minutes and 4 seconds elapsed.
+end of experiment 2
+mån 11 sep 2017 15:27:53 CEST
+
+--- Experiment 3, run 1 ...
+mån 11 sep 2017 15:27:53 CEST
+a_sobel.hsdf.xml
+b_susan.hsdf.xml
+c_rasta.hsdf.xml
+d_jpegEnc1.hsdf.xml
+g10_3_cycl.sdf.xml
+0 minutes and 12 seconds elapsed.
+end of experiment 3
+mån 11 sep 2017 15:28:05 CEST
+
+--- Experiment 4, run 1 ...
+mån 11 sep 2017 15:28:05 CEST
+a_sobel.hsdf.xml
+b_susan.hsdf.xml
+c_rasta.hsdf.xml
+d_jpegEnc1.hsdf.xml
+g10_3_cycl.sdf.xml
+0 minutes and 0 seconds elapsed.
+end of experiment 4
+mån 11 sep 2017 15:28:05 CEST

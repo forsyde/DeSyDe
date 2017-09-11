@@ -143,40 +143,40 @@
         </processor>
       </actorProperties>
       <channelProperties channel="ch0">
-        <tokenSize sz="16"/>
+        <tokenSize sz="256"/>
       </channelProperties>
       <channelProperties channel="ch1">
-        <tokenSize sz="16"/>
+        <tokenSize sz="64"/>
       </channelProperties>
       <channelProperties channel="ch2">
-        <tokenSize sz="16"/>
+        <tokenSize sz="512"/>
       </channelProperties>
       <channelProperties channel="ch3">
-        <tokenSize sz="16"/>
+        <tokenSize sz="64"/>
       </channelProperties>
       <channelProperties channel="ch4">
-        <tokenSize sz="16"/>
+        <tokenSize sz="256"/>
       </channelProperties>
       <channelProperties channel="ch5">
-        <tokenSize sz="16"/>
+        <tokenSize sz="256"/>
       </channelProperties>
       <channelProperties channel="ch6">
-        <tokenSize sz="16"/>
+        <tokenSize sz="64"/>
       </channelProperties>
       <channelProperties channel="ch7">
-        <tokenSize sz="16"/>
+        <tokenSize sz="512"/>
       </channelProperties>
       <channelProperties channel="ch8">
-        <tokenSize sz="16"/>
+        <tokenSize sz="64"/>
       </channelProperties>
       <channelProperties channel="ch10">
-        <tokenSize sz="16"/>
+        <tokenSize sz="256"/>
       </channelProperties>
       <channelProperties channel="ch11">
-        <tokenSize sz="16"/>
+        <tokenSize sz="64"/>
       </channelProperties>
       <channelProperties channel="ch12">
-        <tokenSize sz="16"/>
+        <tokenSize sz="64"/>
       </channelProperties>
       <graphProperties/>
     </sdfProperties>

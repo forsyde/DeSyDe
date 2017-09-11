@@ -109,6 +109,8 @@ public:
     unsigned long int         timeout_all;
 
     unsigned long int luby_scale;
+    unsigned int threads;
+    unsigned long int noGoodDepth;
     ThroughputPropagator      th_prop;
     OutputFileType            out_file_type;
     OutputPrintFrequency      out_print_freq;
@@ -176,6 +178,8 @@ private:
   void setCriteria(const std::vector<std::string> &) throw (InvalidFormatException);
   void setThPropagator(const std::string &) throw (InvalidFormatException);
   void setTimeout(const std::vector<unsigned long int> &) throw (IllegalStateException);
+  void setThreads(unsigned int) throw ();
+  void setNoGoodDepth(unsigned long int) throw ();
   void setLubyScale(unsigned long int) throw ();
   void setPresolverModel(const std::vector<std::string> &) throw (InvalidFormatException);
   void setPresolverSearch(const std::string &) throw (InvalidFormatException);

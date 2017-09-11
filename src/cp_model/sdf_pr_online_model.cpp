@@ -6,7 +6,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
     mapping(p_mapping),
     cfg(_cfg),
     next(*this, apps->n_SDFActors()+platform->nodes(), 0, apps->n_SDFActors()+platform->nodes()),
-    rank(*this, apps->n_SDFActors(), 0, apps->n_SDFActors()-1),
+    //rank(*this, apps->n_SDFActors(), 0, apps->n_SDFActors()-1),
     proc(*this, apps->n_programEntities(), 0, platform->nodes()-1),
     proc_mode(*this, platform->nodes(), 0, platform->getMaxModes()),
     tdmaAlloc(*this, platform->nodes(), 0, platform->tdmaSlots()),
@@ -18,31 +18,51 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
     sendbufferSz(*this, apps->n_programChannels(), 0, Int::Limits::max),
     recbufferSz(*this, apps->n_programChannels(), 0, Int::Limits::max),
     period(*this, apps->n_SDFApps(), 0, Int::Limits::max),
-    proc_period(*this, platform->nodes(), 0, Int::Limits::max),
-    latency(*this, apps->n_SDFApps(), 0, Int::Limits::max),
-    procsUsed(*this, 1, platform->nodes()),
-    utilization(*this, platform->nodes(), 0, p_mapping->max_utilization),
+    //proc_period(*this, platform->nodes(), 0, Int::Limits::max),
+    //latency(*this, apps->n_SDFApps(), 0, Int::Limits::max),
+    //procsUsed(*this, 1, platform->nodes()),
+    //utilization(*this, platform->nodes(), 0, p_mapping->max_utilization),
     sys_utilization(*this, 0, p_mapping->max_utilization),
     procsUsed_utilization(*this, 0, p_mapping->max_utilization),
-    proc_powerDyn(*this, platform->nodes(), 0, Int::Limits::max),
+    //proc_powerDyn(*this, platform->nodes(), 0, Int::Limits::max),
     //flitsPerLink(*this, apps->n_programChannels()*(platform->getTDNGraph().size()/platform->getTDNCycles()), 0, Int::Limits::max),
-    noc_power(*this, 0, Int::Limits::max),
-    nocUsed_power(*this, 0, Int::Limits::max),
+    //noc_power(*this, 0, Int::Limits::max),
+    //nocUsed_power(*this, 0, Int::Limits::max),
     sys_power(*this, 0, Int::Limits::max),
     sysUsed_power(*this, 0, Int::Limits::max),
-    proc_area(*this, platform->nodes(), 0, Int::Limits::max),
-    noc_area(*this, 0, Int::Limits::max),
-    nocUsed_area(*this, 0, Int::Limits::max),
+    //proc_area(*this, platform->nodes(), 0, Int::Limits::max),
+    //noc_area(*this, 0, Int::Limits::max),
+    //nocUsed_area(*this, 0, Int::Limits::max),
     sys_area(*this, 0, Int::Limits::max),
     sysUsed_area(*this, 0, Int::Limits::max),
-    proc_cost(*this, platform->nodes(), 0, Int::Limits::max),
-    noc_cost(*this, 0, Int::Limits::max),
-    nocUsed_cost(*this, 0, Int::Limits::max),
+    //proc_cost(*this, platform->nodes(), 0, Int::Limits::max),
+    //noc_cost(*this, 0, Int::Limits::max),
+    //nocUsed_cost(*this, 0, Int::Limits::max),
     sys_cost(*this, 0, Int::Limits::max),
-    sysUsed_cost(*this, 0, Int::Limits::max),
-    wcct_b(*this, apps->n_programChannels(), 0, Int::Limits::max),
-    wcct_s(*this, apps->n_programChannels(), 0, Int::Limits::max),
-    wcct_r(*this, apps->n_programChannels(), 0, Int::Limits::max){
+    sysUsed_cost(*this, 0, Int::Limits::max)//,
+    //wcct_b(*this, apps->n_programChannels(), 0, Int::Limits::max),
+    //wcct_s(*this, apps->n_programChannels(), 0, Int::Limits::max),
+    //wcct_r(*this, apps->n_programChannels(), 0, Int::Limits::max)
+    {
+      
+    //initialization of secondary variables
+    IntVarArgs rank(*this, apps->n_SDFActors(), 0, apps->n_SDFActors()-1);
+    IntVarArgs proc_period(*this, platform->nodes(), 0, Int::Limits::max);
+    IntVarArgs latency(*this, apps->n_SDFApps(), 0, Int::Limits::max);            
+    IntVar procsUsed(*this, 1, platform->nodes());     
+    IntVarArgs utilization(*this, platform->nodes(), 0, p_mapping->max_utilization);
+    IntVarArgs proc_powerDyn(*this, platform->nodes(), 0, Int::Limits::max);
+    IntVar noc_power(*this, 0, Int::Limits::max);
+    IntVar nocUsed_power(*this, 0, Int::Limits::max);
+    IntVarArgs proc_area(*this, platform->nodes(), 0, Int::Limits::max);
+    IntVar noc_area(*this, 0, Int::Limits::max); 
+    IntVar nocUsed_area(*this, 0, Int::Limits::max); 
+    IntVarArgs proc_cost(*this, platform->nodes(), 0, Int::Limits::max); 
+    IntVar noc_cost(*this, 0, Int::Limits::max);  
+    IntVar nocUsed_cost(*this, 0, Int::Limits::max);
+    IntVarArgs wcct_b(*this, apps->n_programChannels(), 0, Int::Limits::max); 
+    IntVarArgs wcct_s(*this, apps->n_programChannels(), 0, Int::Limits::max); 
+    IntVarArgs wcct_r(*this, apps->n_programChannels(), 0, Int::Limits::max); 
 
     std::ostream debug_stream(nullptr); /**< debuging stream, it is printed only in debug mode. */
     debug_stream << "\n==========\ndebug log:\n..........\n";
@@ -391,7 +411,13 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
         }
         
         if(platform->getInterconnectType() == TDN_NOC){
-          branch(*this, chosenRoute, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN()); 
+          if(platform->getTDNCyclesPerProc() == 1){
+            branch(*this, chosenRoute, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN()); 
+          }else if(platform->getTDNCyclesPerProc()>1 &&
+            !cfg->doOptimizeThput()){
+            rnd.hw();
+            branch(*this, chosenRoute, INT_VAR_AFC_MAX(0.99), INT_VAL_RND(rnd));
+          }
           //assign(*this, injectionTable, INT_ASSIGN_MAX());
           //assign(*this, flitsPerLink, INT_ASSIGN_MIN());
         }else if(platform->getInterconnectType() == TDMA_BUS){
@@ -415,9 +441,16 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
         }else{
           branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VAL_MED());
         } 
+        
+        if(platform->getTDNCyclesPerProc()>1 && cfg->doOptimizeThput()){
+          rnd.hw();
+          branch(*this, chosenRoute, INT_VAR_AFC_MAX(0.99), INT_VAL_RND(rnd));
+        }
        
 
-        branch(*this, proc, INT_VAR_NONE(), INT_VAL(&valueProc));
+        //branch(*this, proc, INT_VAR_NONE(), INT_VAL(&valueProc));
+        rnd.hw();
+        branch(*this, proc, INT_VAR_NONE(), INT_VAL_RND(rnd));
     }else{ /**< end of SDF related constraints and branching. */
         /**
          * Memory
@@ -431,7 +464,9 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
          * We also use valueProc to select the minimu slack proccessor
          * to mimic bestfit algorithm
          */
-        branch(*this, proc, INT_VAR_NONE(), INT_VAL(&valueProc));
+        //branch(*this, proc, INT_VAR_NONE(), INT_VAL(&valueProc));
+        rnd.hw();
+        branch(*this, proc, INT_VAR_NONE(), INT_VAL_RND(rnd));
         if(cfg->doOptimizeThput()){
           branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VALUES_MAX());
         }else if(cfg->doOptimizePower()){
@@ -449,10 +484,11 @@ SDFPROnlineModel::SDFPROnlineModel(bool share, SDFPROnlineModel& s):
     mapping(s.mapping),
     desDec(s.desDec),
     cfg(s.cfg),
+    rnd(s.rnd),
     least_power_est(s.least_power_est){
 
     next.update(*this, share, s.next);
-    rank.update(*this, share, s.rank);
+    //rank.update(*this, share, s.rank);
     proc.update(*this, share, s.proc);
     proc_mode.update(*this, share, s.proc_mode);
     tdmaAlloc.update(*this, share, s.tdmaAlloc);
@@ -464,31 +500,31 @@ SDFPROnlineModel::SDFPROnlineModel(bool share, SDFPROnlineModel& s):
     sendbufferSz.update(*this, share, s.sendbufferSz);
     recbufferSz.update(*this, share, s.recbufferSz);
     period.update(*this, share, s.period);
-    proc_period.update(*this, share, s.proc_period);
-    latency.update(*this, share, s.latency);
-    procsUsed.update(*this, share, s.procsUsed);
-    utilization.update(*this, share, s.utilization);
+    //proc_period.update(*this, share, s.proc_period);
+    //latency.update(*this, share, s.latency);
+    //procsUsed.update(*this, share, s.procsUsed);
+    //utilization.update(*this, share, s.utilization);
     sys_utilization.update(*this, share, s.sys_utilization);
     procsUsed_utilization.update(*this, share, s.procsUsed_utilization);
-    proc_powerDyn.update(*this, share, s.proc_powerDyn);
-    noc_power.update(*this, share, s.noc_power);
-    nocUsed_power.update(*this, share, s.nocUsed_power);
+    //proc_powerDyn.update(*this, share, s.proc_powerDyn);
+    //noc_power.update(*this, share, s.noc_power);
+    //nocUsed_power.update(*this, share, s.nocUsed_power);
     //flitsPerLink.update(*this, share, s.flitsPerLink);
     sys_power.update(*this, share, s.sys_power);
     sysUsed_power.update(*this, share, s.sysUsed_power);
-    proc_area.update(*this, share, s.proc_area);
-    noc_area.update(*this, share, s.noc_area);
-    nocUsed_area.update(*this, share, s.nocUsed_area);
+    //proc_area.update(*this, share, s.proc_area);
+    //noc_area.update(*this, share, s.noc_area);
+    //nocUsed_area.update(*this, share, s.nocUsed_area);
     sys_area.update(*this, share, s.sys_area);
     sysUsed_area.update(*this, share, s.sysUsed_area);
-    proc_cost.update(*this, share, s.proc_cost);
-    noc_cost.update(*this, share, s.noc_cost);
-    nocUsed_cost.update(*this, share, s.nocUsed_cost);
+    //proc_cost.update(*this, share, s.proc_cost);
+    //noc_cost.update(*this, share, s.noc_cost);
+    //nocUsed_cost.update(*this, share, s.nocUsed_cost);
     sys_cost.update(*this, share, s.sys_cost);
     sysUsed_cost.update(*this, share, s.sysUsed_cost);
-    wcct_b.update(*this, share, s.wcct_b);
-    wcct_s.update(*this, share, s.wcct_s);
-    wcct_r.update(*this, share, s.wcct_r);
+    //wcct_b.update(*this, share, s.wcct_b);
+    //wcct_s.update(*this, share, s.wcct_s);
+    //wcct_r.update(*this, share, s.wcct_r);
 }
 
 Space* SDFPROnlineModel::copy(bool share) {
@@ -500,26 +536,26 @@ void SDFPROnlineModel::print(std::ostream& out) const {
     out << "Proc: " << proc << endl;
     out << "proc mode: " << proc_mode << endl;
     out << "noc mode: " << noc_mode << endl;
-    out << "Latency: " << latency << endl;
+    //out << "Latency: " << latency << endl;
     out << "Period: " << period << endl;
-    out << "Procs used: " << procsUsed << endl;
-    out << "Proc_period: " << proc_period << endl;
-    out << "Proc utilization: " << utilization << endl;
+    //out << "Procs used: " << procsUsed << endl;
+    //out << "Proc_period: " << proc_period << endl;
+    //out << "Proc utilization: " << utilization << endl;
     out << "Sys utilization: " << sys_utilization << endl;
     out << "ProcsUsed utilization: " << procsUsed_utilization << endl;
-    out << "proc power: " << proc_powerDyn << endl;
-    out << "noc power: " << noc_power << endl;
-    out << "noc power (only used parts): " << nocUsed_power << endl;
+    //out << "proc power: " << proc_powerDyn << endl;
+    //out << "noc power: " << noc_power << endl;
+    //out << "noc power (only used parts): " << nocUsed_power << endl;
     out << "sys power: " << sys_power << endl;
     out << "sys power (only used parts): " << sysUsed_power << endl;
-    out << "proc area: " << proc_area << endl;
-    out << "noc area: " << noc_area << endl;
-    out << "noc area (only used parts): " << nocUsed_area << endl;
+    //out << "proc area: " << proc_area << endl;
+    //out << "noc area: " << noc_area << endl;
+    //out << "noc area (only used parts): " << nocUsed_area << endl;
     out << "sys area: " << sys_area << endl;
     out << "sys area (only used parts): " << sysUsed_area << endl;
-    out << "proc cost: " << proc_cost << endl;
-    out << "noc cost: " << noc_cost << endl;
-    out << "noc cost (only used parts): " << nocUsed_cost << endl;
+    //out << "proc cost: " << proc_cost << endl;
+    //out << "noc cost: " << noc_cost << endl;
+    //out << "noc cost (only used parts): " << nocUsed_cost << endl;
     out << "sys cost: " << sys_cost << endl;
     out << "sys cost (only used parts): " << sysUsed_cost << endl;
     out << "Next: ";
@@ -531,10 +567,10 @@ void SDFPROnlineModel::print(std::ostream& out) const {
         out << next[apps->n_SDFActors() + ii] << " ";
     }
     out << endl;
-    out << "Rank: ";
-    for(size_t ii = 0; ii < apps->n_SDFActors(); ii++){
-        out << rank[ii] << " ";
-    }
+    //out << "Rank: ";
+    //for(size_t ii = 0; ii < apps->n_SDFActors(); ii++){
+    //    out << rank[ii] << " ";
+    //}
     out << endl;
     out << "TDMA slots: " << tdmaAlloc << endl;
     //print TDN table
@@ -560,8 +596,8 @@ void SDFPROnlineModel::print(std::ostream& out) const {
     }
     out << endl << endl;
    
-    out << "Flits per link: " << endl;
-    size_t links = tdn_graph.size()/platform->getTDNCycles();
+    //out << "Flits per link: " << endl;
+    //size_t links = tdn_graph.size()/platform->getTDNCycles();
     /*for(size_t ii=0; ii<flitsPerLink.size(); ii++){
       int msg = ii/links;
       if(ii!=0 && ii%links==0) out << endl;
@@ -572,21 +608,21 @@ void SDFPROnlineModel::print(std::ostream& out) const {
     out << endl << endl;*/
     
     out << "S-order: " << sendNext << endl;
-    out << "wcct_b: " << wcct_b << endl;
-    out << "wcct_s: " << wcct_s << endl;
+    //out << "wcct_b: " << wcct_b << endl;
+    //out << "wcct_s: " << wcct_s << endl;
     out << "R-order: " << recNext << endl;
-    out << "wcct_r: " << wcct_r << endl;
+    //out << "wcct_r: " << wcct_r << endl;
     out << "----------------------------------------" << endl;
 
 }
 
 void SDFPROnlineModel::printCSV(std::ostream& out) const {
     const char sep = ',';
-    for(auto i = 0; i < latency.size(); i++)
-        out << latency[i] << sep;
+    //for(auto i = 0; i < latency.size(); i++)
+    //    out << latency[i] << sep;
     for(auto i = 0; i < period.size(); i++)
         out << period[i] << sep;
-    out << procsUsed << sep;
+    //out << procsUsed << sep;
     out << sys_utilization << sep;
     out << sys_power << sep;
     out << least_power_est << sep;
@@ -627,7 +663,7 @@ vector<int> SDFPROnlineModel::getOptimizationValues(){
   
   return values;
 }
-
+/*
 int SDFPROnlineModel::valueProc(const Space& home, IntVar x, int i) {
     int min_slack_proc = x.min();
 
@@ -640,9 +676,10 @@ int SDFPROnlineModel::valueProc(const Space& home, IntVar x, int i) {
         }
     }
     return min_slack_proc;
-}
+}*/
 
 Mapping* SDFPROnlineModel::extractResult() {
+  /*
     //cout << "Creating mapping..." << endl;
 
     vector<int> mem_load;
@@ -701,15 +738,15 @@ Mapping* SDFPROnlineModel::extractResult() {
     }
 
     //TODO: check if this part is still needed
-    vector<int> proc_tmp; /** a temp vector for converting IntVarArray to int vector. */
-    vector<int> proc_mode_tmp; /** a temp vector for converting IntVarArray to int vector. */
-
+    vector<int> proc_tmp;*/ /** a temp vector for converting IntVarArray to int vector. */
+    //vector<int> proc_mode_tmp; /** a temp vector for converting IntVarArray to int vector. */
+/*
     for(size_t j = 0; j < platform->nodes(); j++)
         proc_mode_tmp.push_back(proc_mode[j].val());
     for(size_t i = 0; i < apps->n_programEntities(); i++)
         proc_tmp.push_back(proc[i].val());
 
-    mapping->setMappingMode(proc_tmp, proc_mode_tmp);
+    mapping->setMappingMode(proc_tmp, proc_mode_tmp);*/
 
     return mapping;
 }

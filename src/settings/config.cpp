@@ -124,7 +124,15 @@ int Config::parse(int argc, const char** argv) throw (IOException, InvalidArgume
               "0 0")->notifier(boost::bind(&Config::setTimeout, this, _1)),
           "search timeout. 0 means infinite. If two values are provided, the first one specifies "
           "the timeout for the first solution, and the second one for all solutions.")
+      ("dse.threads",
+          po::value<unsigned int>()->default_value(0)->notifier(
+              boost::bind(&Config::setThreads, this, _1)),
+          "number of parallel search for threads (0=all procs)")      
       ("dse.luby_scale",
+          po::value<unsigned long int>()->default_value(0)->notifier(
+              boost::bind(&Config::setNoGoodDepth, this, _1)),
+          "Depth for no good generation")      
+      ("dse.noGoodDepth",
           po::value<unsigned long int>()->default_value(0)->notifier(
               boost::bind(&Config::setLubyScale, this, _1)),
           "Luby scale")      
@@ -228,7 +236,10 @@ string Config::printSettings() {
       + "\n* criteria : " + tools::toString(settings_.criteria)
       + "\n* timeout : " + tools::toString(settings_.timeout_first)
       + " | " + tools::toString(settings_.timeout_all)
-      + "\n* luby_scale : " + tools::toString(settings_.luby_scale);
+      + "\n* no of threads : " + tools::toString(settings_.threads)
+      + "\n* no good depth : " + tools::toString(settings_.noGoodDepth)
+      + "\n* luby_scale : " + tools::toString(settings_.luby_scale)
+      + "\n* throughput propagator : " + tools::toString(settings_.th_prop);
 }
 
 void Config::dumpConfigFile(string path, po::options_description opts) throw (IOException){
@@ -446,6 +457,14 @@ void Config::setTimeout(const vector<unsigned long int> &touts) throw (IllegalSt
   } catch (std::exception& e) {
     THROW_EXCEPTION(IllegalStateException, "internal error");
   }
+}
+
+void Config::setThreads(unsigned int _t) throw () {
+  settings_.threads = _t;
+}
+
+void Config::setNoGoodDepth(unsigned long int _ngd) throw () {
+  settings_.noGoodDepth = _ngd;
 }
 
 void Config::setLubyScale(unsigned long int scale) throw () {
