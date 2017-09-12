@@ -1,18 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <platform name="demo_platform">
-	<processor model="small" number="4">
-        <mode name="default" cycle="13" mem="131072" dynPower="2680" staticPower="3850" area="24573" 
-              monetary="495"/>
-        <mode name="eco" cycle="65" mem="131072" dynPower="536" staticPower="3850" area="24000" monetary="495"/>
+	<processor model="microblaze" number="3">
+        <mode name="default" cycle="13" mem="1048576" dynPower="2680" staticPower="3850" area="24573" monetary="495"/>
+        <mode name="eco" cycle="65" mem="1048576" dynPower="536" staticPower="3850" area="24000" monetary="495"/>
     </processor>
-    <processor model="large" number="2">
-        <mode name="default" cycle="1" mem="536870912" dynPower="80" staticPower="156400" area="59582" 
-              monetary="495"/>
-        <mode name="eco" cycle="10" mem="536870912" dynPower="8" staticPower="156400" area="59582" 
-              monetary="495"/>
+    <processor model="arm" number="1">
+        <mode name="default" cycle="1" mem="4294967296" dynPower="80" staticPower="156400" area="59582" monetary="495"/>
+        <mode name="eco" cycle="10" mem="4294967296" dynPower="8" staticPower="156400" area="59582" monetary="495"/>
     </processor>
     <interconnect>
-        <TDN_NoC name="2x3TDN" topology="mesh" x-dimension="2" y-dimension="3" routing="Y-X" 
+        <TDN_NoC name="2x2TDN" topology="mesh" x-dimension="2" y-dimension="2" routing="Y-X" 
                  flitSize="128" cycles="4" maxCyclesPerProc="1">
           <mode name="slow" cycleLength="8" 
                 dynPower_link="3" dynPower_NI="17000" dynPower_switch="718"
