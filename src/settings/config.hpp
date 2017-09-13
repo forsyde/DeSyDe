@@ -40,6 +40,7 @@
 #include <list>
 #include <boost/program_options.hpp>
 #include <vector>
+#include <chrono>
 
 
 namespace po = boost::program_options;
@@ -55,6 +56,11 @@ using namespace std;
  */
 class Config {
 public:
+
+  struct SolutionValues{
+    std::chrono::high_resolution_clock::duration time;
+    vector<int> values;
+  };
   enum CPModels {
     NONECP,
     SDF,
@@ -117,9 +123,9 @@ public:
   };
   struct PresolverResults{
     size_t it_mapping; /**< Informs the CP model how to use oneProcMappings: <.size(): Enforce mapping, >=.size() Forbid all. */
-    vector<vector<tuple<int,int>>> oneProcMappings;
-    vector<vector<int>> periods;
-    vector<int> sys_energys;
+    vector<tuple<int, vector<tuple<int,int>>>> oneProcMappings;
+    vector<SolutionValues> optResults;
+    std::chrono::high_resolution_clock::duration presolver_delay;
   };
 
 public:

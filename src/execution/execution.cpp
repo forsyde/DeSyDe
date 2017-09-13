@@ -46,10 +46,6 @@
 using namespace std;
 using namespace Gecode;
 
-struct SolutionValues{
-  std::chrono::high_resolution_clock::duration time;
-  vector<int> values;
-};
 
 template<class CPModelTemplate>
 class Execution {
@@ -130,7 +126,7 @@ private:
   ofstream out, outCSV, outMOSTCSV, outMappingCSV; /**< Output file streams: .txt and .csv. */
   typedef std::chrono::high_resolution_clock runTimer; /**< Timer type. */
   runTimer::time_point t_start, t_endAll; /**< Timer objects for start and end of experiment. */
-  vector<SolutionValues> solutionData;
+  vector<Config::SolutionValues> solutionData;
   
 
   void printMOSTCSV(Mapping* solution, int n, int split) {
@@ -341,6 +337,12 @@ private:
     LOG_INFO("Printing frequency: " + cfg.get_out_freq());
     out << "\n \n*** \n";    
     
+    std::chrono::high_resolution_clock::duration presolver_delay(0);
+    if(cfg.doPresolve() && cfg.is_presolved()){
+      solutionData = cfg.getPresolverResults()->optResults;
+      presolver_delay = cfg.getPresolverResults()->presolver_delay;
+    }
+    
     CPModelTemplate * prev_sol = nullptr;
     t_start = runTimer::now();
     while(CPModelTemplate * s = e->next()){
@@ -359,7 +361,7 @@ private:
       t_endAll = runTimer::now();
       
       //cout << nodes << " solutions found." << endl;
-      solutionData.push_back(SolutionValues{t_endAll-t_start, s->getOptimizationValues()});
+      solutionData.push_back(Config::SolutionValues{t_endAll-t_start+presolver_delay, s->getOptimizationValues()});
       //cout << nodes << " solutions found." << endl;
 
       if(cfg.settings().out_print_freq == Config::ALL_SOL){

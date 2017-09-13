@@ -243,11 +243,12 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
       LOG_INFO("sdf_pr_online_model.cpp: The model is presolved");
       if (cfg->getPresolverResults()->it_mapping < cfg->getPresolverResults()->oneProcMappings.size()) {
         vector<tuple<int, int>> oneProcMapping =
-            cfg->getPresolverResults()->oneProcMappings[cfg->getPresolverResults()->it_mapping];
+            get<1>(cfg->getPresolverResults()->oneProcMappings[cfg->getPresolverResults()->it_mapping]);
 
         for (size_t a = 0; a < apps->n_SDFActors(); a++) {
           rel(*this, proc[a] == get<0>(oneProcMapping[apps->getSDFGraph(a)]));
           rel(*this, proc_mode[get<0>(oneProcMapping[apps->getSDFGraph(a)])] == get<1>(oneProcMapping[apps->getSDFGraph(a)]));
+          rel(*this, noc_mode == get<0>(cfg->getPresolverResults()->oneProcMappings[cfg->getPresolverResults()->it_mapping]));
         }
       } else { //...otherwise forbid all mappings in oneProcMappings
         cout << "Now forbidding " << cfg->getPresolverResults()->oneProcMappings.size() << " mappings." << endl;
@@ -255,7 +256,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
         for (size_t i = 0;
             i < cfg->getPresolverResults()->oneProcMappings.size(); i++) {
           vector<tuple<int, int>> oneProcMapping =
-              cfg->getPresolverResults()->oneProcMappings[i];
+              get<1>(cfg->getPresolverResults()->oneProcMappings[i]);
           IntVarArgs t_mapping(*this, apps->n_programEntities(), 0,
               platform->nodes() - 1);
           for (size_t a = 0; a < apps->n_SDFActors(); a++) {
@@ -268,28 +269,25 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
     }
     
     if (cfg->doPresolve() && cfg->is_presolved()) {
-      switch (cfg->settings().criteria[0]) {
-      case (Config::POWER):
-        for (size_t i = 0;
-            i < cfg->getPresolverResults()->sys_energys.size(); i++) {
-          rel(*this, sys_power < cfg->getPresolverResults()->sys_energys[i]);
-        }
-        break;
-      case (Config::THROUGHPUT):
-        for (size_t i = 0; i < apps->n_SDFApps(); i++) {
-          if (apps->getPeriodConstraint(i) == -1) {
-            for (size_t j = 0; j < cfg->getPresolverResults()->periods.size(); j++) {
-              rel(*this, period[i] < cfg->getPresolverResults()->periods[j][i]);
+      if(cfg->doOptimizeThput()){
+        bool set = false;
+        for(size_t i=0;i<apps->n_SDFApps();i++)
+        {
+          if(!set){
+            if(apps->getPeriodConstraint(i) == -1){   
+              for (size_t j = 0; j < cfg->getPresolverResults()->optResults.size(); j++) {
+                rel(*this, period[i] < cfg->getPresolverResults()->optResults[j].values[i]);
+              }
+              set = true;
             }
-            break;
           }
         }
-        break;
-      default:
-        cout << "unknown optimization criterion !!!\n";
-        throw 42;
-        break;
+      }else if(cfg->doOptimizePower()){
+        for (size_t j = 0; j < cfg->getPresolverResults()->optResults.size(); j++) {
+          rel(*this, sys_power < cfg->getPresolverResults()->optResults[j].values[0]);
+        }
       }
+      
     }
 
         for(size_t i = 0; i < channels.size(); i++){

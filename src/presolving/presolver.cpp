@@ -110,7 +110,7 @@ public:
     return full_model;
   }
   ;
-  vector<vector<tuple<int,int>>> getMappingResults() const{
+  vector<tuple<int, vector<tuple<int,int>>>> getMappingResults() const{
     return results->oneProcMappings;
   }
   ;
@@ -125,6 +125,7 @@ private:
   typedef std::chrono::high_resolution_clock runTimer; /**< Timer type. */
   runTimer::time_point t_start, t_endAll; /**< Timer objects for start and end of experiment. */
   shared_ptr<Config::PresolverResults> results;
+  vector<Config::SolutionValues> solutionData;
 
   /**
    * Prints the solutions in the ofstream (out)
@@ -184,9 +185,11 @@ private:
         outFull << "Pre-solution " << nodes << "----------" << endl;
         sf->print(outFull);
         outFull << "------------------------------" << endl << endl;
-        Mapping* mapRes = sf->extractResult();
-        settings.getPresolverResults()->periods.push_back(mapRes->getPeriods());
-        settings.getPresolverResults()->sys_energys.push_back(mapRes->getSysEnergy());
+        //Mapping* mapRes = sf->extractResult();
+        //settings.getPresolverResults()->periods.push_back(mapRes->getPeriods());
+        //settings.getPresolverResults()->sys_energys.push_back(mapRes->getSysEnergy());
+        t_endAll = runTimer::now();
+        settings.getPresolverResults()->optResults.push_back(Config::SolutionValues{t_endAll-t_start, sf->getOptimizationValues()});
         delete sf;
       }else{
         outFull << "------------------------------" << endl << endl;
@@ -198,6 +201,7 @@ private:
     outFull << "~~~~~ *** END OF PRESOLVER SOLUTIONS *** ~~~~~" << endl;
     cout << endl;
     auto durAll = runTimer::now() - t_start;
+    settings.getPresolverResults()->presolver_delay = durAll;
     auto durAll_s = std::chrono::duration_cast<std::chrono::seconds>(durAll).count();
     auto durAll_ms = std::chrono::duration_cast<std::chrono::milliseconds>(durAll).count();
     out << "===== search ended after: " << durAll_s << " s (" << durAll_ms << " ms)";

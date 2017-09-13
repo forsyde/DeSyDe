@@ -170,7 +170,7 @@ int main(int argc, const char* argv[]) {
       LOG_INFO("Running PRESOLVING model object ... ");
       model = (SDFPROnlineModel*)presolver.presolve(map);
 
-      vector<vector<tuple<int,int>>> mappings = presolver.getMappingResults();
+      vector<tuple<int,vector<tuple<int,int>>>> mappings = presolver.getMappingResults();
       LOG_INFO("Presolver found " + tools::toString(mappings.size()) + " isolated mappings.");
       
     }else{

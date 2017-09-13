@@ -38,6 +38,7 @@ private:
   IntVarArray proc;
   //for "flexible" procs with modes: economy, regular and performance
   IntVarArray proc_mode;
+  IntVar noc_mode;
   
   
 public:
@@ -55,7 +56,7 @@ public:
   virtual void constrain(const Space& _b){
   }
   
-  vector<tuple<int,int>> getResult() const;
+  tuple<int,vector<tuple<int,int>>> getResult() const;
   
 
   
