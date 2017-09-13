@@ -1,34 +1,109 @@
 --- Experiments for DATE 2018 ---
 
---- Experiment 2, run 1 ...
-mån 11 sep 2017 15:27:49 CEST
+--- Experiment 16, run 1 ...
+tis 12 sep 2017 16:20:41 CEST
 a_sobel.hsdf.xml
 b_susan.hsdf.xml
-c_rasta.hsdf.xml
-d_jpegEnc1.hsdf.xml
-g10_3_cycl.sdf.xml
-0 minutes and 4 seconds elapsed.
-end of experiment 2
-mån 11 sep 2017 15:27:53 CEST
+6 minutes and 21 seconds elapsed.
+end of experiment 16
+tis 12 sep 2017 16:27:02 CEST
+--- Experiment 16, run 2 ...
+tis 12 sep 2017 16:27:02 CEST
+a_sobel.hsdf.xml
+b_susan.hsdf.xml
+4 minutes and 59 seconds elapsed.
+end of experiment 16
+tis 12 sep 2017 16:32:01 CEST
+--- Experiment 16, run 3 ...
+tis 12 sep 2017 16:32:01 CEST
+a_sobel.hsdf.xml
+b_susan.hsdf.xml
+2 minutes and 53 seconds elapsed.
+end of experiment 16
+tis 12 sep 2017 16:34:54 CEST
+--- Experiment 16, run 4 ...
+tis 12 sep 2017 16:34:54 CEST
+a_sobel.hsdf.xml
+b_susan.hsdf.xml
+6 minutes and 16 seconds elapsed.
+end of experiment 16
+tis 12 sep 2017 16:41:10 CEST
+--- Experiment 16, run 5 ...
+tis 12 sep 2017 16:41:10 CEST
+a_sobel.hsdf.xml
+b_susan.hsdf.xml
+7 minutes and 29 seconds elapsed.
+end of experiment 16
+tis 12 sep 2017 16:48:39 CEST
 
---- Experiment 3, run 1 ...
-mån 11 sep 2017 15:27:53 CEST
+--- Experiment 17, run 1 ...
+tis 12 sep 2017 16:48:39 CEST
 a_sobel.hsdf.xml
 b_susan.hsdf.xml
-c_rasta.hsdf.xml
-d_jpegEnc1.hsdf.xml
-g10_3_cycl.sdf.xml
-0 minutes and 12 seconds elapsed.
-end of experiment 3
-mån 11 sep 2017 15:28:05 CEST
+15 minutes and 1 seconds elapsed.
+end of experiment 17
+tis 12 sep 2017 17:03:40 CEST
+--- Experiment 17, run 2 ...
+tis 12 sep 2017 17:03:40 CEST
+a_sobel.hsdf.xml
+b_susan.hsdf.xml
+14 minutes and 39 seconds elapsed.
+end of experiment 17
+tis 12 sep 2017 17:18:19 CEST
+--- Experiment 17, run 3 ...
+tis 12 sep 2017 17:18:19 CEST
+a_sobel.hsdf.xml
+b_susan.hsdf.xml
+15 minutes and 39 seconds elapsed.
+end of experiment 17
+tis 12 sep 2017 17:33:58 CEST
+--- Experiment 17, run 4 ...
+tis 12 sep 2017 17:33:58 CEST
+a_sobel.hsdf.xml
+b_susan.hsdf.xml
+15 minutes and 57 seconds elapsed.
+end of experiment 17
+tis 12 sep 2017 17:49:55 CEST
+--- Experiment 17, run 5 ...
+tis 12 sep 2017 17:49:55 CEST
+a_sobel.hsdf.xml
+b_susan.hsdf.xml
+15 minutes and 19 seconds elapsed.
+end of experiment 17
+tis 12 sep 2017 18:05:14 CEST
 
---- Experiment 4, run 1 ...
-mån 11 sep 2017 15:28:05 CEST
+--- Experiment 18, run 1 ...
+tis 12 sep 2017 18:05:14 CEST
 a_sobel.hsdf.xml
 b_susan.hsdf.xml
-c_rasta.hsdf.xml
-d_jpegEnc1.hsdf.xml
-g10_3_cycl.sdf.xml
-0 minutes and 0 seconds elapsed.
-end of experiment 4
-mån 11 sep 2017 15:28:05 CEST
+15 minutes and 6 seconds elapsed.
+end of experiment 18
+tis 12 sep 2017 18:20:20 CEST
+--- Experiment 18, run 2 ...
+tis 12 sep 2017 18:20:20 CEST
+a_sobel.hsdf.xml
+b_susan.hsdf.xml
+15 minutes and 11 seconds elapsed.
+end of experiment 18
+tis 12 sep 2017 18:35:31 CEST
+--- Experiment 18, run 3 ...
+tis 12 sep 2017 18:35:31 CEST
+a_sobel.hsdf.xml
+b_susan.hsdf.xml
+14 minutes and 41 seconds elapsed.
+end of experiment 18
+tis 12 sep 2017 18:50:12 CEST
+--- Experiment 18, run 4 ...
+tis 12 sep 2017 18:50:12 CEST
+a_sobel.hsdf.xml
+b_susan.hsdf.xml
+14 minutes and 36 seconds elapsed.
+end of experiment 18
+tis 12 sep 2017 19:04:48 CEST
+--- Experiment 18, run 5 ...
+tis 12 sep 2017 19:04:48 CEST
+a_sobel.hsdf.xml
+b_susan.hsdf.xml
+14 minutes and 31 seconds elapsed.
+end of experiment 18
+tis 12 sep 2017 19:19:19 CEST

@@ -1,0 +1,139 @@
+~~~~~ *** BEGIN OF PRESOLVER SOLUTIONS *** ~~~~~
+------------------------------
+
+Presolver mapping 1 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 2 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 3 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 4 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 5 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 6 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 7 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 8 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 9 does not give a solution.
+------------------------------
+
+Pre-solution 10----------
+----------------------------------------
+Proc: {0, 0, 0, 0, 1, 1, 1, 1, 1}
+proc mode: {0, 1, 0, 0}
+noc mode: 2
+Period: {718, 2072}
+Sys utilization: 50
+ProcsUsed utilization: 100
+sys power: 494894
+sys power (only used parts): 330948
+sys area: 144583
+sys area (only used parts): 52843
+sys cost: 13860
+sys cost (only used parts): 3960
+Next: 2 3 1 9 5 6 7 8 10 || 4 11 12 0 
+
+TDMA slots: {0, 0, 0, 0}
+
+Chosen routes: {4, 4, 4, 4, 4, 4, 4, 4}
+
+TDN table: 
+NI -> SW0: _ _ _ _ 
+NI -> SW1: _ _ _ _ 
+NI -> SW2: _ _ _ _ 
+NI -> SW3: _ _ _ _ 
+-------------------------------------------
+
+S-order: {3, 0, 8, 2, 5, 6, 7, 9, 4, 10, 11, 1}
+R-order: {3, 0, 8, 2, 5, 6, 7, 9, 4, 10, 11, 1}
+----------------------------------------
+------------------------------
+
+------------------------------
+
+Presolver mapping 11 does not give a solution.
+------------------------------
+
+Pre-solution 12----------
+----------------------------------------
+Proc: {0, 0, 0, 0, 1, 1, 1, 1, 1}
+proc mode: {1, 1, 0, 0}
+noc mode: 2
+Period: {597, 2072}
+Sys utilization: 50
+ProcsUsed utilization: 100
+sys power: 709294
+sys power (only used parts): 545348
+sys area: 145156
+sys area (only used parts): 53416
+sys cost: 13860
+sys cost (only used parts): 3960
+Next: 2 3 1 9 5 6 7 8 10 || 4 11 12 0 
+
+TDMA slots: {0, 0, 0, 0}
+
+Chosen routes: {4, 4, 4, 4, 4, 4, 4, 4}
+
+TDN table: 
+NI -> SW0: _ _ _ _ 
+NI -> SW1: _ _ _ _ 
+NI -> SW2: _ _ _ _ 
+NI -> SW3: _ _ _ _ 
+-------------------------------------------
+
+S-order: {3, 0, 8, 2, 5, 6, 7, 9, 4, 10, 11, 1}
+R-order: {3, 0, 8, 2, 5, 6, 7, 9, 4, 10, 11, 1}
+----------------------------------------
+------------------------------
+
+------------------------------
+
+Presolver mapping 13 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 14 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 15 does not give a solution.
+------------------------------
+
+------------------------------
+
+Presolver mapping 16 does not give a solution.
+------------------------------
+
+~~~~~ *** END OF PRESOLVER SOLUTIONS *** ~~~~~
+===== search ended after: 342 s (342143 ms) =====
+2 solutions found
+search nodes: 41, fail: 5, propagate: 366, depth: 4, nogoods: 0 ***
