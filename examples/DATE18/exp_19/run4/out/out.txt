@@ -1,7 +1,37 @@
 
  
 *** 
-No (better) solution found.
-===== search ended after: 0 s (0 ms) (with 0 incremental timer reset(s).) =====
-0 solutions found
-search nodes: 0, fail: 2, propagate: 0, depth: 0, nogoods: 0, restarts: 0 ***
+*** Solution number: 1, after 5 ms, search nodes: 14, fail: 0, propagate: 121418, depth: 13, nogoods: 0, restarts: 0 ***
+----------------------------------------
+Proc: {0, 0, 0, 0, 0, 0, 0, 0, 0}
+proc mode: {0, 0, 0, 0}
+noc mode: 0
+Period: {3206, 3206}
+Sys utilization: 25
+ProcsUsed utilization: 100
+sys power: 224686
+sys power (only used parts): 58106
+sys area: 139678
+sys area (only used parts): 25781
+sys cost: 13860
+sys cost (only used parts): 1980
+Next: 2 3 1 9 5 6 7 8 0 || 10 11 12 4 
+
+TDMA slots: {0, 0, 0, 0}
+
+Chosen routes: {4, 4, 4, 4, 4, 4, 4, 4}
+
+TDN table: 
+NI -> SW0: _ _ _ _ 
+NI -> SW1: _ _ _ _ 
+NI -> SW2: _ _ _ _ 
+NI -> SW3: _ _ _ _ 
+-------------------------------------------
+
+S-order: {3, 0, 8, 2, 5, 6, 7, 1, 9, 10, 11, 4}
+R-order: {3, 0, 8, 2, 5, 6, 7, 1, 9, 10, 11, 4}
+----------------------------------------
+No better solution found.
+===== search ended after: 2400 s (2400036 ms) due to time-out! (with 1 incremental timer reset(s).) =====
+1 solutions found
+search nodes: 8162778, fail: 3888140, propagate: 21067472091, depth: 31, nogoods: 128419, restarts: 28802 ***

@@ -1,7 +1,66 @@
 
  
 *** 
-No (better) solution found.
-===== search ended after: 0 s (0 ms) (with 0 incremental timer reset(s).) =====
-0 solutions found
-search nodes: 0, fail: 2, propagate: 0, depth: 0, nogoods: 0, restarts: 0 ***
+*** Solution number: 1, after 4 ms, search nodes: 14, fail: 0, propagate: 121344, depth: 13, nogoods: 0, restarts: 0 ***
+----------------------------------------
+Proc: {0, 0, 0, 0, 0, 0, 0, 0, 0}
+proc mode: {1, 0, 0, 0}
+noc mode: 2
+Period: {2669, 2669}
+Sys utilization: 25
+ProcsUsed utilization: 100
+sys power: 441294
+sys power (only used parts): 272674
+sys area: 144583
+sys area (only used parts): 26708
+sys cost: 13860
+sys cost (only used parts): 1980
+Next: 2 3 1 9 5 6 7 8 0 || 10 11 12 4 
+
+TDMA slots: {0, 0, 0, 0}
+
+Chosen routes: {4, 4, 4, 4, 4, 4, 4, 4}
+
+TDN table: 
+NI -> SW0: _ _ _ _ 
+NI -> SW1: _ _ _ _ 
+NI -> SW2: _ _ _ _ 
+NI -> SW3: _ _ _ _ 
+-------------------------------------------
+
+S-order: {3, 0, 8, 2, 5, 6, 7, 1, 9, 10, 11, 4}
+R-order: {3, 0, 8, 2, 5, 6, 7, 1, 9, 10, 11, 4}
+----------------------------------------
+*** Solution number: 11, after 73 ms, search nodes: 167, fail: 4, propagate: 750359, depth: 16, nogoods: 14, restarts: 10 ***
+----------------------------------------
+Proc: {1, 2, 2, 2, 0, 0, 0, 0, 0}
+proc mode: {1, 1, 1, 0}
+noc mode: 2
+Period: {320, 2072}
+Sys utilization: 71
+ProcsUsed utilization: 95
+sys power: 966439
+sys power (only used parts): 808479
+sys area: 145729
+sys area (only used parts): 82568
+sys cost: 13860
+sys cost (only used parts): 9405
+Next: 10 3 1 11 5 6 7 8 9 || 0 2 12 4 
+
+TDMA slots: {0, 0, 0, 0}
+
+Chosen routes: {0, 0, 4, 4, 4, 4, 4, 4}
+
+TDN table: 
+NI -> SW0: _ _ _ _ 
+NI -> SW1: 1 _ _ _ 
+NI -> SW2: _ _ _ _ 
+NI -> SW3: _ _ _ _ 
+-------------------------------------------
+
+S-order: {9, 0, 10, 2, 5, 6, 7, 8, 1, 3, 11, 4}
+R-order: {3, 0, 10, 2, 5, 6, 7, 8, 9, 1, 11, 4}
+----------------------------------------
+===== search ended after: 0 s (73 ms) (with 11 incremental timer reset(s).) =====
+11 solutions found
+search nodes: 167, fail: 4, propagate: 750359, depth: 16, nogoods: 14, restarts: 10 ***
