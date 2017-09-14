@@ -176,9 +176,9 @@ void Mapping::load_mappingRules(XMLdoc& xml){
                + " - map on: " + mapOn 
                + ", do not map on: " + tools::toString(notMapOn));
     
-  
-      
-    setMappingRules(task_type, atoi(mapOn.c_str()), notMapOn);
+    int _mapOn = -1;
+    if(mapOn != "") _mapOn = atoi(mapOn.c_str());
+    setMappingRules(task_type, _mapOn , notMapOn);
         
 	}	
     
@@ -187,7 +187,7 @@ void Mapping::load_mappingRules(XMLdoc& xml){
 void Mapping::setMappingRules(string taskType, int _mapOn, vector<int> _notMapOn){
   for (size_t i = 0; i < program->n_programEntities(); i++) {      
     if (taskType.compare(program->getType(i)) == 0) {
-      if (wcets[i].size() <= _mapOn) {
+      if (_mapOn != -1 && (wcets[i].size() <= _mapOn)) {
         THROW_EXCEPTION(InvalidArgumentException,"proc id for doMap of "+ taskType +" out of bound\n");
       }
       mappingRules_do[i] = _mapOn;
