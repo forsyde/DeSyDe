@@ -1,28 +1,28 @@
 <WCET_table>
 <!-- SOBEL -->
     <mapping task_type="get_pixel">
-        <wcet processor="microblaze" mode="default" wcet="320"/>
-        <wcet processor="microblaze" mode="eco" wcet="384"/>
-        <wcet processor="arm" mode="default" wcet="224"/>
-        <wcet processor="arm" mode="eco" wcet="288"/>
+        <wcet processor="microblaze" mode="default" wcet="11653"/>
+        <wcet processor="microblaze" mode="eco" wcet="116534"/>
+        <wcet processor="arm" mode="default" wcet="3330"/>
+        <wcet processor="arm" mode="eco" wcet="33362"/>
     </mapping>
     <mapping task_type="gx">
-        <wcet processor="microblaze" mode="default" wcet="77"/>
-        <wcet processor="microblaze" mode="eco" wcet="93"/>
-        <wcet processor="arm" mode="default" wcet="54"/>
-        <wcet processor="arm" mode="eco" wcet="69"/>
+        <wcet processor="microblaze" mode="default" wcet="6277"/>
+        <wcet processor="microblaze" mode="eco" wcet="31385"/>
+        <wcet processor="arm" mode="default" wcet="4169"/>
+        <wcet processor="arm" mode="eco" wcet=""/>
     </mapping>
     <mapping task_type="gy">
-        <wcet processor="microblaze" mode="default" wcet="77"/>
-        <wcet processor="microblaze" mode="eco" wcet="93"/>
-        <wcet processor="arm" mode="default" wcet="54"/>
-        <wcet processor="arm" mode="eco" wcet="69"/>
+        <wcet processor="microblaze" mode="default" wcet="6277"/>
+        <wcet processor="microblaze" mode="eco" wcet="31385"/>
+        <wcet processor="arm" mode="default" wcet="4169"/>
+        <wcet processor="arm" mode="eco" wcet="30845"/>
     </mapping>
     <mapping task_type="abs">
-        <wcet processor="microblaze" mode="default" wcet="123"/>
-        <wcet processor="microblaze" mode="eco" wcet="148"/>
-        <wcet processor="arm" mode="default" wcet="86"/>
-        <wcet processor="arm" mode="eco" wcet="111"/>
+        <wcet processor="microblaze" mode="default" wcet="5619"/>
+        <wcet processor="microblaze" mode="eco" wcet="28095"/>
+        <wcet processor="arm" mode="default" wcet="170"/>
+        <wcet processor="arm" mode="eco" wcet="1500"/>
     </mapping>
 <!--SUSAN -->
     <mapping task_type="getImage">
