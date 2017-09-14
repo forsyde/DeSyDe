@@ -26,34 +26,34 @@
     </mapping>
 <!--SUSAN -->
     <mapping task_type="getImage">
-        <wcet processor="microblaze" mode="default" wcet="15"/>
-        <wcet processor="microblaze" mode="eco" wcet="18"/>
-        <wcet processor="arm" mode="default" wcet="10"/>
-        <wcet processor="arm" mode="eco" wcet="13"/>
+        <wcet processor="microblaze" mode="default" wcet="8138"/>
+        <wcet processor="microblaze" mode="eco" wcet="4069"/>
+        <wcet processor="arm" mode="default" wcet="626"/>
+        <wcet processor="arm" mode="eco" wcet="6250"/>
     </mapping>
     <mapping task_type="usan">
-        <wcet processor="microblaze" mode="default" wcet="1177"/>
-        <wcet processor="microblaze" mode="eco" wcet="1413"/>
-        <wcet processor="arm" mode="default" wcet="824"/>
-        <wcet processor="arm" mode="eco" wcet="1059"/>
+        <wcet processor="microblaze" mode="default" wcet="313729"/>
+        <wcet processor="microblaze" mode="eco" wcet="1568645"/>
+        <wcet processor="arm" mode="default" wcet="24133"/>
+        <wcet processor="arm" mode="eco" wcet="241342"/>
     </mapping>
     <mapping task_type="direction">
-        <wcet processor="microblaze" mode="default" wcet="833"/>
-        <wcet processor="microblaze" mode="eco" wcet="1000"/>
-        <wcet processor="arm" mode="default" wcet="583"/>
-        <wcet processor="arm" mode="eco" wcet="750"/>
+        <wcet processor="microblaze" mode="default" wcet="33241"/>
+        <wcet processor="microblaze" mode="eco" wcet="166205"/>
+        <wcet processor="arm" mode="default" wcet="2557"/>
+        <wcet processor="arm" mode="eco" wcet="25566"/>
     </mapping>
     <mapping task_type="thin">
-        <wcet processor="microblaze" mode="default" wcet="32"/>
-        <wcet processor="microblaze" mode="eco" wcet="39"/>
-        <wcet processor="arm" mode="default" wcet="22"/>
-        <wcet processor="arm" mode="eco" wcet="29"/>
+        <wcet processor="microblaze" mode="default" wcet="10595"/>
+        <wcet processor="microblaze" mode="eco" wcet="52975"/>
+        <wcet processor="arm" mode="default" wcet="815"/>
+        <wcet processor="arm" mode="eco" wcet="8144"/>
     </mapping>
     <mapping task_type="putImage">
-        <wcet processor="microblaze" mode="default" wcet="15"/>
-        <wcet processor="microblaze" mode="eco" wcet="18"/>
-        <wcet processor="arm" mode="default" wcet="10"/>
-        <wcet processor="arm" mode="eco" wcet="13"/>
+        <wcet processor="microblaze" mode="default" wcet="7423"/>
+        <wcet processor="microblaze" mode="eco" wcet="37115"/>
+        <wcet processor="arm" mode="default" wcet="571"/>
+        <wcet processor="arm" mode="eco" wcet="5709"/>
     </mapping>
 <!--RASTA -->
     <mapping task_type="frontEnd">
