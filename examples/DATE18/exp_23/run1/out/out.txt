@@ -1,0 +1,66 @@
+
+ 
+*** 
+*** Solution number: 1, after 10 ms, search nodes: 15, fail: 0, propagate: 87898, depth: 14, nogoods: 0, restarts: 0 ***
+----------------------------------------
+Proc: {2, 2, 2, 3, 0, 0, 0, 0, 1}
+proc mode: {1, 1, 1, 1}
+noc mode: 1
+Period: {24207, 365703}
+Sys utilization: 50
+ProcsUsed utilization: 50
+sys power: 733333
+sys power (only used parts): 733333
+sys area: 142841
+sys area (only used parts): 142841
+sys cost: 13860
+sys cost (only used parts): 13860
+Next: 2 11 1 12 5 6 7 9 10 || 8 0 3 4 
+
+TDMA slots: {0, 0, 0, 0}
+
+Chosen routes: {4, 4, 0, 0, 4, 4, 4, 0}
+
+TDN table: 
+NI -> SW0: 0 _ _ _ 
+NI -> SW1: _ _ _ _ 
+NI -> SW2: 2 _ _ _ 
+NI -> SW3: _ _ _ _ 
+-------------------------------------------
+
+S-order: {3, 0, 10, 2, 5, 6, 7, 8, 9, 1, 11, 4}
+R-order: {10, 0, 11, 2, 5, 6, 8, 9, 7, 1, 3, 4}
+----------------------------------------
+*** Solution number: 3, after 32 ms, search nodes: 213, fail: 99, propagate: 1266350, depth: 14, nogoods: 0, restarts: 0 ***
+----------------------------------------
+Proc: {2, 2, 2, 3, 0, 0, 1, 1, 1}
+proc mode: {1, 1, 1, 1}
+noc mode: 1
+Period: {24207, 321867}
+Sys utilization: 53
+ProcsUsed utilization: 53
+sys power: 768261
+sys power (only used parts): 768261
+sys area: 142841
+sys area (only used parts): 142841
+sys cost: 13860
+sys cost (only used parts): 13860
+Next: 2 11 1 12 5 9 7 8 10 || 6 0 3 4 
+
+TDMA slots: {0, 0, 0, 0}
+
+Chosen routes: {4, 4, 0, 0, 4, 0, 4, 4}
+
+TDN table: 
+NI -> SW0: 0 _ _ _ 
+NI -> SW1: _ _ _ _ 
+NI -> SW2: 2 _ _ _ 
+NI -> SW3: _ _ _ _ 
+-------------------------------------------
+
+S-order: {3, 0, 10, 2, 5, 8, 7, 9, 6, 1, 11, 4}
+R-order: {10, 0, 11, 2, 8, 6, 7, 9, 5, 1, 3, 4}
+----------------------------------------
+===== search ended after: 0 s (179 ms) (with 3 incremental timer reset(s).) =====
+3 solutions found
+search nodes: 213, fail: 99, propagate: 1266350, depth: 14, nogoods: 0, restarts: 0 ***

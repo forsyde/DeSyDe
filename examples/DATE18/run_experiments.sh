@@ -3,8 +3,8 @@ Experiment="--- Experiments for DATE 2018 ---"
 echo $Experiment
 echo $Experiment > log.txt
 #number of experiments
-total_experiments=18
-total_runs=5
+total_experiments=23
+total_runs=1
 
 echo -n "Insert the experiment number or first-exp last-exp (Enter for all experiments) > "
 read config
