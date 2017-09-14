@@ -2,9 +2,9 @@
 <!-- SOBEL -->
     <mapping task_type="get_pixel">
         <wcet processor="microblaze" mode="default" wcet="11653"/>
-        <wcet processor="microblaze" mode="eco" wcet=""/>
+        <wcet processor="microblaze" mode="eco" wcet="116534"/>
         <wcet processor="arm" mode="default" wcet="3330"/>
-        <wcet processor="arm" mode="eco" wcet=""/>
+        <wcet processor="arm" mode="eco" wcet="33362"/>
     </mapping>
     <mapping task_type="gx">
         <wcet processor="microblaze" mode="default" wcet="6277"/>
