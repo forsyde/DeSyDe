@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <platform name="demo_platform">
-    <processor model="arm" number="1">
-        <mode name="eco" cycle="10" mem="4294967296" dynPower="8" staticPower="156400" area="59582" monetary="495"/>
-        <mode name="default" cycle="1" mem="4294967296" dynPower="80" staticPower="156400" area="59582" monetary="495"/>
-    </processor>
-	<processor model="microblaze" number="3">
+	<processor model="microblaze" number="4">
         <mode name="eco" cycle="65" mem="1048576" dynPower="536" staticPower="3850" area="24000" monetary="495"/>
         <mode name="default" cycle="13" mem="1048576" dynPower="2680" staticPower="3850" area="24573" monetary="495"/>
     </processor>

@@ -1,6 +1,66 @@
-
+NOTE: with area constraint <= 140000
  
 *** 
-===== search ended after: 0 s (0 ms) (with 0 incremental timer reset(s).) =====
-0 solutions found
-search nodes: 0, fail: 1, propagate: 54130, depth: 0, nogoods: 0, restarts: 0 ***
+*** Solution number: 1, after 7 ms, search nodes: 8, fail: 0, propagate: 108211, depth: 7, nogoods: 0, restarts: 0 ***
+----------------------------------------
+Proc: {1, 2, 2, 2, 0, 0, 0, 0, 0}
+proc mode: {1, 0, 0, 0}
+noc mode: 0
+Period: {116534, 28702}
+Sys utilization: 69
+ProcsUsed utilization: 92
+sys power: 281902
+sys power (only used parts): 277212
+sys area: 139678
+sys area (only used parts): 113536
+sys cost: 13860
+sys cost (only used parts): 9405
+Next: 10 3 1 11 5 6 7 8 9 || 0 2 12 4 
+
+TDMA slots: {0, 0, 0, 0}
+
+Chosen routes: {0, 0, 4, 4, 4, 4, 4, 4}
+
+TDN table: 
+NI -> SW0: _ _ _ _ 
+NI -> SW1: 1 _ _ _ 
+NI -> SW2: _ _ _ _ 
+NI -> SW3: _ _ _ _ 
+-------------------------------------------
+
+S-order: {9, 0, 10, 2, 5, 6, 7, 8, 1, 3, 11, 4}
+R-order: {3, 0, 10, 2, 5, 6, 7, 8, 9, 1, 11, 4}
+----------------------------------------
+*** Solution number: 2, after 22 ms, search nodes: 23, fail: 8, propagate: 221811, depth: 7, nogoods: 0, restarts: 0 ***
+----------------------------------------
+Proc: {1, 3, 3, 3, 0, 0, 0, 0, 0}
+proc mode: {1, 0, 0, 0}
+noc mode: 0
+Period: {116534, 28702}
+Sys utilization: 69
+ProcsUsed utilization: 92
+sys power: 281744
+sys power (only used parts): 276926
+sys area: 139678
+sys area (only used parts): 113293
+sys cost: 13860
+sys cost (only used parts): 7920
+Next: 10 3 1 12 5 6 7 8 9 || 0 11 2 4 
+
+TDMA slots: {0, 0, 0, 0}
+
+Chosen routes: {0, 0, 4, 4, 4, 4, 4, 4}
+
+TDN table: 
+NI -> SW0: _ _ _ _ 
+NI -> SW1: 1 _ _ _ 
+NI -> SW2: _ _ _ _ 
+NI -> SW3: _ _ _ _ 
+-------------------------------------------
+
+S-order: {9, 0, 11, 2, 5, 6, 7, 8, 1, 10, 3, 4}
+R-order: {3, 0, 11, 2, 5, 6, 7, 8, 9, 10, 1, 4}
+----------------------------------------
+===== search ended after: 0 s (57 ms) (with 2 incremental timer reset(s).) =====
+2 solutions found
+search nodes: 75, fail: 36, propagate: 543340, depth: 7, nogoods: 0, restarts: 0 ***
