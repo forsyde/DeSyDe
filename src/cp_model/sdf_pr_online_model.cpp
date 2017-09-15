@@ -64,6 +64,8 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
     IntVarArgs wcct_s(*this, apps->n_programChannels(), 0, Int::Limits::max); 
     IntVarArgs wcct_r(*this, apps->n_programChannels(), 0, Int::Limits::max); 
     
+    
+    LOG_DEBUG("Gecode version: " + tools::toString(GECODE_VERSION));
     LOG_DEBUG("Int::Limits::max = " + tools::toString(Int::Limits::max));
 
     std::ostream debug_stream(nullptr); /**< debuging stream, it is printed only in debug mode. */
