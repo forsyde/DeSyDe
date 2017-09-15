@@ -1,6 +1,0 @@
-
- 
-*** 
-===== search ended after: 1799 s (1799993 ms) due to time-out! (with 0 incremental timer reset(s).) =====
-0 solutions found
-search nodes: 6534277, fail: 3109905, propagate: 16863367252, depth: 31, nogoods: 104192, restarts: 23431 ***

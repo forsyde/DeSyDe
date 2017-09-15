@@ -1,7 +1,7 @@
 
  
 *** 
-*** Solution number: 1, after 6258 ms, search nodes: 64, fail: 0, propagate: 34488310, depth: 63, nogoods: 0, restarts: 0 ***
+*** Solution number: 1, after 6189 ms, search nodes: 64, fail: 0, propagate: 34488310, depth: 63, nogoods: 0, restarts: 0 ***
 ----------------------------------------
 Proc: {27, 4, 11, 5, 29, 29, 22, 1, 1, 24, 18, 19, 20, 21, 3, 10, 28, 28, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 7, 7, 0, 0, 9, 8, 2, 9, 23, 9, 2, 0}
 proc mode: {1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1}
@@ -58,6 +58,6 @@ S-order: {1, 76, 53, 60, 5, 78, 71, 50, 9, 10, 73, 67, 68, 69, 13, 70, 52, 22, 1
 R-order: {53, 60, 3, 54, 78, 71, 7, 50, 67, 14, 16, 68, 69, 15, 70, 52, 59, 77, 24, 26, 28, 30, 32, 34, 61, 27, 62, 29, 63, 31, 64, 33, 65, 35, 66, 36, 56, 40, 41, 48, 49, 45, 37, 72, 57, 46, 58, 42, 51, 6, 39, 13, 0, 2, 55, 25, 44, 38, 10, 1, 18, 19, 20, 21, 22, 23, 8, 11, 12, 9, 5, 43, 73, 74, 75, 76, 17, 4, 47}
 ----------------------------------------
 No better solution found.
-===== search ended after: 6 s (6283 ms) (with 1 incremental timer reset(s).) =====
+===== search ended after: 6 s (6215 ms) (with 1 incremental timer reset(s).) =====
 1 solutions found
 search nodes: 64, fail: 0, propagate: 34488310, depth: 63, nogoods: 0, restarts: 0 ***
