@@ -1,7 +1,7 @@
 
  
 *** 
-*** Solution number: 1, after 7 ms, search nodes: 16, fail: 0, propagate: 89351, depth: 15, nogoods: 0, restarts: 0 ***
+*** Solution number: 1, after 10 ms, search nodes: 16, fail: 0, propagate: 89351, depth: 15, nogoods: 0, restarts: 0 ***
 ----------------------------------------
 Proc: {0, 0, 0, 1, 2, 2, 2, 2, 3}
 proc mode: {1, 1, 1, 1}
@@ -31,7 +31,7 @@ NI -> SW3: _ _ _ _
 S-order: {3, 0, 8, 2, 5, 6, 7, 10, 9, 4, 11, 1}
 R-order: {8, 0, 9, 2, 5, 6, 10, 11, 3, 4, 7, 1}
 ----------------------------------------
-*** Solution number: 3, after 20 ms, search nodes: 151, fail: 68, propagate: 1130460, depth: 15, nogoods: 0, restarts: 0 ***
+*** Solution number: 3, after 24 ms, search nodes: 151, fail: 68, propagate: 1130460, depth: 15, nogoods: 0, restarts: 0 ***
 ----------------------------------------
 Proc: {0, 0, 1, 1, 2, 2, 2, 2, 3}
 proc mode: {1, 1, 1, 1}
@@ -61,6 +61,6 @@ NI -> SW3: _ _ _ _
 S-order: {1, 2, 8, 9, 5, 6, 7, 10, 3, 4, 11, 0}
 R-order: {8, 3, 9, 2, 5, 6, 10, 11, 1, 4, 7, 0}
 ----------------------------------------
-===== search ended after: 0 s (147 ms) (with 3 incremental timer reset(s).) =====
+===== search ended after: 0 s (135 ms) (with 3 incremental timer reset(s).) =====
 3 solutions found
 search nodes: 151, fail: 68, propagate: 1130460, depth: 15, nogoods: 0, restarts: 0 ***

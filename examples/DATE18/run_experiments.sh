@@ -37,7 +37,8 @@ for (( i=$first_exp;i<=$last_exp;i++)); do
         ls exp_$i/sdfs >> log.txt
         SECONDS=0
         #sudo chrt --rr 99 ./../../bin/adse --config exp_$i/config.cfg --dse.th_prop MCR --output exp_$i/MCR/
-        sudo chrt --rr 99 ./../../bin/adse --config exp_$i/config.cfg --dse.th_prop MCR --output exp_$i/run$r/
+        #sudo chrt --rr 99 
+        ./../../bin/adse --config exp_$i/config.cfg --dse.th_prop MCR --output exp_$i/run$r/
         duration=$SECONDS
         echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed." >> log.txt
         echo "end of experiment "$i >> log.txt
