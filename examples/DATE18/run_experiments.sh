@@ -4,7 +4,7 @@ echo $Experiment
 echo $Experiment > log.txt
 #number of experiments
 total_experiments=23
-total_runs=1
+total_runs=5
 
 echo -n "Insert the experiment number or first-exp last-exp (Enter for all experiments) > "
 read config
