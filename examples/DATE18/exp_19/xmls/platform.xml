@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <platform name="demo_platform">
     <processor model="arm" number="1">
-        <mode name="eco" cycle="10" mem="4294967296" dynPower="8" staticPower="156400" area="59582" monetary="495"/>
+        <mode name="eco" cycle="2" mem="4294967296" dynPower="40" staticPower="156400" area="59582" monetary="495"/>
         <mode name="default" cycle="1" mem="4294967296" dynPower="80" staticPower="156400" area="59582" monetary="495"/>
     </processor>
 	<processor model="microblaze" number="3">
-        <mode name="eco" cycle="65" mem="1048576" dynPower="536" staticPower="3850" area="24000" monetary="495"/>
-        <mode name="default" cycle="13" mem="1048576" dynPower="2680" staticPower="3850" area="24573" monetary="495"/>
+        <mode name="eco" cycle="13" mem="524288" dynPower="536" staticPower="3850" area="24000" monetary="495"/>
+        <mode name="default" cycle="13" mem="524288" dynPower="2680" staticPower="3850" area="24573" monetary="495"/>
     </processor>
     <interconnect>
         <TDN_NoC name="2x2TDN" topology="mesh" x-dimension="2" y-dimension="2" routing="Y-X" 
@@ -77,10 +77,10 @@
     		<Time>
 	    		<Type>
 	    			<Small>
-	        		<eco:default="65:13 as it is assumed that processor can work 5xfrequency"/>
+	        		<eco:default="65:13 as it is assumed that processor can work 1xfrequency"/>
 	    			</Small>
 	    			<Large>
-	        		<eco:default="10:1 as it is assumed that processsor can work 10xfrequency"/>
+	        		<eco:default="10:1 as it is assumed that processsor can work 2xfrequency"/>
 	    			</Large>
 	    		</Type>
     		</Time>
@@ -89,10 +89,10 @@
 	        	<Dynamic power="factor of utilisation over average additional power over nops baseline when processor is executing"/>
 	    		<Type>
 	    			<Small>
-	        		<eco:default="1:5 as it is assumed that processor can work 5xfrequency"/>
+	        		<eco:default="1:5 as it is assumed that processor can work 1xfrequency"/>
 	    			</Small>
 	    			<Large>
-	        		<eco:default="1:10 as it is assumed that processsor can work 10xfrequency"/>
+	        		<eco:default="1:10 as it is assumed that processsor can work 2xfrequency"/>
 	    			</Large>
 	    		</Type>
     		</Power>
@@ -106,7 +106,7 @@
     		</Area>
     		<Memory/>
     			<Small/>
-        		<eco:default="131072:131072 do not scale and fixed to 128KiB"/>
+        		<eco:default="524288:524288 do not scale and fixed to 64KiB"/>
     			</Small/>
     			<Large/>
         		<eco:default="536870912:536870912 do not scale and fixed to 512MiB"/>

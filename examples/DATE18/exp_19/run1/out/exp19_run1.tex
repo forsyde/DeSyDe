@@ -1,0 +1,25 @@
+\documentclass{standalone}
+\usepackage{tikz,pgfplots}
+
+\pgfplotsset{compat=1.13}
+
+\begin{document}
+\begin{tikzpicture}
+  \begin{axis} [%
+    width=12cm, height=8cm,
+    tick label style={font=\sffamily},
+    xlabel={Exploration time {\small(ms)}},
+    ylabel={Power {\small(mW)}},
+    ylabel near ticks,
+    xmin=170000, xmax=350000,
+    %ymin=8500, ymax=14500,%
+    % axis x line=box,
+    % axis y line=box,
+    ]
+    %\addplot [mark=none, gray,samples=2] coordinates {(0,9173) (405000,9173)};
+    %\addlegendentry{Best Found}
+    \addplot gnuplot [mark=star, mark options={color=purple, fill=purple, scale=0.8}, raw gnuplot]{plot "out.csv" using ($1):($2)};
+    \addlegendentry{Exp. 3, Run 1}
+  \end{axis}
+\end{tikzpicture}
+\end{document}

@@ -38,7 +38,7 @@
         <processor type="proc" default="true">
           <executionTime time="1177"/>
           <memory>
-            <stateSize max="209715"/>
+            <stateSize max="573440"/>
           </memory>
         </processor>
       </actorProperties>
@@ -46,7 +46,7 @@
         <processor type="proc" default="true">
           <executionTime time="833"/>
           <memory>
-            <stateSize max="209715"/>
+            <stateSize max="573440"/>
           </memory>
         </processor>
       </actorProperties>
@@ -54,7 +54,7 @@
         <processor type="proc" default="true">
           <executionTime time="32"/>
           <memory>
-            <stateSize max="209715"/>
+            <stateSize max="573440"/>
           </memory>
         </processor>
       </actorProperties>
@@ -62,7 +62,7 @@
         <processor type="proc" default="true">
           <executionTime time="15"/>
           <memory>
-            <stateSize max="209715"/>
+            <stateSize max="573440"/>
           </memory>
         </processor>
       </actorProperties>
