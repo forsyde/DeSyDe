@@ -64,6 +64,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
     IntVarArgs wcct_s(*this, apps->n_programChannels(), 0, Int::Limits::max); 
     IntVarArgs wcct_r(*this, apps->n_programChannels(), 0, Int::Limits::max); 
     
+    rel(*this, sys_area <= mapping->getSystemConstraints().area);
     
     LOG_DEBUG("Gecode version: " + tools::toString(GECODE_VERSION));
     LOG_DEBUG("Int::Limits::max = " + tools::toString(Int::Limits::max));

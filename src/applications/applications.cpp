@@ -33,19 +33,34 @@ Applications::Applications(vector<SDFGraph*> _sdfApps, TaskSet* _iptApps, XMLdoc
   
   load_const(xml);
 }
+
 void Applications::load_const(XMLdoc& xml)
 {
-    const char* my_xpathString = "///designConstraints/constraint";
+  const char* my_xpathString = "///designConstraints/appConstraint";
 	LOG_DEBUG("running xpathString  " + tools::toString(my_xpathString) + " on desConst file ...");
 	auto xml_constraints = xml.xpathNodes(my_xpathString);
     LOG_DEBUG("xml_constraints size="+tools::toString(xml_constraints.size()));
 	for (const auto& cons : xml_constraints)
 	{
 		string app_name = xml.getProp(cons, "app_name");
-		string period_cons = xml.getProp(cons, "period");
-		string latency_cons = xml.getProp(cons, "latency");
+    string period_cons_s;
+    int period_cons;
+    if(xml.hasProp(cons, "period")){
+      period_cons_s = xml.getProp(cons, "period");
+      period_cons = atoi(period_cons_s.c_str());
+    }else{
+      period_cons = 0;
+    }
+    string latency_cons_s;
+    int latency_cons;
+    if(xml.hasProp(cons, "latency")){
+      latency_cons_s = xml.getProp(cons, "latency");
+      latency_cons = atoi(latency_cons_s.c_str());
+    }else{
+      latency_cons = 0;
+    }
         
-        set_const(app_name, atoi(period_cons.c_str()), atoi(latency_cons.c_str()));
+    set_const(app_name, period_cons, latency_cons);
         
 		LOG_DEBUG("Reading constraints for app: " + app_name + "...");		
 		

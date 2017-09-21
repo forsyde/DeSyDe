@@ -1,7 +1,7 @@
 
  
 *** 
-*** Solution number: 1, after 8 ms, search nodes: 7, fail: 0, propagate: 98791, depth: 6, nogoods: 0, restarts: 0 ***
+*** Solution number: 1, after 4 ms, search nodes: 7, fail: 0, propagate: 98791, depth: 6, nogoods: 0, restarts: 0 ***
 ----------------------------------------
 Proc: {1, 2, 3, 2, 0, 0, 0, 0, 0}
 proc mode: {1, 0, 0, 0}
@@ -31,6 +31,6 @@ NI -> SW3: 3 _ _ _
 S-order: {1, 9, 10, 11, 5, 6, 7, 8, 0, 2, 3, 4}
 R-order: {2, 11, 3, 10, 5, 6, 7, 8, 9, 0, 1, 4}
 ----------------------------------------
-===== search ended after: 0 s (48 ms) (with 1 incremental timer reset(s).) =====
+===== search ended after: 0 s (42 ms) (with 1 incremental timer reset(s).) =====
 1 solutions found
 search nodes: 51, fail: 25, propagate: 420667, depth: 6, nogoods: 0, restarts: 0 ***

@@ -38,6 +38,14 @@
 
 using namespace std;
 
+struct SystemConstraints{
+  int power;
+  int util;
+  int area;
+  int money;
+  int procsUsed;
+};
+
 
 /**
  * This class specifies a mapping.
@@ -48,6 +56,7 @@ protected:
 
   Applications* program;            /*!< Reference to the applications. */
   Platform* target;                 /*!< Reference to the target platform. */
+  SystemConstraints sysConstr;      /*!< Constraints on the system. */
   int n_apps;                       /*!< Number of applications in the mapping (=SDF apps + no. of tasks). */
   vector<vector<int>> mappingSched; /*!< The mapping, in form of a schedule of actors, for each processing element. */
   vector<vector<int>> commSched;    /*!< The order-based schedules for communication channels from each processor. */
@@ -114,20 +123,24 @@ protected:
 
   vector<int>  current_mapping; /*!< Used by validation class. */  
   vector<int>  current_modes;   /*!< Used by validation class. */  
+  
+  
+  void load_wcets(XMLdoc& xml);
+  void load_mappingRules(XMLdoc& xml);
+  void load_designConstraints(XMLdoc& xml);
+  void setMappingRules(string task, int _mapOn, vector<int> _notMapOn);
+  void setSystemConstraints(int, int, int, int, int);
 
 public:
 
   int const max_utilization = 100; //TODO: add to configuration
 
   Mapping() {};
-  Mapping(Applications*, Platform*, XMLdoc&);
   Mapping(Applications*, Platform*, XMLdoc&, XMLdoc&);
+  Mapping(Applications*, Platform*, XMLdoc&, XMLdoc&, XMLdoc&);
   //Mapping(Applications*, Platform*, vector<vector<int>>&, vector<int>&, vector<int>&, vector<vector<SDFChannel*>>&);
 
   ~Mapping();
-  void load_wcets(XMLdoc& xml);
-  void load_mappingRules(XMLdoc& xml);
-  void setMappingRules(string task, int _mapOn, vector<int> _notMapOn);
   Applications* getApplications() const;
 
   Platform* getPlatform() const;
@@ -263,6 +276,9 @@ public:
   
   /** Gets the designer-specified rules for mapping. */
   vector<vector<int>> getMappingRules_doNot() const;
+  
+  /** Gets the designer-specified system constraints. */
+  SystemConstraints getSystemConstraints() const;
   
   void setFixedWCET(int id, int p_wcet);              /*!< Sets the WCET of the actor/task. */
   

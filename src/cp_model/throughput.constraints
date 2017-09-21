@@ -57,6 +57,14 @@ for(size_t a=0; a<apps->n_SDFApps(); a++){
         rel(*this, wcet[ii] <= apps->getPeriodConstraint(a));
       }
     }
+    //... and none of the channels either
+    for(unsigned int ki=0; ki<channels.size(); ki++){
+      if(apps->getSDFGraph(channels[ki]->source) == a){
+        rel(*this, wcct_b[ki] <= apps->getPeriodConstraint(a));
+        rel(*this, wcct_s[ki] <= apps->getPeriodConstraint(a));
+        rel(*this, wcct_r[ki] <= apps->getPeriodConstraint(a));
+      }
+    }
   }
 }
 

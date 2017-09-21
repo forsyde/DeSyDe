@@ -148,9 +148,9 @@ int main(int argc, const char* argv[]) {
     if(mappingRules_path != ""){
       XMLdoc xml_mapRules(mappingRules_path);
       xml_mapRules.read(false);
-      map = new Mapping(appset, platform, xml_wcet, xml_mapRules);
+      map = new Mapping(appset, platform, xml_wcet, xml_const, xml_mapRules);
     }else{
-      map = new Mapping(appset, platform, xml_wcet);
+      map = new Mapping(appset, platform, xml_wcet, xml_const);
     }
     
     LOG_INFO("Sorting pr tasks based on utilization ... ");

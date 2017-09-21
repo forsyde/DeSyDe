@@ -2,7 +2,7 @@
 
 using namespace std;
 
-Mapping::Mapping(Applications* p_program, Platform* p_target, XMLdoc& p_xml_wcet) {
+Mapping::Mapping(Applications* p_program, Platform* p_target, XMLdoc& p_xml_wcet, XMLdoc& p_des_constr) {
   program = p_program;
   target = p_target;
   n_apps = program->n_SDFApps() + program->n_IPTTasks();
@@ -48,9 +48,10 @@ Mapping::Mapping(Applications* p_program, Platform* p_target, XMLdoc& p_xml_wcet
   
   ///Load WCETs
   load_wcets(p_xml_wcet);
+  load_designConstraints(p_des_constr);
 }
 
-Mapping::Mapping(Applications* p_program, Platform* p_target, XMLdoc& p_xml_wcet, XMLdoc& p_xml_mapRules) {
+Mapping::Mapping(Applications* p_program, Platform* p_target, XMLdoc& p_xml_wcet, XMLdoc& p_des_constr, XMLdoc& p_xml_mapRules) {
   program = p_program;
   target = p_target;
   n_apps = program->n_SDFApps() + program->n_IPTTasks();
@@ -96,6 +97,7 @@ Mapping::Mapping(Applications* p_program, Platform* p_target, XMLdoc& p_xml_wcet
   
   ///Load WCETs
   load_wcets(p_xml_wcet);
+  load_designConstraints(p_des_constr);
   load_mappingRules(p_xml_mapRules);
 }
 
@@ -122,6 +124,10 @@ Mapping::~Mapping() {
 }
 
 void Mapping::load_wcets(XMLdoc& xml){
+  //ofstream out; 
+  //out.open("./WCETs10percent.xml");
+  
+  //out << "<WCET_table>" << endl;
   const char* my_xpathString = "///WCET_table/mapping";
 	LOG_DEBUG("running xpathString  " + tools::toString(my_xpathString) + " on WCET file ...");
 	auto xml_mappings = xml.xpathNodes(my_xpathString);
@@ -129,6 +135,8 @@ void Mapping::load_wcets(XMLdoc& xml){
 	{
 		string task_type = xml.getProp(map, "task_type");
     LOG_DEBUG("Reading mapping for task type: " + task_type + "...");
+    
+    //out << "\t<mapping task_type=\"" + task_type << "\">" << endl;
     
     /// Parsing the modes
     string query = "///WCET_table/mapping[@task_type=\'" + task_type + "\']/wcet";
@@ -141,21 +149,41 @@ void Mapping::load_wcets(XMLdoc& xml){
       
       setWCETs(task_type, proc_type, proc_mode, atoi(task_wcet.c_str()));
         
+      //out << "\t\t<wcet processor=\"" << proc_type;
+      //out << "\" mode=\"" << proc_mode;
+      //out << "\" wcet=\"" << ceil(1.1*atoi(task_wcet.c_str()));
+      //out << "\"/>" << endl;
+        
       LOG_DEBUG("Proc: " + proc_type + ", proc_mode: " + proc_mode 
                  + ", WCET: " + tools::toString(atoi(task_wcet.c_str())));		
     }
+    
+    //out << "\t</mapping>" << endl;
+    
 	}	
     for (size_t i=0; i < wcets.size(); i++)
     {
-        for (const auto& task_proc_wcets: wcets[i])
+      bool wcetSet = false;
+        for (size_t j=0; j<wcets[i].size(); j++)
         {
-            for (const auto& task_proc_mode_wcet: task_proc_wcets)
+            for (size_t k=0; k<wcets[i][j].size(); k++)
             {
-                if(task_proc_mode_wcet >= std::numeric_limits<int>::max() - 1)
-                THROW_EXCEPTION(InvalidArgumentException,"wcet is not specified for task "+program->getName(i)+"\n");
+                if(wcets[i][j][k] >= std::numeric_limits<int>::max() - 1){ 
+                  LOG_INFO("Note: no WCET is specified for task "+program->getName(i)
+                           + " on proc type " + target->getProcModel(j)
+                           + " in mode " + target->getProcModelMode(j,k));
+                }else{
+                  wcetSet = true;
+                }
             }
         }
+        if(!wcetSet){
+          THROW_EXCEPTION(InvalidArgumentException,"wcet is not specified for task "+program->getName(i)+"\n");
+        }
     }
+  
+  //out << "</WCET_table>";
+  //out.close();
 }
 
 void Mapping::load_mappingRules(XMLdoc& xml){
@@ -165,11 +193,16 @@ void Mapping::load_mappingRules(XMLdoc& xml){
 	for (const auto& map : xml_mappings)
 	{
 		string task_type = xml.getProp(map, "task_type");
-		string mapOn = xml.getProp(map, "mapOn");
-		vector<string> notMapOn_s = tools::split(xml.getProp(map, "notMapOn"), ',');
+    string mapOn;
+    if(xml.hasProp(map, "mapOn"))
+      mapOn = xml.getProp(map, "mapOn");
+    vector<string> notMapOn_s;
     vector<int> notMapOn;
-    for(auto i : notMapOn_s){
-      notMapOn.push_back(atoi(i.c_str()));
+    if(xml.hasProp(map, "notMapOn")){
+      notMapOn_s = tools::split(xml.getProp(map, "notMapOn"), ',');
+      for(auto i : notMapOn_s){
+        notMapOn.push_back(atoi(i.c_str()));
+      }
     }
     
     LOG_DEBUG("Reading mapping rules for task type: " + task_type 
@@ -182,6 +215,54 @@ void Mapping::load_mappingRules(XMLdoc& xml){
         
 	}	
     
+}
+
+
+void Mapping::load_designConstraints(XMLdoc& xml)
+{
+    const char* my_xpathString = "///designConstraints/systemConstraint";
+	LOG_DEBUG("running xpathString  " + tools::toString(my_xpathString) + " on desConst file ...");
+	auto xml_constraints = xml.xpathNodes(my_xpathString);
+	for (const auto& cons : xml_constraints)
+	{
+    string power_constr;
+		string util_constr;
+		string area_constr;
+		string money_constr;
+		string procsUsed_constr;
+    
+    if(xml.hasProp(cons, "power"))
+      power_constr = xml.getProp(cons, "power");
+    if(xml.hasProp(cons, "utilization"))
+      util_constr = xml.getProp(cons, "utilization");
+    if(xml.hasProp(cons, "area"))
+      area_constr = xml.getProp(cons, "area");
+    if(xml.hasProp(cons, "money"))
+      money_constr = xml.getProp(cons, "money");
+    if(xml.hasProp(cons, "procsUsed"))
+      procsUsed_constr = xml.getProp(cons, "procsUsed");
+      
+    int power;
+    int util;
+    int area;
+    int money;
+    int procsUsed;
+      
+    if(power_constr.empty()) power = -1; else power = atoi(power_constr.c_str());
+    if(util_constr.empty()) util = -1; else util = atoi(util_constr.c_str())*(max_utilization/100);
+    if(area_constr.empty()) area = -1; else area = atoi(area_constr.c_str());
+    if(money_constr.empty()) money = -1; else money = atoi(money_constr.c_str());
+    if(procsUsed_constr.empty()) procsUsed = -1; else procsUsed = atoi(procsUsed_constr.c_str());
+        
+		LOG_DEBUG("Reading system constraints: " + tools::toString(power) + ", "
+              + tools::toString(util) + ", "
+              + tools::toString(area) + ", "
+              + tools::toString(money) + ", "
+              + tools::toString(procsUsed) );		
+    
+    setSystemConstraints(power, util, area, money, procsUsed);
+		
+	}	
 }
 
 void Mapping::setMappingRules(string taskType, int _mapOn, vector<int> _notMapOn){
@@ -200,6 +281,10 @@ void Mapping::setMappingRules(string taskType, int _mapOn, vector<int> _notMapOn
       
     }
   }
+}
+
+void Mapping::setSystemConstraints(int _pow, int _util, int _area, int _money, int _pu){
+  sysConstr = SystemConstraints{_pow, _util, _area, _money, _pu};
 }
 
 Applications* Mapping::getApplications() const {
@@ -477,6 +562,11 @@ vector<int> Mapping::getMappingRules_do() const{
 /** Gets the designer-specified rules for mapping. */
 vector<vector<int>> Mapping::getMappingRules_doNot() const{
   return mappingRules_doNot;
+}
+
+/** Gets the designer-specified system constraints. */
+SystemConstraints Mapping::getSystemConstraints() const{
+  return sysConstr;
 }
 
 void Mapping::setFirstMapping(vector<div_t>& _firstMapping) {

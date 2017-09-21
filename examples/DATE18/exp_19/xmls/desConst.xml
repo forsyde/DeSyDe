@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- LE: <=, GE >=, EQ == -->
+<!-- system constraints: power LE, utilization GE, area LE, money LE, procUsed EQ -->
+<!-- utilization: max 100 -->
 <designConstraints>
-	<constraint app_name="a_sobel" period="13000" latency="8000"></constraint> 
-    <constraint app_name="b_susan" period="35000" latency="8000"></constraint> 
-    <constraint app_name="c_rasta" period="800" latency="8000"></constraint> 
-    <constraint app_name="d_jpegEnc1" period="9500" latency="8000"></constraint>
-    <constraint app_name="e_vad" period="9500" latency="8000"></constraint> 	
-    <constraint app_name="g10_3_cycl" period="440" latency="8000"></constraint>
+	<appConstraint app_name="a_sobel" period="13000"/>
+    <appConstraint app_name="b_susan" period="35000"/>
+    <systemConstraint area="140000" />
 </designConstraints>
