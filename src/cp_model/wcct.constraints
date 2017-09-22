@@ -6,6 +6,10 @@ for(unsigned int ki=0; ki<channels.size(); ki++){
 }
 
 if(platform->getInterconnectType() == TDMA_BUS){
+  
+  //effects of chosen interconnect mode:
+  element(*this, IntArgs(platform->getTDNCycleLengths()), ic_mode, cycleLength);
+  
   for(unsigned int ki=0; ki<channels.size(); ki++){
     int src_ch1 = channels[ki]->source;
     int dst_ch1 = channels[ki]->destination;
@@ -21,37 +25,31 @@ if(platform->getInterconnectType() == TDMA_BUS){
     rel(*this, (proc[src_ch1]==proc[dst_ch1]) >> (recbufferSz[ki]==1));
     rel(*this, (proc[src_ch1]==proc[dst_ch1]) >> (sendbufferSz[ki]==0));
     //if src and dst actors are on different proc, wcct is sum of blocking and transfer time
-    rel(*this, (proc[src_ch1]!=proc[dst_ch1]) >> (wcct_b[ki] == blockingTime_s[ki]));
-    rel(*this, (proc[src_ch1]!=proc[dst_ch1]) >> (wcct_s[ki] == transferTime_s[ki]));
     rel(*this, (proc[src_ch1]!=proc[dst_ch1]) >> (wcct_b[ki] > 0));
     rel(*this, (proc[src_ch1]!=proc[dst_ch1]) >> (wcct_s[ki] > 0));
     rel(*this, (proc[src_ch1]!=proc[dst_ch1]) >> (recbufferSz[ki]>=1));
     rel(*this, (proc[src_ch1]!=proc[dst_ch1]) >> (sendbufferSz[ki]>=1));
     
     //blocking and transfer times for all channels, depending on TDMA allocation
-    //Does element exist in a reified version?
-    IntVarArgs bt_sj(*this, platform->nodes(), 0, Int::Limits::max);
-    IntVarArgs tt_sj(*this, platform->nodes(), 0, Int::Limits::max);
-    //cout << "   Blocking: ";
-    IntArgs wcbts(mapping->wcBlockingTimes()); //blocking
-    //for(int i=0; i<wcbts.size(); i++){
-            //cout << wcbts[i] << " ";
-
-    //}
-    //cout << endl;
-    //cout << "   Transfer: ";
-    IntArgs wctts(mapping->wcTransferTimes(ki)); //transfer
-    //for(int i=0; i<wctts.size(); i++){
-        //cout << wctts[i] << " ";
-
-    //}
-    //cout << endl;
-    for(size_t j=0; j<platform->nodes(); j++){
-      element(*this, wcbts, tdmaAlloc[j], bt_sj[j]);
-      element(*this, wctts, tdmaAlloc[j], tt_sj[j]);
+    int slotsNeeded = ceil(((double)channels[ki]->messageSize)/platform->dataPerSlot());
+    vector<int> fullRoundsNeeded;
+    fullRoundsNeeded.push_back(0); //for 0 TDMA slots assigned
+    fullRoundsNeeded.push_back(slotsNeeded-1); //for 1 TDMA slots assigned
+    for(int s=2; s<=platform->tdmaSlots(); s++){
+      int tmp_roundsNeeded = floor(((double)slotsNeeded)/s);
+      if(slotsNeeded%s==0) tmp_roundsNeeded -= 1; //for making sending time less conservative, depending on which slots are assigned
+      fullRoundsNeeded.push_back(tmp_roundsNeeded);
     }
-    element(*this, bt_sj, proc[src_ch1], blockingTime_s[ki]);
-    element(*this, tt_sj, proc[src_ch1], transferTime_s[ki]);
+    for(size_t j=0; j<platform->nodes(); j++){
+      IntVar tmda_round(*this, 0, Int::Limits::max);
+      element(*this, IntArgs(fullRoundsNeeded), tdmaAlloc[j], tmda_round);
+      rel(*this, ((proc[src_ch1]!=proc[dst_ch1]) && (proc[src_ch1]==j)) 
+                  >> (wcct_b[ki] == ((platform->tdmaSlots()-(tdmaAlloc[j]-1))*cycleLength)));
+      rel(*this, ((proc[src_ch1]!=proc[dst_ch1]) && (proc[src_ch1]==j))  
+                      >> (wcct_s[ki] == ((tmda_round*platform->tdmaSlots()*cycleLength)
+                                       +(platform->tdmaSlots()*cycleLength)))); //for last tdn round (TODO: make less conservative, 
+                                                                                              //considering slot assignment)
+    }
     
     //order-based scheduling of messages
     rel(*this, sendNext[ki]!=ki);
@@ -146,6 +144,10 @@ if(platform->getInterconnectType() == TDMA_BUS){
   rel(*this, sum(tdmaAlloc) <= platform->tdmaSlots());
   
 } else if(platform->getInterconnectType() == TDN_NOC){ //TDN-NoC ###############################################################################
+  vector<tdn_graphNode> tdn_graph = platform->getTDNGraph();
+  size_t messages = channels.size(); 
+  size_t links = tdn_graph.size()/platform->getTDNCycles();
+  IntVarArgs flitsPerLink(*this, messages*links, 0, Int::Limits::max); 
   
   LOG_INFO("TDN graph is of size " + tools::toString(tdn_graph.size()));
   //for the TDN table, values 0...platform->nodes()-1 means location is assigned to processor with that id
@@ -167,7 +169,7 @@ if(platform->getInterconnectType() == TDMA_BUS){
   }
 
   //effects of chosen NoC mode:
-  element(*this, IntArgs(platform->getTDNCycleLengths()), noc_mode, cycleLength);
+  element(*this, IntArgs(platform->getTDNCycleLengths()), ic_mode, cycleLength);
   
   vector<tdn_route> all_routes = platform->getAllRoutes();
   for(unsigned int ki=0; ki<channels.size(); ki++){
@@ -437,8 +439,6 @@ if(platform->getInterconnectType() == TDMA_BUS){
     rel(*this, (proc[src_ch1]==proc[dst_ch1]) >> (chosenRoute[ki]==platform->getTDNCycles()));
     rel(*this, (proc[src_ch1]==proc[dst_ch1]) >> (hops[ki]==0));
     //if src and dst actors are on different proc, wcct consists of blocking and transfer time
-    rel(*this, (proc[src_ch1]!=proc[dst_ch1]) >> (wcct_b[ki] == blockingTime_s[ki]));
-    rel(*this, (proc[src_ch1]!=proc[dst_ch1]) >> (wcct_s[ki] == transferTime_s[ki]));
     rel(*this, (proc[src_ch1]!=proc[dst_ch1]) >> (wcct_b[ki] > 0));
     rel(*this, (proc[src_ch1]!=proc[dst_ch1]) >> (wcct_s[ki] > 0));
     rel(*this, (proc[src_ch1]!=proc[dst_ch1]) >> (recbufferSz[ki]>=1));

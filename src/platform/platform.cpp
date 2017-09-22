@@ -62,13 +62,43 @@ void Platform::load_xml(XMLdoc& xml) throw (InvalidArgumentException)
               string mode_name = xml.getProp(mode, "name");
               string mode_cycle = xml.getProp(mode, "cycle");
               string mode_mem = xml.getProp(mode, "mem");
-              string mode_dynPower = xml.getProp(mode, "dynPower");
-              string mode_staticPower = xml.getProp(mode, "staticPower");
-              string mode_area = xml.getProp(mode, "area");
-              string mode_monetary = xml.getProp(mode, "monetary");
+              //all cost metrics are optional (default: 0)
+              string mode_dynPower;
+              int i_mode_dynPower;
+              if(xml.hasProp(mode, "dynPower")){
+                mode_dynPower = xml.getProp(mode, "dynPower");
+                i_mode_dynPower = atoi(mode_dynPower.c_str());
+              }else{
+                i_mode_dynPower = 0;
+              }
+              string mode_staticPower;
+              int i_mode_staticPower;
+              if(xml.hasProp(mode, "staticPower")){
+                mode_staticPower = xml.getProp(mode, "staticPower");
+                i_mode_staticPower = atoi(mode_staticPower.c_str());
+              }else{
+                i_mode_staticPower = 0;
+              }
+              string mode_area;
+              int i_mode_area;
+              if(xml.hasProp(mode, "area")){
+                mode_area = xml.getProp(mode, "area");
+                i_mode_area = atoi(mode_area.c_str());
+              }else{
+                i_mode_area = 0;
+              }
+              string mode_monetary;
+              int i_mode_monetary;
+              if(xml.hasProp(mode, "monetary")){
+                mode_monetary = xml.getProp(mode, "monetary");
+                i_mode_monetary = atoi(mode_monetary.c_str());
+              }else{
+                i_mode_monetary = 0;
+              }
+              
               pe->AddMode(mode_name, atof(mode_cycle.c_str()), atoi(mode_mem.c_str()),
-                        atoi(mode_dynPower.c_str()), atoi(mode_staticPower.c_str()), atoi(mode_area.c_str()),
-                        atoi(mode_monetary.c_str()));
+                        i_mode_dynPower, i_mode_staticPower, i_mode_area,
+                        i_mode_monetary);
               LOG_DEBUG("Reading processor mode: " + mode_name + "...");		
             }
             
@@ -91,43 +121,140 @@ void Platform::load_xml(XMLdoc& xml) throw (InvalidArgumentException)
     string noc_routing = xml.getProp(ic_settings, "routing");
     string noc_flitSize = xml.getProp(ic_settings, "flitSize");
     string noc_tdnCycles = xml.getProp(ic_settings, "cycles");
-    string noc_tdnCyclesPP = xml.getProp(ic_settings, "maxCyclesPerProc");
+    //maxCyclesPerProc is optional (default: number of tdn slots)
+    string noc_tdnCyclesPP;
+    int i_tdnCyclesPP;
+    if(xml.hasProp(ic_settings, "maxCyclesPerProc")){
+      string noc_tdnCyclesPP = xml.getProp(ic_settings, "maxCyclesPerProc");
+      i_tdnCyclesPP = atoi(noc_tdnCyclesPP.c_str());
+    }else{
+      i_tdnCyclesPP = atoi(noc_tdnCycles.c_str());
+    }
   
     interconnect = Interconnect(TDN_NOC, noc_name, 0, 0, 0, atoi(noc_columns.c_str()), 
                                 atoi(noc_rows.c_str()), atoi(noc_flitSize.c_str()), 
-                                atoi(noc_tdnCycles.c_str()), atoi(noc_tdnCyclesPP.c_str()));
+                                atoi(noc_tdnCycles.c_str()), i_tdnCyclesPP);
                                 
     query = "///platform/interconnect/TDN_NoC/mode";
     auto ic_modes = xml.xpathNodes(query.c_str());
     for(auto ic_mode : ic_modes) {
       string mode_name = xml.getProp(ic_mode, "name");
       string mode_cycleLength = xml.getProp(ic_mode, "cycleLength");
-      string mode_dynPowerCons_link = xml.getProp(ic_mode, "dynPower_link");
-      string mode_dynPowerCons_NI = xml.getProp(ic_mode, "dynPower_NI");
-      string mode_dynPowerCons_switch = xml.getProp(ic_mode, "dynPower_switch");
-      string mode_staticPow_link = xml.getProp(ic_mode, "staticPower_link");
-      string mode_staticPow_NI = xml.getProp(ic_mode, "staticPower_NI");
-      string mode_staticPow_switch = xml.getProp(ic_mode, "staticPower_switch");
-      string mode_area_link = xml.getProp(ic_mode, "area_link");
-      string mode_area_NI = xml.getProp(ic_mode, "area_NI");
-      string mode_area_switch = xml.getProp(ic_mode, "area_switch");
-      string mode_monetary_link = xml.getProp(ic_mode, "monetary_link");
-      string mode_monetary_NI = xml.getProp(ic_mode, "monetary_NI");
-      string mode_monetary_switch = xml.getProp(ic_mode, "monetary_switch");
+      
+      //all cost factors are optional (default: 0)
+      string mode_dynPowerCons_link;
+      string mode_dynPowerCons_NI;
+      string mode_dynPowerCons_switch;
+      string mode_staticPow_link;
+      string mode_staticPow_NI;
+      string mode_staticPow_switch;
+      string mode_area_link;
+      string mode_area_NI;
+      string mode_area_switch;
+      string mode_monetary_link;
+      string mode_monetary_NI;
+      string mode_monetary_switch;
+      int i_mode_dynPowerCons_link;
+      int i_mode_dynPowerCons_NI;
+      int i_mode_dynPowerCons_switch;
+      int i_mode_staticPow_link;
+      int i_mode_staticPow_NI;
+      int i_mode_staticPow_switch;
+      int i_mode_area_link;
+      int i_mode_area_NI;
+      int i_mode_area_switch;
+      int i_mode_monetary_link;
+      int i_mode_monetary_NI;
+      int i_mode_monetary_switch;
+      
+      if(xml.hasProp(ic_mode, "dynPower_link")){
+        mode_dynPowerCons_link = xml.getProp(ic_mode, "dynPower_link");
+        i_mode_dynPowerCons_link = atoi(mode_dynPowerCons_link.c_str());
+      }else{
+        i_mode_dynPowerCons_link = 0;
+      }
+      if(xml.hasProp(ic_mode, "dynPower_NI")){
+        mode_dynPowerCons_NI = xml.getProp(ic_mode, "dynPower_NI");
+        i_mode_dynPowerCons_NI = atoi(mode_dynPowerCons_NI.c_str());
+      }else{
+        i_mode_dynPowerCons_NI = 0;
+      }
+      if(xml.hasProp(ic_mode, "dynPower_switch")){
+        mode_dynPowerCons_switch = xml.getProp(ic_mode, "dynPower_switch");
+        i_mode_dynPowerCons_switch = atoi(mode_dynPowerCons_switch.c_str());
+      }else{
+        i_mode_dynPowerCons_switch = 0;
+      }
+      if(xml.hasProp(ic_mode, "staticPower_link")){
+        mode_staticPow_link = xml.getProp(ic_mode, "staticPower_link");
+        i_mode_staticPow_link = atoi(mode_staticPow_link.c_str());
+      }else{
+        i_mode_staticPow_link = 0;
+      }
+      if(xml.hasProp(ic_mode, "staticPower_NI")){
+        mode_staticPow_NI = xml.getProp(ic_mode, "staticPower_NI");
+        i_mode_staticPow_NI = atoi(mode_staticPow_NI.c_str());
+      }else{
+        i_mode_staticPow_NI = 0;
+      }
+      if(xml.hasProp(ic_mode, "staticPower_switch")){
+        mode_staticPow_switch = xml.getProp(ic_mode, "staticPower_switch");
+        i_mode_staticPow_switch = atoi(mode_staticPow_switch.c_str());
+      }else{
+        i_mode_staticPow_switch = 0;
+      }
+      if(xml.hasProp(ic_mode, "area_link")){
+        mode_area_link = xml.getProp(ic_mode, "area_link");
+        i_mode_area_link = atoi(mode_area_link.c_str());
+      }else{
+        i_mode_area_link = 0;
+      }
+      if(xml.hasProp(ic_mode, "area_NI")){
+        mode_area_NI = xml.getProp(ic_mode, "area_NI");
+        i_mode_area_NI = atoi(mode_area_NI.c_str());
+      }else{
+        i_mode_area_NI = 0;
+      }
+      if(xml.hasProp(ic_mode, "area_switch")){
+        mode_area_switch = xml.getProp(ic_mode, "area_switch");
+        i_mode_area_switch = atoi(mode_area_switch.c_str());
+      }else{
+        i_mode_area_switch = 0;
+      }
+    
+      if(xml.hasProp(ic_mode, "monetary_link")){
+        mode_monetary_link = xml.getProp(ic_mode, "monetary_link");
+        i_mode_monetary_link = atoi(mode_monetary_link.c_str());
+      }else{
+        i_mode_monetary_link = 0;
+      }
+      if(xml.hasProp(ic_mode, "monetary_NI")){
+        mode_monetary_NI = xml.getProp(ic_mode, "monetary_NI");
+        i_mode_monetary_NI = atoi(mode_monetary_NI.c_str());
+      }else{
+        i_mode_monetary_NI = 0;
+      }
+      if(xml.hasProp(ic_mode, "monetary_switch")){
+        mode_monetary_switch = xml.getProp(ic_mode, "monetary_switch");
+        i_mode_monetary_switch = atoi(mode_monetary_switch.c_str());
+      }else{
+        i_mode_monetary_switch = 0;
+      }
+
       
       interconnect.addMode(mode_name, atoi(mode_cycleLength.c_str()),
-                            atoi(mode_dynPowerCons_link.c_str()),
-                            atoi(mode_dynPowerCons_NI.c_str()),
-                            atoi(mode_dynPowerCons_switch.c_str()),
-                            atoi(mode_staticPow_link.c_str()),
-                            atoi(mode_staticPow_NI.c_str()),
-                            atoi(mode_staticPow_switch.c_str()),
-                            atoi(mode_area_link.c_str()),
-                            atoi(mode_area_NI.c_str()),
-                            atoi(mode_area_switch.c_str()),
-                            atoi(mode_monetary_link.c_str()),
-                            atoi(mode_monetary_NI.c_str()),
-                            atoi(mode_monetary_switch.c_str()));
+                            i_mode_dynPowerCons_link,
+                            i_mode_dynPowerCons_NI,                         
+                            i_mode_dynPowerCons_switch,                         
+                            i_mode_staticPow_link,                         
+                            i_mode_staticPow_NI,                         
+                            i_mode_staticPow_switch,                         
+                            i_mode_area_link,                         
+                            i_mode_area_NI,                         
+                            i_mode_area_switch,                         
+                            i_mode_monetary_link,                         
+                            i_mode_monetary_NI,                         
+                            i_mode_monetary_switch);
     }
                                 
     LOG_DEBUG("Found a " + noc_name + " with " + noc_topology + " topology, "
@@ -147,6 +274,127 @@ void Platform::load_xml(XMLdoc& xml) throw (InvalidArgumentException)
 
     createTDNGraph();
     createRouteTable();
+  }
+  
+  
+  query = "///platform/interconnect/TDMA_bus";
+  auto tdma_bus = xml.xpathNodes(query.c_str());
+  for(auto ic_settings : tdma_bus) {
+    string bus_name = xml.getProp(ic_settings, "name");
+    string bus_columns = xml.getProp(ic_settings, "x-dimension");
+    string bus_flitSize = xml.getProp(ic_settings, "flitSize");
+    string bus_tdmaSlots = xml.getProp(ic_settings, "tdma_slots");
+    //maxSlotsPerProc is optional (default: number of tdn slots)
+    string bus_tdmaSlotsPP;
+    int i_bus_tdmaSlotsPP;
+    if(xml.hasProp(ic_settings, "maxSlotsPerProc")){
+      bus_tdmaSlotsPP = xml.getProp(ic_settings, "maxSlotsPerProc");
+      i_bus_tdmaSlotsPP = atoi(bus_tdmaSlotsPP.c_str());
+    }else{
+      i_bus_tdmaSlotsPP = atoi(bus_tdmaSlots.c_str());
+    } 
+  
+    interconnect = Interconnect(TDMA_BUS, bus_name, atoi(bus_flitSize.c_str()), 
+                                atoi(bus_tdmaSlots.c_str()), 0, atoi(bus_columns.c_str()), 
+                                1, 0, 0, i_bus_tdmaSlotsPP);
+                                
+    query = "///platform/interconnect/TDMA_bus/mode";
+    auto ic_modes = xml.xpathNodes(query.c_str());
+    for(auto ic_mode : ic_modes) {
+      string mode_name = xml.getProp(ic_mode, "name");
+      string mode_cycleLength = xml.getProp(ic_mode, "cycleLength");
+      
+      //all cost factors are optional (default: 0)
+      string mode_dynPowerCons_NI;
+      string mode_dynPowerCons_bus;
+      string mode_staticPow_NI;
+      string mode_staticPow_bus;
+      string mode_area_NI;
+      string mode_area_bus;
+      string mode_monetary_NI;
+      string mode_monetary_bus;
+      int i_mode_dynPowerCons_NI;
+      int i_mode_dynPowerCons_bus;
+      int i_mode_staticPow_NI;
+      int i_mode_staticPow_bus;
+      int i_mode_area_NI;
+      int i_mode_area_bus;
+      int i_mode_monetary_NI;
+      int i_mode_monetary_bus;
+      
+      if(xml.hasProp(ic_mode, "dynPower_NI")){
+        mode_dynPowerCons_NI = xml.getProp(ic_mode, "dynPower_NI");
+        i_mode_dynPowerCons_NI = atoi(mode_dynPowerCons_NI.c_str());
+      }else{
+        i_mode_dynPowerCons_NI = 0;
+      }
+      if(xml.hasProp(ic_mode, "dynPower_bus")){
+        mode_dynPowerCons_bus = xml.getProp(ic_mode, "dynPower_bus");
+        i_mode_dynPowerCons_bus = atoi(mode_dynPowerCons_bus.c_str());
+      }else{
+        i_mode_dynPowerCons_bus = 0;
+      }
+      if(xml.hasProp(ic_mode, "staticPower_NI")){
+        mode_staticPow_NI = xml.getProp(ic_mode, "staticPower_NI");
+        i_mode_staticPow_NI = atoi(mode_staticPow_NI.c_str());
+      }else{
+        i_mode_staticPow_NI = 0;
+      }
+      if(xml.hasProp(ic_mode, "staticPower_bus")){
+        mode_staticPow_bus = xml.getProp(ic_mode, "staticPower_bus");
+        i_mode_staticPow_bus = atoi(mode_staticPow_bus.c_str());
+      }else{
+        i_mode_staticPow_bus = 0;
+      }
+      if(xml.hasProp(ic_mode, "area_NI")){
+        mode_area_NI = xml.getProp(ic_mode, "area_NI");
+        i_mode_area_NI = atoi(mode_area_NI.c_str());
+      }else{
+        i_mode_area_NI = 0;
+      }
+      if(xml.hasProp(ic_mode, "area_bus")){
+        mode_area_bus = xml.getProp(ic_mode, "area_bus");
+        i_mode_area_bus = atoi(mode_area_bus.c_str());
+      }else{
+        i_mode_area_bus = 0;
+      }
+      if(xml.hasProp(ic_mode, "monetary_NI")){
+        mode_monetary_NI = xml.getProp(ic_mode, "monetary_NI");
+        i_mode_monetary_NI = atoi(mode_monetary_NI.c_str());
+      }else{
+        i_mode_monetary_NI = 0;
+      }
+      if(xml.hasProp(ic_mode, "monetary_bus")){
+        mode_monetary_bus = xml.getProp(ic_mode, "monetary_bus");
+        i_mode_monetary_bus = atoi(mode_monetary_bus.c_str());
+      }else{
+        i_mode_monetary_bus = 0;
+      }
+
+      
+      interconnect.addMode(mode_name, atoi(mode_cycleLength.c_str()),
+                            i_mode_dynPowerCons_NI,                         
+                            i_mode_dynPowerCons_bus,                       
+                            i_mode_staticPow_NI,                         
+                            i_mode_staticPow_bus,                     
+                            i_mode_area_NI,                         
+                            i_mode_area_bus,                              
+                            i_mode_monetary_NI,                         
+                            i_mode_monetary_bus);
+    }
+                                
+    LOG_DEBUG("Found a " + bus_name + " with "
+                         + bus_columns + " nodes, "	
+                         + bus_flitSize + " bit flit size, "	
+                         + bus_tdmaSlots + " TDMA-slots, "	
+                         + tools::toString(i_bus_tdmaSlotsPP) + " TDMA-slots per proc, and "	
+                         + tools::toString(interconnect.modes.size()) + " mode(s).");	
+                                
+    int procsOnBus = atoi(bus_columns.c_str());
+    if(procsOnBus != proc_id){
+       THROW_EXCEPTION(InvalidArgumentException, "size of TDMA-bus does not match with number of processors");
+    }                            
+
   }
     
   //}
@@ -961,6 +1209,8 @@ double Platform::speedUp(int node, int mode) const {
 //for different TDM slot allocations (index of vector = number of slots
 //for use with the element constraint in the model
 const vector<int> Platform::maxCommTimes(int tokSize) const{
+  THROW_EXCEPTION(InvalidArgumentException, "Platform::maxCommTimes uses roundLength");
+  
   double slotLength = (double)interconnect.roundLength/interconnect.tdmaSlots;
   double slotsNeeded = ((double)tokSize/interconnect.dataPerSlot);
   double activeSendingTime = slotsNeeded * slotLength;
@@ -982,6 +1232,8 @@ const vector<int> Platform::maxCommTimes(int tokSize) const{
 //for different TDM slot allocations (index of vector = number of slots
 //for use with the element constraint in the model
 const vector<int> Platform::maxBlockingTimes() const{
+  THROW_EXCEPTION(InvalidArgumentException, "Platform::maxBlockingTimes uses roundLength");
+  
   double slotLength = (double)interconnect.roundLength/interconnect.tdmaSlots;
 
   //cout << "TMDA slot length = " << slotLength << endl;
@@ -999,6 +1251,8 @@ const vector<int> Platform::maxBlockingTimes() const{
 //for different TDM slot allocations (index of vector = number of slots
 //for use with the element constraint in the model
 const vector<int> Platform::maxTransferTimes(int tokSize) const{
+  THROW_EXCEPTION(InvalidArgumentException, "Platform::maxTransferTimes uses roundLength");
+  
   double slotLength = (double)interconnect.roundLength/interconnect.tdmaSlots;
   double slotsNeeded = ((double)tokSize/interconnect.dataPerSlot);
   double activeSendingTime = slotsNeeded * slotLength;

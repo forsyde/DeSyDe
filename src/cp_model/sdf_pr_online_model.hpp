@@ -68,7 +68,7 @@ private:
     IntVarArray             proc_mode;    /**< processor modes: economy, regular and performance. */
     IntVarArray             tdmaAlloc;    /**< allocation of TDMA slots to processors.*/
     IntVarArray             injectionTable;     /**< TDN injection and state-of-NoC table.*/
-    IntVar                  noc_mode;     /**< assignment of NoC mode. */
+    IntVar                  ic_mode;     /**< assignment of interconnect mode. */
     IntVarArray             chosenRoute; /**< Assignment of TDN slot to channel.*/
 
     IntVarArray             sendNext;    /**< a schedule for sent messages on interconnect. */

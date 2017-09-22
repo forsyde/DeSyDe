@@ -38,6 +38,7 @@
 
 using namespace std;
 
+// 0 means "no constraint set"
 struct SystemConstraints{
   int power;
   int util;
@@ -126,7 +127,9 @@ protected:
   
   
   void load_wcets(XMLdoc& xml);
+  bool isMappingRules(XMLdoc& xml);
   void load_mappingRules(XMLdoc& xml);
+  bool isDesignConstraints(XMLdoc& xml);
   void load_designConstraints(XMLdoc& xml);
   void setMappingRules(string task, int _mapOn, vector<int> _notMapOn);
   void setSystemConstraints(int, int, int, int, int);
@@ -136,6 +139,7 @@ public:
   int const max_utilization = 100; //TODO: add to configuration
 
   Mapping() {};
+  Mapping(Applications*, Platform*, XMLdoc&);
   Mapping(Applications*, Platform*, XMLdoc&, XMLdoc&);
   Mapping(Applications*, Platform*, XMLdoc&, XMLdoc&, XMLdoc&);
   //Mapping(Applications*, Platform*, vector<vector<int>>&, vector<int>&, vector<int>&, vector<vector<SDFChannel*>>&);

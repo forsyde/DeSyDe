@@ -1465,7 +1465,7 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
                      (!sendingTime.assigned() || !sendingLatency.assigned() || !wcet.assigned());
   vector<int> period_upperBound(apps.size(), 0);
 
-  if(apps.size() > 1){
+  //if(apps.size() > 1){
     //check which application graphs are mapped to same processor (= combined into the same MSAG)
     vector<set<int>> result;
     unordered_map<int, set<int>> coMappedApps;
@@ -1607,7 +1607,7 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
       }
     }
 
-  }else{ //only a single application
+  /*}else{ //only a single application
     constructMSAG();
     using namespace boost;
     int max_cr; /// maximum cycle ratio
@@ -1643,7 +1643,7 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
       }
       cout << endl;
     }
-  }
+  }*/
 
   //constructMSAG();
 

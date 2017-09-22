@@ -16,6 +16,23 @@ Applications::~Applications() {
     delete desContr[i];
 }
 
+Applications::Applications(vector<SDFGraph*> _sdfApps, TaskSet* _iptApps)
+  : sdfApps(_sdfApps), iptApps(_iptApps) {
+
+  n_sdfActors       = 0;
+  n_sdfParentActors = 0;
+  n_sdfChannels	    = 0;
+  for (size_t i=0; i<sdfApps.size(); i++){
+    offsets.push_back(n_sdfActors);
+    n_sdfActors += sdfApps[i]->n_actors();
+    n_sdfParentActors += sdfApps[i]->n_parentActors();
+    n_sdfChannels += sdfApps[i]->n_channels();
+  }
+  
+  n_iptTasks = iptApps->getNumberOfTasks();
+
+}
+
 Applications::Applications(vector<SDFGraph*> _sdfApps, TaskSet* _iptApps, XMLdoc& xml)
   : sdfApps(_sdfApps), iptApps(_iptApps) {
 

@@ -232,7 +232,6 @@ string Config::printSettings() {
       + " | " +  Logger::logLevelToString(Logger::instance().getLogLevel().second)
       + "\n* model : " + tools::toString(settings_.model)
       + "\n* search : " + tools::toString(settings_.search)
-      + "\n* propagator : " + tools::toString(settings_.th_prop)
       + "\n* criteria : " + tools::toString(settings_.criteria)
       + "\n* timeout : " + tools::toString(settings_.timeout_first)
       + " | " + tools::toString(settings_.timeout_all)

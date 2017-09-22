@@ -1,3 +1,11 @@
+//enforcing the design constraints:
+if(mapping->getSystemConstraints().util >0){
+  rel(*this, sys_utilization >= mapping->getSystemConstraints().util);
+}
+if(mapping->getSystemConstraints().procsUsed >0){
+  rel(*this, procsUsed == mapping->getSystemConstraints().procsUsed);
+}
+
 // *** GENERAL CONSTRAINTS ***
 
 //choosing a mode for each proc

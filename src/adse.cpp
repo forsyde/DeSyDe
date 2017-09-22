@@ -78,24 +78,27 @@ int main(int argc, const char* argv[]) {
 	  string mappingRules_path;
 	  for (const auto& path : cfg.settings().inputs_paths) {
        /// Reading taskset
-       size_t found_taskset=path.find("taskset");
-       if(found_taskset != string::npos){
-			XMLdoc xml(path);
-			LOG_INFO("Parsing taskset XML files...");
-			xml.read(false);
-			taskset =  new TaskSet(xml);
-			if (taskset->getNumberOfTasks() > 0) {
-			  taskset->SetRMPriorities();
-			  LOG_INFO(tools::toString(*taskset));
-			} else {
-			  LOG_INFO("did not import any periodic tasks!");
-			}
-	   }
+      size_t found_taskset=path.find("taskset");
+      if(found_taskset != string::npos){
+        XMLdoc xml(path);
+        LOG_INFO("Parsing taskset XML files...");
+        xml.read(false);
+        taskset =  new TaskSet(xml);
+        if (taskset->getNumberOfTasks() > 0) {
+          taskset->SetRMPriorities();
+          LOG_INFO(tools::toString(*taskset));
+        } else {
+          LOG_INFO("did not import any periodic tasks!");
+        }
+      }else{
+        taskset =  new TaskSet();
+        LOG_INFO("did not import any periodic tasks!");
+      }
 	   /// Reading platform
        size_t found_platform=path.find("platform");
        if(found_platform != string::npos){
 			XMLdoc xml(path);
-			LOG_INFO("Parsing platform XML files...");
+			LOG_INFO("Parsing platform XML file...");
 			xml.read(false);
 			platform =  new Platform(xml);
 			LOG_INFO(tools::toString(*platform));
@@ -134,29 +137,47 @@ int main(int argc, const char* argv[]) {
     /*for(auto &i : sdfXMLs)
      sdfs.push_back(new SDFGraph(i));*/
 
-    
-	XMLdoc xml_const(desConst_path);
-	xml_const.read(false);
     LOG_INFO("Creating an application object ... ");
-    Applications* appset = new Applications(sdfs, taskset, xml_const);
+    Applications* appset;
+    if(desConst_path != ""){
+      XMLdoc xml_const(desConst_path);
+      xml_const.read(false);
+      appset = new Applications(sdfs, taskset, xml_const);
+    }else{
+      appset = new Applications(sdfs, taskset);
+    }
     LOG_INFO(tools::toString(*appset));
 
 	LOG_INFO("Creating a mapping object ... " );
     Mapping* map;
     XMLdoc xml_wcet(WCET_path);
     xml_wcet.read(false);
+    
     if(mappingRules_path != ""){
       XMLdoc xml_mapRules(mappingRules_path);
       xml_mapRules.read(false);
-      map = new Mapping(appset, platform, xml_wcet, xml_const, xml_mapRules);
+      if(desConst_path != ""){
+        XMLdoc xml_const(desConst_path);
+        xml_const.read(false);
+        map = new Mapping(appset, platform, xml_wcet, xml_const, xml_mapRules);
+      }else{
+        map = new Mapping(appset, platform, xml_wcet, xml_mapRules);
+      }
     }else{
-      map = new Mapping(appset, platform, xml_wcet, xml_const);
+      if(desConst_path != ""){
+        XMLdoc xml_const(desConst_path);
+        xml_const.read(false);
+        map = new Mapping(appset, platform, xml_wcet, xml_const);
+      }else{
+        map = new Mapping(appset, platform, xml_wcet);
+      }
     }
     
-    LOG_INFO("Sorting pr tasks based on utilization ... ");
-    //map->PrintWCETs();
-    map->SortTasksUtilization();
-    LOG_INFO(tools::toString(*taskset));
+    if(appset->n_IPTTasks()>0){
+      LOG_INFO("Sorting pr tasks based on utilization ... ");
+      map->SortTasksUtilization();
+      LOG_INFO(tools::toString(*taskset));
+    }
 
     //PRESOLVING +++
     

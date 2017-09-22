@@ -11,7 +11,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
     proc_mode(*this, platform->nodes(), 0, platform->getMaxModes()),
     tdmaAlloc(*this, platform->nodes(), 0, platform->tdmaSlots()),
     injectionTable(*this, platform->nodes()*platform->getTDNCycles(), 0, platform->nodes()+1),
-    noc_mode(*this, 0, platform->getInterconnectModes()-1),
+    ic_mode(*this, 0, platform->getInterconnectModes()-1),
     chosenRoute(*this, apps->n_programChannels(), 0, platform->getTDNCycles()),
     sendNext(*this, apps->n_programChannels()+platform->nodes(), 0, apps->n_programChannels()+platform->nodes()),
     recNext(*this, apps->n_programChannels()+platform->nodes(), 0, apps->n_programChannels()+platform->nodes()),
@@ -63,8 +63,6 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
     IntVarArgs wcct_b(*this, apps->n_programChannels(), 0, Int::Limits::max); 
     IntVarArgs wcct_s(*this, apps->n_programChannels(), 0, Int::Limits::max); 
     IntVarArgs wcct_r(*this, apps->n_programChannels(), 0, Int::Limits::max); 
-    
-    rel(*this, sys_area <= mapping->getSystemConstraints().area);
     
     LOG_DEBUG("Gecode version: " + tools::toString(GECODE_VERSION));
     LOG_DEBUG("Int::Limits::max = " + tools::toString(Int::Limits::max));
@@ -178,15 +176,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
          * Communication
          */
         LOG_INFO("Inserting communication constraints ");
-        vector<tdn_graphNode> tdn_graph = platform->getTDNGraph();
-        size_t messages = channels.size(); 
-        size_t links = tdn_graph.size()/platform->getTDNCycles();
-        IntVarArgs flitsPerLink(*this, messages*links, 0, Int::Limits::max); 
-        IntVarArgs blockingTime_s(*this, apps->n_programChannels(), 0, Int::Limits::max);
-        IntVarArgs blockingTime_r(*this, apps->n_programChannels(), 0, Int::Limits::max);
-        IntVarArgs transferTime_s(*this, apps->n_programChannels(), 0, Int::Limits::max);
-        IntVarArgs transferTime_r(*this, apps->n_programChannels(), 0, Int::Limits::max);
-        IntVar cycleLength(*this, 0, Int::Limits::max); //depends on chosen NoC-mode
+        IntVar cycleLength(*this, 0, Int::Limits::max); //depends on chosen interconnect-mode
         //IntVarArgs sendbufferSz(*this, apps->n_programChannels(), 0, Int::Limits::max);                               /**< //sending buffer sizes. */
         //IntVarArgs recbufferSz(*this, apps->n_programChannels(), 1, Int::Limits::max);                                /**< //receiving buffer sizes. */
 #include "wcct.constraints"
@@ -237,8 +227,8 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
 
                     sumMinWCETs[a] += maxMinWcetActor[i];
                 }
-      }
-    }
+            }
+        }
 #include "throughput.constraints"
 
 //PRESOLVING
@@ -253,7 +243,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
         for (size_t a = 0; a < apps->n_SDFActors(); a++) {
           rel(*this, proc[a] == get<0>(oneProcMapping[apps->getSDFGraph(a)]));
           rel(*this, proc_mode[get<0>(oneProcMapping[apps->getSDFGraph(a)])] == get<1>(oneProcMapping[apps->getSDFGraph(a)]));
-          rel(*this, noc_mode == get<0>(cfg->getPresolverResults()->oneProcMappings[cfg->getPresolverResults()->it_mapping]));
+          rel(*this, ic_mode == get<0>(cfg->getPresolverResults()->oneProcMappings[cfg->getPresolverResults()->it_mapping]));
         }
       } else { //...otherwise forbid all mappings in oneProcMappings
         cout << "Now forbidding " << cfg->getPresolverResults()->oneProcMappings.size() << " mappings." << endl;
@@ -310,7 +300,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
         for(size_t a = 0; a < apps->n_SDFApps(); a++){
             if(apps->getPeriodConstraint(a) < 0){
                 heaviestFirst = false;
-            }else{
+            }else if(apps->getPeriodConstraint(a) > 0){
                 double new_ratio = (double) apps->getPeriodConstraint(a) / sumMinWCETs[a];
                 if(ratio.size() == 0 || new_ratio > ratio.back()){
                     ratio.push_back(new_ratio);
@@ -429,11 +419,11 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
         
         if(platform->getInterconnectType() == TDN_NOC){
           if(cfg->doOptimizeThput()){
-            branch(*this, noc_mode,  INT_VAL_MAX());
+            branch(*this, ic_mode,  INT_VAL_MAX());
           }else if(cfg->doOptimizePower()){
-            branch(*this, noc_mode, INT_VAL_MIN());
+            branch(*this, ic_mode, INT_VAL_MIN());
           }else{
-            branch(*this, noc_mode, INT_VAL_MED());
+            branch(*this, ic_mode, INT_VAL_MED());
           }
         }
         
@@ -496,7 +486,7 @@ SDFPROnlineModel::SDFPROnlineModel(bool share, SDFPROnlineModel& s):
     proc_mode.update(*this, share, s.proc_mode);
     tdmaAlloc.update(*this, share, s.tdmaAlloc);
     injectionTable.update(*this, share, s.injectionTable);
-    noc_mode.update(*this, share, s.noc_mode);
+    ic_mode.update(*this, share, s.ic_mode);
     chosenRoute.update(*this, share, s.chosenRoute);
     sendNext.update(*this, share, s.sendNext);
     recNext.update(*this, share, s.recNext);
@@ -538,7 +528,7 @@ void SDFPROnlineModel::print(std::ostream& out) const {
     out << "----------------------------------------" << endl;
     out << "Proc: " << proc << endl;
     out << "proc mode: " << proc_mode << endl;
-    out << "noc mode: " << noc_mode << endl;
+    out << "ic mode: " << ic_mode << endl;
     //out << "Latency: " << latency << endl;
     out << "Period: " << period << endl;
     //out << "Procs used: " << procsUsed << endl;

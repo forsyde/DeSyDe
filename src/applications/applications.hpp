@@ -57,6 +57,7 @@ protected:
 public:
   Applications();
   ~Applications();
+  Applications(vector<SDFGraph*> _sdfApps, TaskSet* _iptApps);
   Applications(vector<SDFGraph*> _sdfApps, TaskSet* _iptApps, XMLdoc& xml);
   Applications(vector<SDFGraph*> _sdfApps, vector<DesignConstraints*> _desContr, TaskSet* _iptApps);
   Applications(vector<SDFGraph*> _sdfApps, vector<DesignConstraints*> _desContr);

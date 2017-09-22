@@ -209,18 +209,23 @@ struct tdn_graphNode{
 struct InterconnectMode {
   string name;
   int cycleLength;
+  int roundLength;
   int dynPower_link;
   int dynPower_NI;
   int dynPower_switch;
+  int dynPower_bus;
   int staticPow_link;
   int staticPow_NI;
   int staticPow_switch;
+  int staticPow_bus;
   int area_link;
   int area_NI;
   int area_switch;
+  int area_bus;
   int monetary_link;
   int monetary_NI;
   int monetary_switch;
+  int monetary_bus;
   
 };
 
@@ -250,6 +255,7 @@ public:
     type = UNASSIGNED;
   };
 
+ 
   Interconnect(InterconnectType p_type, string p_name, int p_dps, int p_tdma, int p_roundLength, 
                int p_col, int p_row, int p_fs, int p_tdnC, int p_tdnCPP){
     type         = p_type;
@@ -279,11 +285,27 @@ public:
                int _monetary_link,
                int _monetary_NI,
                int _monetary_switch){
-    modes.push_back(InterconnectMode{_name, _cycleLength, 
-                      _dynPower_link, _dynPower_NI, _dynPower_switch,
-                      _staticPow_link, _staticPow_NI, _staticPow_switch, 
-                      _area_link, _area_NI, _area_switch, 
-                      _monetary_link, _monetary_NI, _monetary_switch});
+    modes.push_back(InterconnectMode{_name, _cycleLength, _cycleLength*max(tdmaSlots, tdnCycles),
+                      _dynPower_link, _dynPower_NI, _dynPower_switch, 0,
+                      _staticPow_link, _staticPow_NI, _staticPow_switch, 0, 
+                      _area_link, _area_NI, _area_switch, 0, 
+                      _monetary_link, _monetary_NI, _monetary_switch, 0});
+  }
+  void addMode(string _name,
+               int _cycleLength,
+               int _dynPower_NI,
+               int _dynPower_bus,
+               int _staticPow_NI,
+               int _staticPow_bus,
+               int _area_NI,
+               int _area_bus,
+               int _monetary_NI,
+               int _monetary_bus){
+    modes.push_back(InterconnectMode{_name, _cycleLength, _cycleLength*max(tdmaSlots, tdnCycles),
+                      0, _dynPower_NI, 0, _dynPower_bus,
+                      0, _staticPow_NI, 0, _staticPow_bus, 
+                      0, _area_NI, 0, _area_bus, 
+                      0, _monetary_NI, 0, _monetary_bus});
   }
 };
 

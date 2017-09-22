@@ -1,8 +1,7 @@
 #include "mapping.hpp"
 
 using namespace std;
-
-Mapping::Mapping(Applications* p_program, Platform* p_target, XMLdoc& p_xml_wcet, XMLdoc& p_des_constr) {
+Mapping::Mapping(Applications* p_program, Platform* p_target, XMLdoc& p_xml_wcet) {
   program = p_program;
   target = p_target;
   n_apps = program->n_SDFApps() + program->n_IPTTasks();
@@ -48,7 +47,61 @@ Mapping::Mapping(Applications* p_program, Platform* p_target, XMLdoc& p_xml_wcet
   
   ///Load WCETs
   load_wcets(p_xml_wcet);
-  load_designConstraints(p_des_constr);
+  sysConstr = SystemConstraints{0, 0, 0, 0, 0};
+}
+
+Mapping::Mapping(Applications* p_program, Platform* p_target, XMLdoc& p_xml_wcet, XMLdoc& p_xml2) {
+  program = p_program;
+  target = p_target;
+  n_apps = program->n_SDFApps() + program->n_IPTTasks();
+  period.assign(n_apps, 0);
+  initLatency.assign(n_apps, 0);
+  proc_modes.assign(p_target->nodes(), 0);
+  proc_period.assign(p_target->nodes(), 0);
+  proc_utilization.assign(p_target->nodes(), 0);
+  proc_energy.assign(p_target->nodes(), 0);
+  proc_area.assign(p_target->nodes(), 0);
+  proc_cost.assign(p_target->nodes(), 0);
+  memLoad.assign(p_target->nodes(), 0);
+  procsUsed_utilization = 0;
+  sys_utilization = 0;
+  sys_energy = 0;
+  sys_cost = 0;
+
+  //initialize vector of vectors of vectors for WCETs (combination of entity, proc & mode)
+  wcets.insert(wcets.end(), program->n_programEntities(), //[Nima] n_SDFActors-->n_programEntities
+               vector<vector<int>>(p_target->nodes(),
+                                   vector<int>(p_target->getMaxModes(), std::numeric_limits<int>::max() - 1)));
+                                   
+  mappingRules_do.insert(mappingRules_do.end(), program->n_programEntities(), -1);
+  mappingRules_doNot.insert(mappingRules_doNot.end(), program->n_programEntities(), vector<int>());
+  
+  //prepare WCETs
+  for (size_t i=0; i<program->n_programEntities(); i++){ //all entities
+    for (size_t j=0; j<target->nodes(); j++){  //all processors
+      wcets[i][j].resize(target->getModes(j));
+    }
+  }
+
+  commSched.insert(commSched.end(), p_target->nodes(), vector<int>());
+  //initialize buffers
+  send_buff.assign(program->n_programChannels(), 0);
+  rec_buff.assign(program->n_programChannels(), 0);
+  comm_delay.assign(program->n_programChannels(), div_t());
+
+
+
+  maxIterationsTransPhEntity.assign(p_program->n_programEntities(), 1);
+  maxIterationsTransPhChannel.assign(p_program->n_programChannels(), 1);
+  
+  ///Load WCETs
+  load_wcets(p_xml_wcet);
+  if(isDesignConstraints(p_xml2)){
+    load_designConstraints(p_xml2);
+  }else if(isMappingRules(p_xml2)){
+    load_mappingRules(p_xml2);
+    sysConstr = SystemConstraints{0, 0, 0, 0, 0};
+  }
 }
 
 Mapping::Mapping(Applications* p_program, Platform* p_target, XMLdoc& p_xml_wcet, XMLdoc& p_des_constr, XMLdoc& p_xml_mapRules) {
@@ -125,7 +178,9 @@ Mapping::~Mapping() {
 
 void Mapping::load_wcets(XMLdoc& xml){
   //ofstream out; 
-  //out.open("./WCETs10percent.xml");
+  //out.open("./WCETsTODAES_tradeoff.xml");
+  //double scale[] = {1.6, 1.2, 1.0, 0.8, 0.4};
+  //string scalename[] = {"mode1", "mode2", "mode3", "mode4", "mode5"}; 
   
   //out << "<WCET_table>" << endl;
   const char* my_xpathString = "///WCET_table/mapping";
@@ -149,10 +204,14 @@ void Mapping::load_wcets(XMLdoc& xml){
       
       setWCETs(task_type, proc_type, proc_mode, atoi(task_wcet.c_str()));
         
-      //out << "\t\t<wcet processor=\"" << proc_type;
-      //out << "\" mode=\"" << proc_mode;
-      //out << "\" wcet=\"" << ceil(1.1*atoi(task_wcet.c_str()));
-      //out << "\"/>" << endl;
+      //if(proc_type == "small" && proc_mode == "default"){
+        //for(size_t i=0; i<(sizeof(scale)/sizeof(double)); i++){
+          //out << "\t\t<wcet processor=\"" << "default";
+          //out << "\" mode=\"" << scalename[i];
+          //out << "\" wcet=\"" << ceil(scale[i]*atoi(task_wcet.c_str()));
+          //out << "\"/>" << endl;
+        //}
+      //}
         
       LOG_DEBUG("Proc: " + proc_type + ", proc_mode: " + proc_mode 
                  + ", WCET: " + tools::toString(atoi(task_wcet.c_str())));		
@@ -186,6 +245,13 @@ void Mapping::load_wcets(XMLdoc& xml){
   //out.close();
 }
 
+bool Mapping::isMappingRules(XMLdoc& xml){
+  const char* my_xpathString = "///mappingRules/mapping";
+	auto xml_mappings = xml.xpathNodes(my_xpathString);
+  if(xml_mappings.size()>0) return true; else return false;
+  
+}
+
 void Mapping::load_mappingRules(XMLdoc& xml){
   const char* my_xpathString = "///mappingRules/mapping";
 	LOG_DEBUG("running xpathString  " + tools::toString(my_xpathString) + " on mapping rules file ...");
@@ -217,10 +283,16 @@ void Mapping::load_mappingRules(XMLdoc& xml){
     
 }
 
+bool Mapping::isDesignConstraints(XMLdoc& xml){
+  const char* my_xpathString = "///designConstraints/systemConstraint";
+	auto xml_constraints = xml.xpathNodes(my_xpathString);
+  if(xml_constraints.size()>0) return true; else return false;
+  
+}
 
 void Mapping::load_designConstraints(XMLdoc& xml)
 {
-    const char* my_xpathString = "///designConstraints/systemConstraint";
+  const char* my_xpathString = "///designConstraints/systemConstraint";
 	LOG_DEBUG("running xpathString  " + tools::toString(my_xpathString) + " on desConst file ...");
 	auto xml_constraints = xml.xpathNodes(my_xpathString);
 	for (const auto& cons : xml_constraints)
@@ -1555,4 +1627,73 @@ int Mapping::getProcCost(unsigned proc) const {
 vector<int> Mapping::getProcCosts() const {
   return proc_cost;
 }
+
+//vector<div_t> determineFirstMapping(vector<SDFGraph*>& sdfApps, Applications* apps, Platform* target, Mapping* mapping){
+  //vector<div_t> proc(apps->n_SDFApps());
+  ////Step 1: each app gets 1 proc
+  //vector<int> share(apps->n_SDFApps(), 1);
+  ////Step 2: check how many procs are left to be distributed
+  //int n_extraProcs = target->nodes() - apps->n_SDFApps();
+  //if(n_extraProcs>0){
+    //n_extraProcs = target->nodes();
+    ////Step 3: try to give all apps with throughput constraints as many as needed
+    //for(unsigned int i=0; i<sdfApps.size(); i++){
+
+      //if(apps->getPeriodBound(i) > 0){
+        //int sumMinWCETs = 0;
+        //for(int j=0; j<apps->n_programEntities(); j++){
+          //if(apps->getSDFGraph(j)==i){
+            //vector<int> wcets;
+            //for(int p=0; p<target->nodes(); p++){
+              //vector<int> wcets_proc = mapping->getValidWCETs(j, p);
+              //if(wcets_proc.size()>0)
+                //wcets.push_back(*min_element(wcets_proc.begin(),wcets_proc.end()));
+            //}
+            //sumMinWCETs += *min_element(wcets.begin(),wcets.end()); 
+          //}
+        //}
+        //share[i] = ceil((double)sumMinWCETs/apps->getPeriodBound(i));
+        //n_extraProcs -= share[i];
+      //}
+    //}
+  //}
+
+  //if(n_extraProcs>0){
+    //int optApps = 0;
+    //int remainder;
+    ////Step 4: give remaining procs to the graph with optimization
+    //for(unsigned int i=0; i<sdfApps.size(); i++){
+      //if(apps->getPeriodBound(i) == -1){
+        //optApps++;
+      //}
+    //}
+    //remainder = n_extraProcs%optApps;
+    //for(unsigned int i=0; i<sdfApps.size(); i++){
+      //if(apps->getPeriodBound(i) == -1){
+        //share[i] = n_extraProcs/optApps;
+        //if(remainder>0){
+          //share[i]+=remainder;
+          //remainder = 0;
+        //}
+        //share[i] = min(sdfApps[i]->n_actors(), share[i]);
+        //n_extraProcs -= share[i];
+        //optApps--;
+      //}
+    //}
+  //}
+  
+////  for(unsigned int i=0; i<sdfApps.size(); i++){
+  ////  share[i] += nearbyint((double)sdfApps[i]->n_actors()*n_extraProcs/apps->n_SDFActors());
+  ////}
+  
+  //int minProc=0;
+  //for(unsigned int i=0; i<sdfApps.size(); i++){
+    //cout << "First mapping app " << i << ": ";
+    //proc[i].quot = minProc;
+    //proc[i].rem = minProc + share[i] -1;
+    //cout << proc[i].quot << " - " << proc[i].rem << endl;
+    //minProc = proc[i].rem +1;
+  //}
+  //return proc;
+//}
 

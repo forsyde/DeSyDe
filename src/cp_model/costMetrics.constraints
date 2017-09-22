@@ -4,6 +4,14 @@
 IntVarArgs procUsed_area(*this, platform->nodes(), 0, Int::Limits::max);
 IntVarArgs procUsed_cost(*this, platform->nodes(), 0, Int::Limits::max);
 
+//enforcing the design constraints:
+if(mapping->getSystemConstraints().area >0){
+  rel(*this, sys_area <= mapping->getSystemConstraints().area);
+}
+if(mapping->getSystemConstraints().money >0){
+  rel(*this, sys_cost <= mapping->getSystemConstraints().money);
+}
+
 //for processors:
 for(size_t j=0; j<platform->nodes(); j++){
   element(*this, IntArgs(platform->getAreaCost(j)), proc_mode[j], proc_area[j]);
@@ -22,9 +30,10 @@ rel(*this, sysUsed_cost == sum(procUsed_cost)+nocUsed_cost);
 
 //for the NoC
 if(platform->getInterconnectType() == TDN_NOC){
-  //vector<tdn_graphNode> tdn_graph = platform->getTDNGraph();
-  //size_t links = tdn_graph.size()/platform->getTDNCycles();
-  //size_t messages = channels.size(); 
+  vector<tdn_graphNode> tdn_graph = platform->getTDNGraph();
+  size_t messages = channels.size(); 
+  size_t links = tdn_graph.size()/platform->getTDNCycles();
+  IntVarArgs flitsPerLink(*this, messages*links, 0, Int::Limits::max); 
   Matrix<IntVarArgs> flitsPerLinkM(flitsPerLink, links, messages);//derive flits per switch and flits per NI from this
   //area
   //IntVarArgs area_linkAtNode(*this, platform->nodes(), 0, Int::Limits::max);
@@ -36,13 +45,13 @@ if(platform->getInterconnectType() == TDN_NOC){
   IntVarArgs area_links(*this, links-2*platform->nodes(), 0, Int::Limits::max);
   
   //effects of chosen NoC mode:
-  element(*this, IntArgs(platform->interconnectAreaCost()), noc_mode, noc_area);
+  element(*this, IntArgs(platform->interconnectAreaCost()), ic_mode, noc_area);
   /*for(int p=0; p<platform->nodes(); p++){
-    element(*this, IntArgs(platform->interconnectAreaCost_link(p)), noc_mode, area_linkAtNode[p]);
+    element(*this, IntArgs(platform->interconnectAreaCost_link(p)), ic_mode, area_linkAtNode[p]);
   }*/
-  element(*this, IntArgs(platform->interconnectAreaCost_link()), noc_mode, area_link);
-  element(*this, IntArgs(platform->interconnectAreaCost_switch()), noc_mode, area_switch);
-  element(*this, IntArgs(platform->interconnectAreaCost_NI()), noc_mode, area_NI);
+  element(*this, IntArgs(platform->interconnectAreaCost_link()), ic_mode, area_link);
+  element(*this, IntArgs(platform->interconnectAreaCost_switch()), ic_mode, area_switch);
+  element(*this, IntArgs(platform->interconnectAreaCost_NI()), ic_mode, area_NI);
 
   for(size_t j=0; j<platform->nodes(); j++){
     rel(*this, (nEntitiesOnProc[j]>0) >> (area_NIs[j]==(area_NI+2*area_link)));
@@ -75,13 +84,13 @@ if(platform->getInterconnectType() == TDN_NOC){
   IntVarArgs monetary_links(*this, links-2*platform->nodes(), 0, Int::Limits::max);
   
   //effects of chosen NoC mode:
-  element(*this, IntArgs(platform->interconnectMonetaryCost()), noc_mode, noc_cost);
+  element(*this, IntArgs(platform->interconnectMonetaryCost()), ic_mode, noc_cost);
   /*for(int p=0; p<platform->nodes(); p++){
-    element(*this, IntArgs(platform->interconnectMonetaryCost_link(p)), noc_mode, monetary_linkAtNode[p]);
+    element(*this, IntArgs(platform->interconnectMonetaryCost_link(p)), ic_mode, monetary_linkAtNode[p]);
   }*/
-  element(*this, IntArgs(platform->interconnectMonetaryCost_link()), noc_mode, monetary_link);
-  element(*this, IntArgs(platform->interconnectMonetaryCost_switch()), noc_mode, monetary_switch);
-  element(*this, IntArgs(platform->interconnectMonetaryCost_NI()), noc_mode, monetary_NI);
+  element(*this, IntArgs(platform->interconnectMonetaryCost_link()), ic_mode, monetary_link);
+  element(*this, IntArgs(platform->interconnectMonetaryCost_switch()), ic_mode, monetary_switch);
+  element(*this, IntArgs(platform->interconnectMonetaryCost_NI()), ic_mode, monetary_NI);
   
   for(size_t j=0; j<platform->nodes(); j++){
     rel(*this, (nEntitiesOnProc[j]>0) >> (monetary_NIs[j]==(monetary_NI+2*monetary_link)));
@@ -103,4 +112,9 @@ if(platform->getInterconnectType() == TDN_NOC){
   }
   
   rel(*this, nocUsed_cost == sum(monetary_NIs)+sum(monetary_switches)); //"active" links included in switches & NIs
+}else if(platform->getInterconnectType() == TDMA_BUS){//TODO add model for the bus
+  rel(*this, noc_area == 0);
+  rel(*this, nocUsed_area == 0);
+  rel(*this, noc_cost == 0);
+  rel(*this, nocUsed_cost == 0);
 }
