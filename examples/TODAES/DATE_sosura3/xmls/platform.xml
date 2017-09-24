@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<platform name="demo_platform">
+	<processor model="default" number="5">
+        <mode name="standard" cycle="1" mem="20000" dynPower="100" area="10" monetary="10"/>
+    </processor>
+	<processor model="CS_HWacc" number="1">
+        <mode name="default" cycle="1" mem="20000" dynPower="40" area="5" monetary="8"/>
+    </processor>
+	<processor model="default" number="3">
+        <mode name="standard" cycle="1" mem="20000" dynPower="100" area="10" monetary="10"/>
+    </processor>
+    <interconnect>
+        <TDMA_bus name="TDMA-bus" x-dimension="9" flitSize="32" tdma_slots="9" maxSlotsPerProc="9">
+          <mode name="default" cycleLength="1"/>
+        </TDMA_bus>
+    </interconnect>
+</platform>

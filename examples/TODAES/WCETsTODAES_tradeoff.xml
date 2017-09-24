@@ -1,0 +1,302 @@
+<WCET_table>
+<!-- SOBEL -->
+	<mapping task_type="get_pixel">
+		<wcet processor="default" mode="mode1" wcet="512"/>
+		<wcet processor="default" mode="mode2" wcet="384"/>
+		<wcet processor="default" mode="mode3" wcet="320"/>
+		<wcet processor="default" mode="mode4" wcet="256"/>
+		<wcet processor="default" mode="mode5" wcet="128"/>
+	</mapping>
+	<mapping task_type="gx">
+		<wcet processor="default" mode="mode1" wcet="124"/>
+		<wcet processor="default" mode="mode2" wcet="93"/>
+		<wcet processor="default" mode="mode3" wcet="77"/>
+		<wcet processor="default" mode="mode4" wcet="62"/>
+		<wcet processor="default" mode="mode5" wcet="31"/>
+	</mapping>
+	<mapping task_type="gy">
+		<wcet processor="default" mode="mode1" wcet="124"/>
+		<wcet processor="default" mode="mode2" wcet="93"/>
+		<wcet processor="default" mode="mode3" wcet="77"/>
+		<wcet processor="default" mode="mode4" wcet="62"/>
+		<wcet processor="default" mode="mode5" wcet="31"/>
+	</mapping>
+	<mapping task_type="abs">
+		<wcet processor="default" mode="mode1" wcet="197"/>
+		<wcet processor="default" mode="mode2" wcet="148"/>
+		<wcet processor="default" mode="mode3" wcet="123"/>
+		<wcet processor="default" mode="mode4" wcet="99"/>
+		<wcet processor="default" mode="mode5" wcet="50"/>
+	</mapping>
+<!--SUSAN -->
+	<mapping task_type="getImage">
+		<wcet processor="default" mode="mode1" wcet="24"/>
+		<wcet processor="default" mode="mode2" wcet="18"/>
+		<wcet processor="default" mode="mode3" wcet="15"/>
+		<wcet processor="default" mode="mode4" wcet="12"/>
+		<wcet processor="default" mode="mode5" wcet="6"/>
+	</mapping>
+	<mapping task_type="usan">
+		<wcet processor="default" mode="mode1" wcet="1884"/>
+		<wcet processor="default" mode="mode2" wcet="1413"/>
+		<wcet processor="default" mode="mode3" wcet="1177"/>
+		<wcet processor="default" mode="mode4" wcet="942"/>
+		<wcet processor="default" mode="mode5" wcet="471"/>
+	</mapping>
+	<mapping task_type="direction">
+		<wcet processor="default" mode="mode1" wcet="1333"/>
+		<wcet processor="default" mode="mode2" wcet="1000"/>
+		<wcet processor="default" mode="mode3" wcet="833"/>
+		<wcet processor="default" mode="mode4" wcet="667"/>
+		<wcet processor="default" mode="mode5" wcet="334"/>
+	</mapping>
+	<mapping task_type="thin">
+		<wcet processor="default" mode="mode1" wcet="52"/>
+		<wcet processor="default" mode="mode2" wcet="39"/>
+		<wcet processor="default" mode="mode3" wcet="32"/>
+		<wcet processor="default" mode="mode4" wcet="26"/>
+		<wcet processor="default" mode="mode5" wcet="13"/>
+	</mapping>
+	<mapping task_type="putImage">
+		<wcet processor="default" mode="mode1" wcet="24"/>
+		<wcet processor="default" mode="mode2" wcet="18"/>
+		<wcet processor="default" mode="mode3" wcet="15"/>
+		<wcet processor="default" mode="mode4" wcet="12"/>
+		<wcet processor="default" mode="mode5" wcet="6"/>
+	</mapping>
+<!--RASTA -->
+	<mapping task_type="frontEnd">
+		<wcet processor="default" mode="mode1" wcet="226"/>
+		<wcet processor="default" mode="mode2" wcet="170"/>
+		<wcet processor="default" mode="mode3" wcet="141"/>
+		<wcet processor="default" mode="mode4" wcet="113"/>
+		<wcet processor="default" mode="mode5" wcet="57"/>
+	</mapping>
+	<mapping task_type="rasta">
+		<wcet processor="default" mode="mode1" wcet="50"/>
+		<wcet processor="default" mode="mode2" wcet="38"/>
+		<wcet processor="default" mode="mode3" wcet="31"/>
+		<wcet processor="default" mode="mode4" wcet="25"/>
+		<wcet processor="default" mode="mode5" wcet="13"/>
+	</mapping>
+	<mapping task_type="powspec">
+		<wcet processor="default" mode="mode1" wcet="376"/>
+		<wcet processor="default" mode="mode2" wcet="282"/>
+		<wcet processor="default" mode="mode3" wcet="235"/>
+		<wcet processor="default" mode="mode4" wcet="188"/>
+		<wcet processor="default" mode="mode5" wcet="94"/>
+	</mapping>
+	<mapping task_type="audspec">
+		<wcet processor="default" mode="mode1" wcet="173"/>
+		<wcet processor="default" mode="mode2" wcet="130"/>
+		<wcet processor="default" mode="mode3" wcet="108"/>
+		<wcet processor="default" mode="mode4" wcet="87"/>
+		<wcet processor="default" mode="mode5" wcet="44"/>
+	</mapping>
+	<mapping task_type="compJah">
+		<wcet processor="default" mode="mode1" wcet="173"/>
+		<wcet processor="default" mode="mode2" wcet="130"/>
+		<wcet processor="default" mode="mode3" wcet="108"/>
+		<wcet processor="default" mode="mode4" wcet="87"/>
+		<wcet processor="default" mode="mode5" wcet="44"/>
+	</mapping>
+	<mapping task_type="rastaFilter">
+		<wcet processor="default" mode="mode1" wcet="311"/>
+		<wcet processor="default" mode="mode2" wcet="233"/>
+		<wcet processor="default" mode="mode3" wcet="194"/>
+		<wcet processor="default" mode="mode4" wcet="156"/>
+		<wcet processor="default" mode="mode5" wcet="78"/>
+	</mapping>
+	<mapping task_type="backEnd">
+		<wcet processor="default" mode="mode1" wcet="213"/>
+		<wcet processor="default" mode="mode2" wcet="160"/>
+		<wcet processor="default" mode="mode3" wcet="133"/>
+		<wcet processor="default" mode="mode4" wcet="107"/>
+		<wcet processor="default" mode="mode5" wcet="54"/>
+	</mapping>
+<!-- JPEG encoder -->
+	<mapping task_type="getImage_0">
+		<wcet processor="default" mode="mode1" wcet="661"/>
+		<wcet processor="default" mode="mode2" wcet="496"/>
+		<wcet processor="default" mode="mode3" wcet="413"/>
+		<wcet processor="default" mode="mode4" wcet="331"/>
+		<wcet processor="default" mode="mode5" wcet="166"/>
+	</mapping>
+	<mapping task_type="CC_0">
+		<wcet processor="default" mode="mode1" wcet="1762"/>
+		<wcet processor="default" mode="mode2" wcet="1322"/>
+		<wcet processor="default" mode="mode3" wcet="1101"/>
+		<wcet processor="default" mode="mode4" wcet="881"/>
+		<wcet processor="default" mode="mode5" wcet="441"/>
+	</mapping>
+	<mapping task_type="DCT_0">
+		<wcet processor="default" mode="mode1" wcet="404"/>
+		<wcet processor="default" mode="mode2" wcet="303"/>
+		<wcet processor="default" mode="mode3" wcet="252"/>
+		<wcet processor="default" mode="mode4" wcet="202"/>
+		<wcet processor="default" mode="mode5" wcet="101"/>
+	</mapping>
+	<mapping task_type="Huffman_0">
+		<wcet processor="default" mode="mode1" wcet="544"/>
+		<wcet processor="default" mode="mode2" wcet="408"/>
+		<wcet processor="default" mode="mode3" wcet="340"/>
+		<wcet processor="default" mode="mode4" wcet="272"/>
+		<wcet processor="default" mode="mode5" wcet="136"/>
+	</mapping>
+	<mapping task_type="DCT_1">
+		<wcet processor="default" mode="mode1" wcet="404"/>
+		<wcet processor="default" mode="mode2" wcet="303"/>
+		<wcet processor="default" mode="mode3" wcet="252"/>
+		<wcet processor="default" mode="mode4" wcet="202"/>
+		<wcet processor="default" mode="mode5" wcet="101"/>
+	</mapping>
+	<mapping task_type="Huffman_1">
+		<wcet processor="default" mode="mode1" wcet="544"/>
+		<wcet processor="default" mode="mode2" wcet="408"/>
+		<wcet processor="default" mode="mode3" wcet="340"/>
+		<wcet processor="default" mode="mode4" wcet="272"/>
+		<wcet processor="default" mode="mode5" wcet="136"/>
+	</mapping>
+	<mapping task_type="DCT_2">
+		<wcet processor="default" mode="mode1" wcet="404"/>
+		<wcet processor="default" mode="mode2" wcet="303"/>
+		<wcet processor="default" mode="mode3" wcet="252"/>
+		<wcet processor="default" mode="mode4" wcet="202"/>
+		<wcet processor="default" mode="mode5" wcet="101"/>
+	</mapping>
+	<mapping task_type="Huffman_2">
+		<wcet processor="default" mode="mode1" wcet="544"/>
+		<wcet processor="default" mode="mode2" wcet="408"/>
+		<wcet processor="default" mode="mode3" wcet="340"/>
+		<wcet processor="default" mode="mode4" wcet="272"/>
+		<wcet processor="default" mode="mode5" wcet="136"/>
+	</mapping>
+	<mapping task_type="DCT_3">
+		<wcet processor="default" mode="mode1" wcet="404"/>
+		<wcet processor="default" mode="mode2" wcet="303"/>
+		<wcet processor="default" mode="mode3" wcet="252"/>
+		<wcet processor="default" mode="mode4" wcet="202"/>
+		<wcet processor="default" mode="mode5" wcet="101"/>
+	</mapping>
+	<mapping task_type="Huffman_3">
+		<wcet processor="default" mode="mode1" wcet="544"/>
+		<wcet processor="default" mode="mode2" wcet="408"/>
+		<wcet processor="default" mode="mode3" wcet="340"/>
+		<wcet processor="default" mode="mode4" wcet="272"/>
+		<wcet processor="default" mode="mode5" wcet="136"/>
+	</mapping>
+	<mapping task_type="DCT_4">
+		<wcet processor="default" mode="mode1" wcet="404"/>
+		<wcet processor="default" mode="mode2" wcet="303"/>
+		<wcet processor="default" mode="mode3" wcet="252"/>
+		<wcet processor="default" mode="mode4" wcet="202"/>
+		<wcet processor="default" mode="mode5" wcet="101"/>
+	</mapping>
+	<mapping task_type="Huffman_4">
+		<wcet processor="default" mode="mode1" wcet="544"/>
+		<wcet processor="default" mode="mode2" wcet="408"/>
+		<wcet processor="default" mode="mode3" wcet="340"/>
+		<wcet processor="default" mode="mode4" wcet="272"/>
+		<wcet processor="default" mode="mode5" wcet="136"/>
+	</mapping>
+	<mapping task_type="DCT_5">
+		<wcet processor="default" mode="mode1" wcet="404"/>
+		<wcet processor="default" mode="mode2" wcet="303"/>
+		<wcet processor="default" mode="mode3" wcet="252"/>
+		<wcet processor="default" mode="mode4" wcet="202"/>
+		<wcet processor="default" mode="mode5" wcet="101"/>
+	</mapping>
+	<mapping task_type="Huffman_5">
+		<wcet processor="default" mode="mode1" wcet="544"/>
+		<wcet processor="default" mode="mode2" wcet="408"/>
+		<wcet processor="default" mode="mode3" wcet="340"/>
+		<wcet processor="default" mode="mode4" wcet="272"/>
+		<wcet processor="default" mode="mode5" wcet="136"/>
+	</mapping>
+	<mapping task_type="CS_0">
+		<wcet processor="default" mode="mode1" wcet="4039"/>
+		<wcet processor="default" mode="mode2" wcet="3029"/>
+		<wcet processor="default" mode="mode3" wcet="2524"/>
+		<wcet processor="default" mode="mode4" wcet="2020"/>
+		<wcet processor="default" mode="mode5" wcet="1010"/>
+        <wcet processor="CS_HWacc" mode="default" wcet="1388" />
+	</mapping>
+	<mapping task_type="writeImage_0">
+		<wcet processor="default" mode="mode1" wcet="212"/>
+		<wcet processor="default" mode="mode2" wcet="159"/>
+		<wcet processor="default" mode="mode3" wcet="132"/>
+		<wcet processor="default" mode="mode4" wcet="106"/>
+		<wcet processor="default" mode="mode5" wcet="53"/>
+	</mapping>
+<!-- Synthetic Cyclic Graph -->
+	<mapping task_type="a0">
+		<wcet processor="default" mode="mode1" wcet="48"/>
+		<wcet processor="default" mode="mode2" wcet="36"/>
+		<wcet processor="default" mode="mode3" wcet="30"/>
+		<wcet processor="default" mode="mode4" wcet="24"/>
+		<wcet processor="default" mode="mode5" wcet="12"/>
+	</mapping>
+	<mapping task_type="a1">
+		<wcet processor="default" mode="mode1" wcet="16"/>
+		<wcet processor="default" mode="mode2" wcet="12"/>
+		<wcet processor="default" mode="mode3" wcet="10"/>
+		<wcet processor="default" mode="mode4" wcet="8"/>
+		<wcet processor="default" mode="mode5" wcet="4"/>
+	</mapping>
+	<mapping task_type="a2">
+		<wcet processor="default" mode="mode1" wcet="32"/>
+		<wcet processor="default" mode="mode2" wcet="24"/>
+		<wcet processor="default" mode="mode3" wcet="20"/>
+		<wcet processor="default" mode="mode4" wcet="16"/>
+		<wcet processor="default" mode="mode5" wcet="8"/>
+	</mapping>
+	<mapping task_type="a3">
+		<wcet processor="default" mode="mode1" wcet="13"/>
+		<wcet processor="default" mode="mode2" wcet="10"/>
+		<wcet processor="default" mode="mode3" wcet="8"/>
+		<wcet processor="default" mode="mode4" wcet="7"/>
+		<wcet processor="default" mode="mode5" wcet="4"/>
+	</mapping>
+	<mapping task_type="a4">
+		<wcet processor="default" mode="mode1" wcet="512"/>
+		<wcet processor="default" mode="mode2" wcet="384"/>
+		<wcet processor="default" mode="mode3" wcet="320"/>
+		<wcet processor="default" mode="mode4" wcet="256"/>
+		<wcet processor="default" mode="mode5" wcet="128"/>
+	</mapping>
+	<mapping task_type="a5">
+		<wcet processor="default" mode="mode1" wcet="124"/>
+		<wcet processor="default" mode="mode2" wcet="93"/>
+		<wcet processor="default" mode="mode3" wcet="77"/>
+		<wcet processor="default" mode="mode4" wcet="62"/>
+		<wcet processor="default" mode="mode5" wcet="31"/>
+	</mapping>
+	<mapping task_type="a6">
+		<wcet processor="default" mode="mode1" wcet="124"/>
+		<wcet processor="default" mode="mode2" wcet="93"/>
+		<wcet processor="default" mode="mode3" wcet="77"/>
+		<wcet processor="default" mode="mode4" wcet="62"/>
+		<wcet processor="default" mode="mode5" wcet="31"/>
+	</mapping>
+	<mapping task_type="a7">
+		<wcet processor="default" mode="mode1" wcet="197"/>
+		<wcet processor="default" mode="mode2" wcet="148"/>
+		<wcet processor="default" mode="mode3" wcet="123"/>
+		<wcet processor="default" mode="mode4" wcet="99"/>
+		<wcet processor="default" mode="mode5" wcet="50"/>
+	</mapping>
+	<mapping task_type="a8">
+		<wcet processor="default" mode="mode1" wcet="226"/>
+		<wcet processor="default" mode="mode2" wcet="170"/>
+		<wcet processor="default" mode="mode3" wcet="141"/>
+		<wcet processor="default" mode="mode4" wcet="113"/>
+		<wcet processor="default" mode="mode5" wcet="57"/>
+	</mapping>
+	<mapping task_type="a9">
+		<wcet processor="default" mode="mode1" wcet="50"/>
+		<wcet processor="default" mode="mode2" wcet="38"/>
+		<wcet processor="default" mode="mode3" wcet="31"/>
+		<wcet processor="default" mode="mode4" wcet="25"/>
+		<wcet processor="default" mode="mode5" wcet="13"/>
+	</mapping>
+</WCET_table>
