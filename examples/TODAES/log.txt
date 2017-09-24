@@ -1,0 +1,8 @@
+--- Experiments for DATE 2018 ---
+
+--- Experiment 1, run 1 ...
+fre 22 sep 2017 22:24:20 CEST
+g10_3_cycl.sdf.xml
+0 minutes and 35 seconds elapsed.
+end of experiment 1
+fre 22 sep 2017 22:24:55 CEST
