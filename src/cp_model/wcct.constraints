@@ -10,6 +10,26 @@ if(platform->getInterconnectType() == TDMA_BUS){
   //effects of chosen interconnect mode:
   element(*this, IntArgs(platform->getTDNCycleLengths()), ic_mode, cycleLength);
   
+  IntVarArgs maxMsgSizeFromProc(*this, platform->nodes(), 0, maxMessageSize);
+  for(unsigned int j=0; j<platform->nodes(); j++){
+    //find the largest message sent from proc j
+    IntVarArgs msgSizeProcJ(*this, channels.size(), 0, maxMessageSize);
+    for(unsigned int ki=0; ki<channels.size(); ki++){
+      int src_ch = channels[ki]->source;
+      int dst_ch = channels[ki]->destination;
+      int msgSize = channels[ki]->messageSize;
+      
+      rel(*this, (proc[src_ch]==j && proc[src_ch]!=proc[dst_ch]) >> (msgSizeProcJ[ki]==msgSize));
+      rel(*this, (proc[src_ch]==proc[dst_ch] || proc[src_ch]!=j) >> (msgSizeProcJ[ki]==0));
+    }
+    rel(*this, maxMsgSizeFromProc[j]==max(msgSizeProcJ));
+    
+    //the number of slots allocated to a processor should not exceed the number required to 
+    //send the largest message from that proc (making decision space smaller)
+    rel(*this, ((tdmaAlloc[j]>0) && ((tdmaAlloc[j]*platform->dataPerSlot())>=maxMsgSizeFromProc[j])) 
+                >> ((((tdmaAlloc[j]-1)*platform->dataPerSlot())<maxMsgSizeFromProc[j])));
+  }
+  
   for(unsigned int ki=0; ki<channels.size(); ki++){
     int src_ch1 = channels[ki]->source;
     int dst_ch1 = channels[ki]->destination;
