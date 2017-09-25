@@ -337,7 +337,7 @@ private:
     out << "\n \n*** \n";    
     
     std::chrono::high_resolution_clock::duration presolver_delay(0);
-    if(cfg.doPresolve() && cfg.is_presolved()){
+    if((cfg.doPresolve() && cfg.is_presolved()) || cfg.doMultiStep()){
       solutionData = cfg.getPresolverResults()->optResults;
       presolver_delay = cfg.getPresolverResults()->presolver_delay;
     }

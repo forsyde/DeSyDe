@@ -264,7 +264,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
     }
     
     if (cfg->doPresolve() && cfg->is_presolved()) {
-      if(cfg->doOptimizeThput()){
+      if(cfg->doOptimizeThput(cfg->settings().optimizationStep)){
         bool set = false;
         for(size_t i=0;i<apps->n_SDFApps();i++)
         {
@@ -277,9 +277,13 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
             }
           }
         }
-      }else if(cfg->doOptimizePower()){
+      }else if(cfg->doOptimizePower(cfg->settings().optimizationStep)){
         for (size_t j = 0; j < cfg->getPresolverResults()->optResults.size(); j++) {
-          rel(*this, sys_power < cfg->getPresolverResults()->optResults[j].values[0]);
+          if(cfg->doOptimizePower() && cfg->doOptimizeThput()){
+            rel(*this, sys_power < cfg->getPresolverResults()->optResults[j].values[apps->n_SDFApps()]);
+          }else if(cfg->doOptimizePower() && !cfg->doOptimizeThput()){
+            rel(*this, sys_power < cfg->getPresolverResults()->optResults[j].values[0]);
+          }
         }
       }
       
@@ -290,7 +294,8 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
       for(unsigned int x=0; x<firstMapping.size(); x++){
         for(size_t i=0; i<apps->n_programEntities(); i++){
           if(x == apps->getSDFGraph(i)){
-            cout << "proc[" << i << "] >= " << firstMapping[x].quot << " & <= " << firstMapping[x].rem << endl;
+            LOG_DEBUG("Inserting constraints for fixed mapping (multi-step solving):");
+            LOG_DEBUG("   proc[" + tools::toString(i) + "] >= " + tools::toString(firstMapping[x].quot) + " & <= " + tools::toString(firstMapping[x].rem));
             rel(*this, proc[i]>=firstMapping[x].quot && proc[i]<=firstMapping[x].rem);
           }
         }
@@ -299,6 +304,40 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
       if(firstMapping.size()>0){
         //cout << "procsUsed >= " << (firstMapping.back().quot+1) << endl;
         rel(*this, procsUsed >= (firstMapping.back().quot+1));
+      }else{ //use found solutions for improving solution
+        
+        if(cfg->doOptimizePower() && cfg->doOptimizeThput()){
+          if(cfg->doOptimizePower(cfg->settings().optimizationStep) 
+             && cfg->doOptimizeThput(cfg->settings().optimizationStep-1)){ //first throughput, then power
+               
+            for(size_t i=0;i<apps->n_SDFApps();i++){
+              if(apps->getPeriodConstraint(i) == -1){
+                rel(*this, (period[i] < cfg->getPresolverResults()->optResults.back().values[i]) ||
+                           ((period[i] == cfg->getPresolverResults()->optResults.back().values[i]) && 
+                            (sys_power < cfg->getPresolverResults()->optResults.back().values[apps->n_SDFApps()])));
+                break;
+              }
+            }
+          }else if(cfg->doOptimizeThput(cfg->settings().optimizationStep)
+             && cfg->doOptimizePower(cfg->settings().optimizationStep-1)){ //first power, then throughput
+               
+            for(size_t i=0;i<apps->n_SDFApps();i++){
+              if(apps->getPeriodConstraint(i) == -1){
+                rel(*this, (sys_power < cfg->getPresolverResults()->optResults.back().values[apps->n_SDFApps()]) ||
+                           ((sys_power == cfg->getPresolverResults()->optResults.back().values[apps->n_SDFApps()]) && (period[i] < cfg->getPresolverResults()->optResults.back().values[i])));
+                break;
+              }
+            }
+          }
+        }else if(!cfg->doOptimizePower() && cfg->doOptimizeThput()){
+          for(size_t i=0;i<apps->n_SDFApps();i++){
+            if(apps->getPeriodConstraint(i) == -1){
+              rel(*this, period[i] < cfg->getPresolverResults()->optResults.back().values[i]);break;
+            }
+          }
+        }else if(cfg->doOptimizePower() && !cfg->doOptimizeThput()){
+          rel(*this, sys_power < cfg->getPresolverResults()->optResults.back().values[0]);
+        }//else... add the other metrics (area, money, ...)
       }
     }
 

@@ -507,10 +507,10 @@ void Config::setMultiStepSearch(const string &str) throw (InvalidFormatException
 }
 
 void Config::setOptimizationStep(size_t n){
-  if(n < settings_.criteria.size()){
+  if(n < settings_.criteria.size()+1){ //+1 for the final, complete step
     settings_.optimizationStep = n;
   }else{
-    THROW_EXCEPTION(RuntimeException, "attempted to set non-existing optimization step " + tools::toString(n) + " of " + tools::toString(settings_.criteria.size()-1));
+    THROW_EXCEPTION(RuntimeException, "attempted to set non-existing optimization step " + tools::toString(n) + " of " + tools::toString(settings_.criteria.size()));
   }
 }
 

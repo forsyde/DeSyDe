@@ -134,7 +134,7 @@ public:
   //get worst case execution cost of ipt tasks(-time depends on mapping)
   int getMaxWCET_IPT();
   //get bound on period for graph g_id from design constraints
-  int getPeriodBound(size_t g_id);
+//  int getPeriodBound(size_t g_id);
   //get constraint type on period, sat or opt
   SolutionMode getConstrType(size_t g_id);
 

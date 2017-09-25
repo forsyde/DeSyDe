@@ -63,6 +63,8 @@ public:
    * (i)  print()
    */
   CPModelTemplate* presolve(Mapping* map) {
+    size_t step = 0;
+    settings.setOptimizationStep(step);
     if(settings.doPresolve()){
       PresolverCPTemplate* pre_model = new PresolverCPTemplate(map, settings);
 
@@ -109,8 +111,7 @@ public:
     }
     if(settings.doMultiStep()){
       LOG_DEBUG("  MULTISTEP SOLVING");
-      size_t step = 0;
-      settings.setOptimizationStep(step);
+      
       for(auto i: settings.settings().pre_heuristics){
         switch(i){
         case (Config::TODAES): {
@@ -123,7 +124,6 @@ public:
           THROW_EXCEPTION(RuntimeException, "unknown heuristic for multi-step solving");
           break;
         }
-        
         
         geSearchOptions.threads = settings.settings().threads;
         if(settings.settings().timeout_first > 0){
@@ -172,6 +172,7 @@ public:
           break;
         }
         
+        LOG_DEBUG("  final step optimizing for " + tools::toString(settings.settings().criteria.back()));
         
         // +++ Now: Create the full model
         LOG_INFO("Creating full CP model from multi-step solver, step " + tools::toString(step+1));
@@ -200,8 +201,6 @@ private:
   typedef std::chrono::high_resolution_clock runTimer; /**< Timer type. */
   runTimer::time_point t_start, t_endAll; /**< Timer objects for start and end of experiment. */
   shared_ptr<Config::PresolverResults> results;
-  vector<Config::SolutionValues> solutionData;
-
   /**
    * Prints the solutions in the ofstream (out)
    */
@@ -330,8 +329,9 @@ private:
     
     std::chrono::high_resolution_clock::duration presolver_delay(0);
     if(settings.doPresolve() && settings.is_presolved()){
-      solutionData = settings.getPresolverResults()->optResults;
       presolver_delay = settings.getPresolverResults()->presolver_delay;
+    }else{
+      settings.setPresolverResults(results);
     }
     
     CPModelTemplate* prev_sol = nullptr;
@@ -356,7 +356,6 @@ private:
       //cout << nodes << " solutions found." << endl;
 
       if(settings.settings().out_print_freq == Config::ALL_SOL){
-          LOG_INFO(tools::toString(nodes) +" solution found so far.");
           printSolution(e, (CPModelTemplate*)s);          
       }
      /// We want to keep the last solution in case we only print the last one
@@ -381,7 +380,6 @@ private:
         timerResets++;
       }
     }
-    out << "~~~~~ *** END OF MULTI-STEP (STEP "+tools::toString(settings.settings().optimizationStep)+") SOLUTIONS *** ~~~~~" << endl;
     
     
     auto durAll = runTimer::now() - t_start;
@@ -411,12 +409,11 @@ private:
     }
     out << " =====\n" << nodes << " solutions found\n" << "search nodes: " << e->statistics().node << ", fail: " << e->statistics().fail << ", propagate: "
         << e->statistics().propagate << ", depth: " << e->statistics().depth << ", nogoods: " << e->statistics().nogood << ", restarts: " << e->statistics().restart << " ***\n";
+        
+        
+    out << "\n~~~~~ *** END OF MULTI-STEP (STEP "+tools::toString(settings.settings().optimizationStep)+") SOLUTIONS *** ~~~~~" << endl;
 
     out.close();
-    // +++ Now: Create the full model
-    LOG_INFO("Creating full CP model from Presolver...");
-    results->it_mapping = results->oneProcMappings.size();
-    settings.setPresolverResults(results);
   }
   
   void useHeuristic_TODAES(Mapping* map){
@@ -431,12 +428,13 @@ private:
       n_extraProcs = map->getPlatform()->nodes();
       //Step 3: try to give all apps with throughput constraints as many as needed
       for(unsigned int i=0; i<map->getApplications()->n_SDFApps(); i++){
-        if(map->getApplications()->getPeriodBound(i) > 0){
+        if(map->getApplications()->getPeriodConstraint(i) > 0){
           int sumMinWCETs = 0;
-          for(int j=0; j<map->getApplications()->n_programEntities(); j++){
+          for(size_t j=0; j<map->getApplications()->n_programEntities(); j++){
             if(map->getApplications()->getSDFGraph(j)==i){
               vector<int> wcets;
-              for(int p=0; p<map->getPlatform()->nodes(); p++){
+              
+              for(size_t p=0; p<map->getPlatform()->nodes(); p++){
                 vector<int> wcets_proc = map->getValidWCETs(j, p);
                 if(wcets_proc.size()>0)
                   wcets.push_back(*min_element(wcets_proc.begin(),wcets_proc.end()));
@@ -444,7 +442,7 @@ private:
               sumMinWCETs += *min_element(wcets.begin(),wcets.end()); 
             }
           }
-          share[i] = ceil((double)sumMinWCETs/map->getApplications()->getPeriodBound(i));
+          share[i] = ceil((double)sumMinWCETs/map->getApplications()->getPeriodConstraint(i));
           n_extraProcs -= share[i];
         }
       }
@@ -455,13 +453,13 @@ private:
       int remainder;
       //Step 4: give remaining procs to the graph with optimization
       for(unsigned int i=0; i<map->getApplications()->n_SDFApps(); i++){
-        if(map->getApplications()->getPeriodBound(i) == -1){
+        if(map->getApplications()->getPeriodConstraint(i) == -1){
           optApps++;
         }
       }
       remainder = n_extraProcs%optApps;
       for(unsigned int i=0; i<map->getApplications()->n_SDFApps(); i++){
-        if(map->getApplications()->getPeriodBound(i) == -1){
+        if(map->getApplications()->getPeriodConstraint(i) == -1){
           share[i] = n_extraProcs/optApps;
           if(remainder>0){
             share[i]+=remainder;
@@ -480,13 +478,12 @@ private:
     
     int minProc=0;
     for(unsigned int i=0; i<map->getApplications()->n_SDFApps(); i++){
-      cout << "First mapping app " << i << ": ";
       proc[i].quot = minProc;
       proc[i].rem = minProc + share[i] -1;
-      cout << proc[i].quot << " - " << proc[i].rem << endl;
+      LOG_INFO("  First mapping in multi-step solving for app " + tools::toString(i)
+               + ": "+ tools::toString(proc[i].quot) + " - " + tools::toString(proc[i].rem) );
       minProc = proc[i].rem +1;
     }
-    getchar();
     //return proc;
     map->setFirstMapping(proc);
   //}

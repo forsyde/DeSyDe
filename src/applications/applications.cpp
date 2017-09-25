@@ -79,7 +79,9 @@ void Applications::load_const(XMLdoc& xml)
         
     set_const(app_name, period_cons, latency_cons);
         
-		LOG_DEBUG("Reading constraints for app: " + app_name + "...");		
+		LOG_DEBUG("Reading constraints for app: " + app_name + ":");
+		LOG_DEBUG("  Period <= " + tools::toString(period_cons));		
+		LOG_DEBUG("  Latency <= " + tools::toString(latency_cons));		
 		
 	}	
 }
@@ -411,12 +413,12 @@ int Applications::getMaxNumberOfIPTInstances(){
   return 0;
 }
 
-int Applications::getPeriodBound(size_t g_id){
-  if(g_id<sdfApps.size()){
-    return desContr[g_id]->getPeriodBound();
-  }
-  return -1;
-}
+//int Applications::getPeriodBound(size_t g_id){
+  //if(g_id<sdfApps.size()){
+    //return desContr[g_id]->getPeriodBound();
+  //}
+  //return -1;
+//}
 
 SolutionMode Applications::getConstrType(size_t g_id){
   if(g_id>=sdfApps.size())

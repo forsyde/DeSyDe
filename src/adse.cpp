@@ -180,24 +180,6 @@ int main(int argc, const char* argv[]) {
     }
 
     //PRESOLVING +++
-    if(cfg.doMultiStep()){
-      cout << "multi-step solving: " << endl;
-      for(size_t i = 0; i<cfg.settings().pre_heuristics.size(); i++){
-        cout << "    heuristic " << tools::toString(cfg.settings().pre_heuristics[i]);
-        if(cfg.settings().criteria.size() > i){
-          cout << " optimizing for " << tools::toString(cfg.settings().criteria[i]);
-        }
-        cout << endl;
-      }
-    }
-    cout << "  final step: ";
-    if(cfg.settings().pre_heuristics.size()<cfg.settings().criteria.size()){
-      cout << "optimizing for " << cfg.settings().criteria[cfg.settings().pre_heuristics.size()];
-    }else{
-      cout << "optimizing for " << cfg.settings().criteria.back();
-    }
-    cout << endl;
-    getchar();
     
     SDFPROnlineModel* model;
     
