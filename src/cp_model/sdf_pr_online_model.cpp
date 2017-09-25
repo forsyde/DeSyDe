@@ -284,6 +284,23 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
       }
       
     }
+//MULTI-STEP SOLVING
+    if (cfg->doMultiStep()){
+      vector<div_t> firstMapping = mapping->getFirstMapping();
+      for(unsigned int x=0; x<firstMapping.size(); x++){
+        for(size_t i=0; i<apps->n_programEntities(); i++){
+          if(x == apps->getSDFGraph(i)){
+            cout << "proc[" << i << "] >= " << firstMapping[x].quot << " & <= " << firstMapping[x].rem << endl;
+            rel(*this, proc[i]>=firstMapping[x].quot && proc[i]<=firstMapping[x].rem);
+          }
+        }
+      }
+
+      if(firstMapping.size()>0){
+        //cout << "procsUsed >= " << (firstMapping.back().quot+1) << endl;
+        rel(*this, procsUsed >= (firstMapping.back().quot+1));
+      }
+    }
 
         for(size_t i = 0; i < channels.size(); i++){
             delete channels[i];

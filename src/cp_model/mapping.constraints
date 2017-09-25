@@ -159,20 +159,6 @@ for(size_t i=0; i<apps->n_SDFActors(); i++){ //i iterates of SDF actors
  */
 
 //TODO: further design decisions
-vector<div_t> firstMapping = mapping->getFirstMapping();
-for(unsigned int x=0; x<firstMapping.size(); x++){
-  for(size_t i=0; i<apps->n_programEntities(); i++){
-    if(x == apps->getSDFGraph(i)){
-      cout << "proc[" << i << "] >= " << firstMapping[x].quot << " & <= " << firstMapping[x].rem << endl;
-      rel(*this, proc[i]>=firstMapping[x].quot && proc[i]<=firstMapping[x].rem);
-    }
-  }
-}
-
-if(firstMapping.size()>0){
-  //cout << "procsUsed >= " << (firstMapping.back().quot+1) << endl;
-  rel(*this, procsUsed >= (firstMapping.back().quot+1));
-}
 
 vector<int> mappingRules_do = mapping->getMappingRules_do();
 vector<vector<int>> mappingRules_doNot = mapping->getMappingRules_doNot();

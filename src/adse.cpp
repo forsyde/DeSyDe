@@ -201,25 +201,18 @@ int main(int argc, const char* argv[]) {
     
     SDFPROnlineModel* model;
     
-    if(cfg.doPresolve()){
+    if(cfg.doPresolve() || cfg.doMultiStep()){
 
-      LOG_INFO("Creating PRESOLVING execution object ... ");
+      LOG_INFO("Creating PRESOLVING and MULTI-STEP execution object ... ");
       Presolver<OneProcModel, SDFPROnlineModel> presolver(cfg);
 
-      LOG_INFO("Running PRESOLVING model object ... ");
+      LOG_INFO("Running PRESOLVING and MULTI-STEP object ... ");
       model = (SDFPROnlineModel*)presolver.presolve(map);
 
-      vector<tuple<int,vector<tuple<int,int>>>> mappings = presolver.getMappingResults();
-      LOG_INFO("Presolver found " + tools::toString(mappings.size()) + " isolated mappings.");
+      if(cfg.doPresolve()){
+        LOG_INFO("Presolver found " + tools::toString(presolver.getMappingResults().size()) + " isolated mappings.");
+      }
       
-    }else if(cfg.doMultiStep()){
-      LOG_INFO("Creating PRESOLVING execution object for heuristic multi-step solving ... ");
-      Presolver<OneProcModel, SDFPROnlineModel> presolver(cfg);
-      
-      //model = 
-      
-      LOG_INFO("...");
-    
     }else{
       LOG_INFO("No PRESOLVER specified.");
       model = new SDFPROnlineModel(map, &cfg);
