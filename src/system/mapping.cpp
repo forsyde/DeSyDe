@@ -284,7 +284,7 @@ void Mapping::load_mappingRules(XMLdoc& xml){
 }
 
 bool Mapping::isDesignConstraints(XMLdoc& xml){
-  const char* my_xpathString = "///designConstraints/systemConstraint";
+  const char* my_xpathString = "///designConstraints/designConstraints";
 	auto xml_constraints = xml.xpathNodes(my_xpathString);
   if(xml_constraints.size()>0) return true; else return false;
   
@@ -292,7 +292,7 @@ bool Mapping::isDesignConstraints(XMLdoc& xml){
 
 void Mapping::load_designConstraints(XMLdoc& xml)
 {
-  const char* my_xpathString = "///designConstraints/systemConstraint";
+  const char* my_xpathString = "///designConstraints/constraint";
 	LOG_DEBUG("running xpathString  " + tools::toString(my_xpathString) + " on desConst file ...");
 	auto xml_constraints = xml.xpathNodes(my_xpathString);
 	for (const auto& cons : xml_constraints)

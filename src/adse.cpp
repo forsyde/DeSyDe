@@ -180,13 +180,31 @@ int main(int argc, const char* argv[]) {
     }
 
     //PRESOLVING +++
+    if(cfg.doMultiStep()){
+      cout << "multi-step solving: " << endl;
+      for(size_t i = 0; i<cfg.settings().pre_heuristics.size(); i++){
+        cout << "    heuristic " << tools::toString(cfg.settings().pre_heuristics[i]);
+        if(cfg.settings().criteria.size() > i){
+          cout << " optimizing for " << tools::toString(cfg.settings().criteria[i]);
+        }
+        cout << endl;
+      }
+    }
+    cout << "  final step: ";
+    if(cfg.settings().pre_heuristics.size()<cfg.settings().criteria.size()){
+      cout << "optimizing for " << cfg.settings().criteria[cfg.settings().pre_heuristics.size()];
+    }else{
+      cout << "optimizing for " << cfg.settings().criteria.back();
+    }
+    cout << endl;
+    getchar();
     
     SDFPROnlineModel* model;
     
     if(cfg.doPresolve()){
 
       LOG_INFO("Creating PRESOLVING execution object ... ");
-      Presolver presolver(cfg);
+      Presolver<OneProcModel, SDFPROnlineModel> presolver(cfg);
 
       LOG_INFO("Running PRESOLVING model object ... ");
       model = (SDFPROnlineModel*)presolver.presolve(map);
@@ -194,6 +212,14 @@ int main(int argc, const char* argv[]) {
       vector<tuple<int,vector<tuple<int,int>>>> mappings = presolver.getMappingResults();
       LOG_INFO("Presolver found " + tools::toString(mappings.size()) + " isolated mappings.");
       
+    }else if(cfg.doMultiStep()){
+      LOG_INFO("Creating PRESOLVING execution object for heuristic multi-step solving ... ");
+      Presolver<OneProcModel, SDFPROnlineModel> presolver(cfg);
+      
+      //model = 
+      
+      LOG_INFO("...");
+    
     }else{
       LOG_INFO("No PRESOLVER specified.");
       model = new SDFPROnlineModel(map, &cfg);

@@ -108,8 +108,7 @@ public:
       break;
     }
     default:
-      LOG_INFO("unknown search type !!!");
-      throw 42;
+      THROW_EXCEPTION(RuntimeException, "unknown search type for main solver.");
       break;
     }
     LOG_INFO("End of exploration. Result files written to " +cfg.settings().output_path+"out/");
@@ -388,7 +387,6 @@ private:
         ((Search::TimeStop*)geSearchOptions.stop)->reset();
         ((Search::TimeStop*)geSearchOptions.stop)->limit(cfg.settings().timeout_all);
         timerResets++;
-        cout << timerResets << " timer resets so far." << " (restarts: " << e->statistics().restart << ", nogoods: " << e->statistics().nogood << ")" << endl;
       }
 
     }

@@ -53,7 +53,7 @@ Applications::Applications(vector<SDFGraph*> _sdfApps, TaskSet* _iptApps, XMLdoc
 
 void Applications::load_const(XMLdoc& xml)
 {
-  const char* my_xpathString = "///designConstraints/appConstraint";
+  const char* my_xpathString = "///designConstraints/constraint";
 	LOG_DEBUG("running xpathString  " + tools::toString(my_xpathString) + " on desConst file ...");
 	auto xml_constraints = xml.xpathNodes(my_xpathString);
     LOG_DEBUG("xml_constraints size="+tools::toString(xml_constraints.size()));
@@ -226,6 +226,15 @@ size_t Applications::n_SDFParentActors(){
 //get number of SDF actors
 size_t Applications::n_SDFActors(){
   return n_sdfActors;
+}
+
+//get number of SDF actors of specified graph
+size_t Applications::n_SDFActorsOfApp(size_t app){
+  if(app >= sdfApps.size()){
+    return 0;
+  }else{
+    return sdfApps[app]->n_actors();
+  }
 }
 
 //get number of SDF channels

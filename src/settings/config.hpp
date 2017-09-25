@@ -87,6 +87,10 @@ public:
     NO_PRE,
     ONE_PROC_MAPPINGS
   };
+  enum MultiStepHeuristics {
+    NO_HEURISTIC,
+    TODAES
+  };
   enum SearchTypes {
     NONESEARCH,
     FIRST,
@@ -108,15 +112,18 @@ public:
 
     CPModels                  model;
     std::vector<PresolverModels> pre_models;
+    std::vector<MultiStepHeuristics> pre_heuristics;
     SearchTypes               search;
     SearchTypes               pre_search;
+    SearchTypes               pre_multi_step_search;
+    size_t                    optimizationStep;
     std::vector<OptCriterion> criteria;
     unsigned long int         timeout_first;
     unsigned long int         timeout_all;
 
-    unsigned long int luby_scale;
-    unsigned int threads;
-    unsigned long int noGoodDepth;
+    unsigned long int         luby_scale;
+    unsigned int              threads;
+    unsigned long int         noGoodDepth;
     ThroughputPropagator      th_prop;
     OutputFileType            out_file_type;
     OutputPrintFrequency      out_print_freq;
@@ -155,19 +162,24 @@ public:
   const Settings& settings() const throw();
 
   std::string printSettings();
+  
+  void setOptimizationStep(size_t n);
 
   void setPresolverResults(shared_ptr<PresolverResults> _p);
-    shared_ptr<PresolverResults> getPresolverResults();
-    /**
-     * Determines whether optimization is used.
-     */
-    bool doOptimize() const;
-    bool doOptimizeThput() const;
-    bool doOptimizePower() const;
-    bool doPresolve() const;
-    bool is_presolved();
-    string get_out_freq() const;
-    string get_search_type() const;
+  shared_ptr<PresolverResults> getPresolverResults();
+  /**
+   * Determines whether optimization is used.
+   */
+  bool doOptimize() const;
+  bool doOptimizeThput() const;
+  bool doOptimizePower() const;
+  bool doOptimizeThput(size_t step) const;
+  bool doOptimizePower(size_t step) const;
+  bool doMultiStep() const;
+  bool doPresolve() const;
+  bool is_presolved();
+  string get_out_freq() const;
+  string get_search_type() const;
 private:
   Settings settings_;
   shared_ptr<PresolverResults> pre_results;
@@ -188,7 +200,9 @@ private:
   void setNoGoodDepth(unsigned long int) throw ();
   void setLubyScale(unsigned long int) throw ();
   void setPresolverModel(const std::vector<std::string> &) throw (InvalidFormatException);
+  void setHeuristic(const std::vector<std::string> &) throw (InvalidFormatException);
   void setPresolverSearch(const std::string &) throw (InvalidFormatException);
+  void setMultiStepSearch(const std::string &) throw (InvalidFormatException);
   void setOutputFileType(const std::string &) throw (InvalidFormatException);
   void setOutputPrintFrequency(const std::string &) throw (InvalidFormatException);
 

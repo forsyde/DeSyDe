@@ -154,31 +154,65 @@ public:
     virtual void constrain(const Space& _b)
     {
         const SDFPROnlineModel& b = static_cast<const SDFPROnlineModel&>(_b);
-
-        switch(cfg->settings().criteria[0]) //creates the model based on the first criterion
-        {
-            case(Config::POWER):
-                rel(*this, sys_power < b.sys_power);
-                break;
-            case(Config::THROUGHPUT):
-                for(size_t i=0;i<apps->n_SDFApps();i++)
-                {
-                    if(apps->getPeriodConstraint(i) == -1)
-                        {    rel(*this, period[i] < b.period[i]);break;}
+        if(cfg->settings().optimizationStep == 0){
+          switch(cfg->settings().criteria[0]) //creates the model based on the first criterion
+          {
+              case(Config::POWER):
+                  rel(*this, sys_power < b.sys_power);
+                  break;
+              case(Config::THROUGHPUT):
+                  for(size_t i=0;i<apps->n_SDFApps();i++)
+                  {
+                      if(apps->getPeriodConstraint(i) == -1)
+                          {    rel(*this, period[i] < b.period[i]);break;}
+                  }
+                  break;
+             /* case(Config::LATENCY):
+                  for(size_t i=0;i<apps->n_SDFApps();i++)
+                  {
+                      if(apps->getLatencyConstraint(i) == -1)
+                          {rel(*this, latency[i] < b.latency[i]); break;} 
+                  }                
+                  break;*/
+              default:
+                  THROW_EXCEPTION(RuntimeException, "unknown optimization criterion in constrain function.");
+                  break;
+          }   
+        }else{
+          if(cfg->doOptimizePower() && cfg->doOptimizeThput()){
+            if(cfg->doOptimizePower(cfg->settings().optimizationStep) 
+               && cfg->doOptimizeThput(cfg->settings().optimizationStep-1)){ //first throughput, then power
+                 
+              for(size_t i=0;i<apps->n_SDFApps();i++){
+                if(apps->getPeriodConstraint(i) == -1){
+                  rel(*this, (period[i] < b.period[i]) ||
+                             ((period[i] == b.period[i]) && (sys_power < b.sys_power)));
+                  break;
                 }
-                break;
-           /* case(Config::LATENCY):
-                for(size_t i=0;i<apps->n_SDFApps();i++)
-                {
-                    if(apps->getLatencyConstraint(i) == -1)
-                        {rel(*this, latency[i] < b.latency[i]); break;} 
-                }                
-                break;*/
-            default:
-                cout << "unknown optimization criterion !!!\n";
-                throw 42;
-                break;
-        }   
+              }
+            }else if(cfg->doOptimizeThput(cfg->settings().optimizationStep)
+               && cfg->doOptimizePower(cfg->settings().optimizationStep-1)){ //first power, then throughput
+                 
+              for(size_t i=0;i<apps->n_SDFApps();i++){
+                if(apps->getPeriodConstraint(i) == -1){
+                  rel(*this, (sys_power < b.sys_power) ||
+                             ((sys_power == b.sys_power) && (period[i] < b.period[i])));
+                  break;
+                }
+              }
+            }
+          }else if(!cfg->doOptimizePower() && cfg->doOptimizeThput()){
+            for(size_t i=0;i<apps->n_SDFApps();i++){
+              if(apps->getPeriodConstraint(i) == -1){
+                rel(*this, period[i] < b.period[i]);break;
+              }
+            }
+          }else if(cfg->doOptimizePower() && !cfg->doOptimizeThput()){
+            rel(*this, sys_power < b.sys_power);
+          }//else... add the other metrics (area, money, ...)
+          
+          
+        }
     }
   
     vector<int> getPeriodResults();

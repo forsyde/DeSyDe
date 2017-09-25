@@ -319,14 +319,22 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
         cout << "    ";
         if(!heaviestFirst)
             cout << "not ";
-        cout << "heaviestFirst" << endl;
+        cout << "heaviestFirst" << endl; 
+        
+        if(!cfg->doOptimizeThput(cfg->settings().optimizationStep))
+          cout << "do not ";
+        cout << "optimize throughput." << endl;
+        
+        if(!cfg->doOptimizePower(cfg->settings().optimizationStep))
+          cout << "do not ";
+        cout << "optimize power." << endl;
 
         IntVarArgs procBranchOrderSAT;
         IntVarArgs procBranchOrderOPT;
         IntVarArgs procBranchOrderOther;
         cout << "    procBranchOrderSAT: " << endl;
         for(unsigned a = 0; a < ids.size(); a++){
-            if(apps->getPeriodConstraint(ids[a]) > 0 && !cfg->doOptimize()){
+            if(apps->getPeriodConstraint(ids[a]) > 0 && !cfg->doOptimizeThput()){
                 vector<int> branchProc = mapping->sortedByWCETs(ids[a]);
                 cout << "      " << apps->getGraphName(ids[a]) << " [";
                 for(int i = minA[ids[a]]; i <= maxA[ids[a]]; i++){
@@ -339,7 +347,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
         }
         cout << "    procBranchOrderOPT: " << endl;
         for(size_t a = 0; a < ids.size(); a++){
-            if(apps->getPeriodConstraint(ids[a]) > 0 && cfg->doOptimize()){
+            if(apps->getPeriodConstraint(ids[a]) > 0 && cfg->doOptimizeThput()){
                 vector<int> branchProc = mapping->sortedByWCETs(ids[a]);
                 cout << "      " << apps->getGraphName(ids[a]) << " [";
                 for(int i = minA[ids[a]]; i <= maxA[ids[a]]; i++){
@@ -351,7 +359,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
             }
         }
         for(size_t a = 0; a < apps->n_SDFApps(); a++){
-            if(apps->getPeriodConstraint(a) < 0 && cfg->doOptimize()){
+            if(apps->getPeriodConstraint(a) < 0 && cfg->doOptimizeThput()){
                 vector<int> branchProc = mapping->sortedByWCETs(a);
                 cout << "      " << apps->getGraphName(a) << " [";
                 for(int i = minA[a]; i <= maxA[a]; i++){
@@ -364,7 +372,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
         }
         cout << "    procBranchOrderOther: " << endl;
         for(unsigned a = 0; a < apps->n_SDFApps(); a++){
-            if(apps->getPeriodConstraint(a) <= 0 && !cfg->doOptimize()){
+            if(apps->getPeriodConstraint(a) <= 0 && !cfg->doOptimizeThput()){
                 cout << "      " << apps->getGraphName(a) << " [";
                 for(int i = minA[a]; i <= maxA[a]; i++){
                     procBranchOrderOther << proc[i];
@@ -407,7 +415,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
           if(platform->getTDNCyclesPerProc() == 1){
             branch(*this, chosenRoute, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN()); 
           }else if(platform->getTDNCyclesPerProc()>1 &&
-            !cfg->doOptimizeThput()){
+            !cfg->doOptimizeThput(cfg->settings().optimizationStep)){
             rnd.hw();
             branch(*this, chosenRoute, INT_VAR_AFC_MAX(0.99), INT_VAL_RND(rnd));
           }
@@ -418,24 +426,24 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
         }
         
         if(platform->getInterconnectType() == TDN_NOC){
-          if(cfg->doOptimizeThput()){
+          if(cfg->doOptimizeThput(cfg->settings().optimizationStep)){
             branch(*this, ic_mode,  INT_VAL_MAX());
-          }else if(cfg->doOptimizePower()){
+          }else if(cfg->doOptimizePower(cfg->settings().optimizationStep)){
             branch(*this, ic_mode, INT_VAL_MIN());
           }else{
             branch(*this, ic_mode, INT_VAL_MED());
           }
         }
         
-        if(cfg->doOptimizeThput()){
+        if(cfg->doOptimizeThput(cfg->settings().optimizationStep)){
           branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VAL_MAX());
-        }else if(cfg->doOptimizePower()){
+        }else if(cfg->doOptimizePower(cfg->settings().optimizationStep)){
           branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN());
         }else{
           branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VAL_MED());
         } 
         
-        if(platform->getTDNCyclesPerProc()>1 && cfg->doOptimizeThput()){
+        if(platform->getTDNCyclesPerProc()>1 && cfg->doOptimizeThput(cfg->settings().optimizationStep)){
           rnd.hw();
           branch(*this, chosenRoute, INT_VAR_AFC_MAX(0.99), INT_VAL_RND(rnd));
         }
@@ -460,9 +468,9 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
         //branch(*this, proc, INT_VAR_NONE(), INT_VAL(&valueProc));
         rnd.hw();
         branch(*this, proc, INT_VAR_NONE(), INT_VAL_RND(rnd));
-        if(cfg->doOptimizeThput()){
+        if(cfg->doOptimizeThput(cfg->settings().optimizationStep)){
           branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VALUES_MAX());
-        }else if(cfg->doOptimizePower()){
+        }else if(cfg->doOptimizePower(cfg->settings().optimizationStep)){
           branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VALUES_MIN());
         }else{
           branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VAL_MED());
@@ -649,7 +657,8 @@ vector<int> SDFPROnlineModel::getOptimizationValues(){
     for(auto i : period){
       if(i.assigned()) values.push_back(i.val());
     }
-  }else if(cfg->doOptimizePower()){
+  }
+  if(cfg->doOptimizePower()){
     if(sys_power.assigned()) values.push_back(sys_power.val());
     if(sysUsed_power.assigned()) values.push_back(sysUsed_power.val());
   }

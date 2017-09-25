@@ -84,6 +84,8 @@ public:
   size_t n_SDFParentActors();
   //get number of SDF firings
   size_t n_SDFActors();
+  //get number of SDF actors of specified graph
+  size_t n_SDFActorsOfApp(size_t app);
   //get number of SDF channels
   size_t n_SDFchannels();
   //get number of IPT tasks

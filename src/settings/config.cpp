@@ -40,7 +40,7 @@ using namespace DeSyDe;
 
 
 const string help_intro = string()
-    + "DeSyDe - Analytical Design Space Exploration tool\n"
+    + "DeSyDe - Analytical Design Space Exploration tool with Constraint Programming\n"
     + "Developers: Kathrin Rosvall  <danmann@kth.se>\n"
     + "            Nima Khalilzad   <nkhal@kth.se>\n"
     + "            George Ungureanu <ugeorge@kth.se>\n"
@@ -101,6 +101,29 @@ int Config::parse(int argc, const char** argv) throw (IOException, InvalidArgume
               boost::bind(&Config::setOutputPrintFrequency, this, _1)),
           "Frequency of printing output.\n"
           "Valid options ALL, LAST, Every_n, FIRSTandLAST. ");        
+          
+  po::options_description presolver("Presolver options");
+  presolver.add_options()
+    ("presolver.model",
+              po::value<vector<string>>()->multitoken()->default_value({"NONE",""},
+                  "NONE ")->notifier(boost::bind(&Config::setPresolverModel, this, _1)),
+              "Constraint pre-solving model.\n"
+              "Valid options NONE, ONE_PROC_MAPPINGS.")
+    ("presolver.search",
+               po::value<string>()->default_value(string("NONESEARCH"))->notifier(
+                  boost::bind(&Config::setPresolverSearch, this, _1)),
+             "Search type.\n"
+             "Valid options NONESEARCH, FIRST, ALL, OPTIMIZE, OPTIMIZE_IT, GIST_ALL, GIST_OPT. ")
+    ("presolver.heuristic",
+              po::value<vector<string>>()->multitoken()->default_value({"NONE",""},
+                  "NONE ")->notifier(boost::bind(&Config::setHeuristic, this, _1)),
+              "Multi-step approach using heuristics. Each step uses the optimization criterion in the order as in dse.criteria.\n"
+              "Valid options NONE, TODAES.")
+    ("presolver.multi-search",
+               po::value<string>()->default_value(string("NONESEARCH"))->notifier(
+                  boost::bind(&Config::setMultiStepSearch, this, _1)),
+             "Search type for the heuristic steps. Final step uses search type as defined in dse.search. \n"
+             "Valid options NONESEARCH, FIRST, ALL, OPTIMIZE, OPTIMIZE_IT, GIST_ALL, GIST_OPT. ");
 
   po::options_description dse("DSE options");
   dse.add_options()
@@ -141,19 +164,6 @@ int Config::parse(int argc, const char** argv) throw (IOException, InvalidArgume
               boost::bind(&Config::setThPropagator, this, _1)),
           "Throughput propagator type.\n"
           "Valid options SSE, MCR. ");
-
-  po::options_description presolver("Presolver options");
-  presolver.add_options()
-    ("presolver.model",
-              po::value<vector<string>>()->multitoken()->default_value({"NONE",""},
-                  "NONE ")->notifier(boost::bind(&Config::setPresolverModel, this, _1)),
-              "Constraint pre-solving model.\n"
-              "Valid options NONE, ONE_PROC_MAPPINGS.")
-    ("presolver.search",
-               po::value<string>()->default_value(string("ALL"))->notifier(
-                  boost::bind(&Config::setPresolverSearch, this, _1)),
-             "Search type.\n"
-             "Valid options NONESEARCH, FIRST, ALL, OPTIMIZE, OPTIMIZE_IT, GIST_ALL, GIST_OPT. ");
 
   po::variables_map vm;
   po::options_description visible_options, all_options;
@@ -442,6 +452,12 @@ Config::PresolverModels stringToPresolverModel(const string &str) throw (Invalid
   else THROW_EXCEPTION(InvalidFormatException, str, "invalid option");
 }
 
+Config::MultiStepHeuristics stringToHeuristic(const string &str) throw (InvalidFormatException) {
+  if (str == "NONE")            return Config::NO_HEURISTIC;
+  else if (str == "TODAES")      return Config::TODAES;
+  else THROW_EXCEPTION(InvalidFormatException, str, "invalid option");
+}
+
 
 void Config::setCriteria(const vector<string> &str) throw (InvalidFormatException) {
   for (string s : str)
@@ -476,8 +492,26 @@ void Config::setPresolverModel(const vector<string> &str) throw (InvalidFormatEx
       settings_.pre_models.push_back(stringToPresolverModel(tools::trim(s)));
 }
 
+void Config::setHeuristic(const vector<string> &str) throw (InvalidFormatException) {
+  for (string s : str)
+    if (s.length() != 0)
+      settings_.pre_heuristics.push_back(stringToHeuristic(tools::trim(s)));
+}
+
 void Config::setPresolverSearch(const string &str) throw (InvalidFormatException) {
   settings_.pre_search = stringToSearch(str);
+}
+
+void Config::setMultiStepSearch(const string &str) throw (InvalidFormatException) {
+  settings_.pre_multi_step_search = stringToSearch(str);
+}
+
+void Config::setOptimizationStep(size_t n){
+  if(n < settings_.criteria.size()){
+    settings_.optimizationStep = n;
+  }else{
+    THROW_EXCEPTION(RuntimeException, "attempted to set non-existing optimization step " + tools::toString(n) + " of " + tools::toString(settings_.criteria.size()-1));
+  }
 }
 
 void Config::setPresolverResults(shared_ptr<Config::PresolverResults> _p){
@@ -508,7 +542,28 @@ bool Config::doOptimizePower() const{
     if(i==POWER) return true;
   
   return false;
+}
+
+bool Config::doOptimizeThput(size_t step) const{
+  if(step < settings_.criteria.size())
+    if(settings_.criteria[step]==THROUGHPUT) return true;
   
+  return false;
+}
+
+bool Config::doOptimizePower(size_t step) const{
+  if(step < settings_.criteria.size())
+    if(settings_.criteria[step]==POWER) return true;
+  
+  return false;
+  
+}
+
+bool Config::doMultiStep() const{
+  for(auto i : settings_.pre_heuristics){
+    if(i > NO_HEURISTIC) return true;
+  }
+  return false;
 }
 
 bool Config::doPresolve() const{
