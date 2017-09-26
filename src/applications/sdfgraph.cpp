@@ -11,7 +11,7 @@ SDFGraph::SDFGraph(XMLdoc& xmlAppGraph) : xml(xmlAppGraph) {
   latency_constraint = 0;
 
   graphName = xml.xpathStrings("///sdf/@name")[0];
-  LOG_INFO("Parsing application " + graphName + "...");
+  LOG_INFO("   ...application " + graphName );
 
   _d = new dictionaries();
   buildDictionaries();
@@ -149,9 +149,9 @@ void SDFGraph::transform(){
   for(auto i: channels){
     LOG_DEBUG("channel " + tools::toString(i->id) + ": " + i->name
               +" from " + i->src_name + "(" + tools::toString(i->source) + ")"
-              + " \[prod: " + tools::toString(i->prod) + "\]"
+              + " [prod: " + tools::toString(i->prod) + "]"
               +" to " + i->dst_name + "(" + tools::toString(i->destination) + ")"
-              + " \[cons: " + tools::toString(i->cons) + "\]"
+              + " [cons: " + tools::toString(i->cons) + "]"
               + "; initial tokens: " + tools::toString(i->initTokens)
               + "; token size: " + tools::toString(i->tokenSize)
               + "; message size: "+ tools::toString(i->messageSize));

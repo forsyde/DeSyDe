@@ -228,7 +228,7 @@ void Mapping::load_wcets(XMLdoc& xml){
             for (size_t k=0; k<wcets[i][j].size(); k++)
             {
                 if(wcets[i][j][k] >= std::numeric_limits<int>::max() - 1){ 
-                  LOG_INFO("Note: no WCET is specified for task "+program->getName(i)
+                  LOG_DEBUG("Note: no WCET is specified for task "+program->getName(i)
                            + " on proc type " + target->getProcModel(j)
                            + " in mode " + target->getProcModelMode(j,k));
                 }else{

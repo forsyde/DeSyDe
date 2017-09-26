@@ -127,11 +127,13 @@ public:
     ThroughputPropagator      th_prop;
     OutputFileType            out_file_type;
     OutputPrintFrequency      out_print_freq;
+    std::vector<OptCriterion> printMetrics;
   };
   struct PresolverResults{
     size_t it_mapping; /**< Informs the CP model how to use oneProcMappings: <.size(): Enforce mapping, >=.size() Forbid all. */
     vector<tuple<int, vector<tuple<int,int>>>> oneProcMappings;
     vector<SolutionValues> optResults;
+    vector<SolutionValues> printResults;
     std::chrono::high_resolution_clock::duration presolver_delay;
   };
 
@@ -163,7 +165,7 @@ public:
 
   std::string printSettings();
   
-  void setOptimizationStep(size_t n);
+  void incOptimizationStep();
 
   void setPresolverResults(shared_ptr<PresolverResults> _p);
   shared_ptr<PresolverResults> getPresolverResults();
@@ -193,6 +195,7 @@ private:
   void setLogLevel(const std::vector<std::string> &) throw (IllegalStateException, InvalidFormatException);
   void setModel(const std::string &) throw (InvalidFormatException);
   void setSearch(const std::string &) throw (InvalidFormatException);
+  void setPrintMetrics(const std::vector<std::string> &) throw (InvalidFormatException);
   void setCriteria(const std::vector<std::string> &) throw (InvalidFormatException);
   void setThPropagator(const std::string &) throw (InvalidFormatException);
   void setTimeout(const std::vector<unsigned long int> &) throw (IllegalStateException);

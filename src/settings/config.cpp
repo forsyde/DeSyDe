@@ -100,7 +100,12 @@ int Config::parse(int argc, const char** argv) throw (IOException, InvalidArgume
           po::value<string>()->default_value(string("ALL_SOL"))->notifier(
               boost::bind(&Config::setOutputPrintFrequency, this, _1)),
           "Frequency of printing output.\n"
-          "Valid options ALL, LAST, Every_n, FIRSTandLAST. ");        
+          "Valid options ALL, LAST, Every_n, FIRSTandLAST. ") 
+      ("print-metric",
+          po::value<vector<string>>()->multitoken()->default_value({"NONE",""},
+              "NONE ")->notifier(boost::bind(&Config::setPrintMetrics, this, _1)),
+          "List of all metrics to be printed into CSV file\n"
+          "Valid options NONE, POWER, THROUGHPUT, LATENCY.");        
           
   po::options_description presolver("Presolver options");
   presolver.add_options()
@@ -458,6 +463,11 @@ Config::MultiStepHeuristics stringToHeuristic(const string &str) throw (InvalidF
   else THROW_EXCEPTION(InvalidFormatException, str, "invalid option");
 }
 
+void Config::setPrintMetrics(const vector<string> &str) throw (InvalidFormatException) {
+  for (string s : str)
+    if (s.length() != 0)
+      settings_.printMetrics.push_back(stringToCriterion(tools::trim(s)));
+}
 
 void Config::setCriteria(const vector<string> &str) throw (InvalidFormatException) {
   for (string s : str)
@@ -493,6 +503,7 @@ void Config::setPresolverModel(const vector<string> &str) throw (InvalidFormatEx
 }
 
 void Config::setHeuristic(const vector<string> &str) throw (InvalidFormatException) {
+  settings_.optimizationStep = 0;
   for (string s : str)
     if (s.length() != 0)
       settings_.pre_heuristics.push_back(stringToHeuristic(tools::trim(s)));
@@ -506,12 +517,8 @@ void Config::setMultiStepSearch(const string &str) throw (InvalidFormatException
   settings_.pre_multi_step_search = stringToSearch(str);
 }
 
-void Config::setOptimizationStep(size_t n){
-  if(n < settings_.criteria.size()+1){ //+1 for the final, complete step
-    settings_.optimizationStep = n;
-  }else{
-    THROW_EXCEPTION(RuntimeException, "attempted to set non-existing optimization step " + tools::toString(n) + " of " + tools::toString(settings_.criteria.size()));
-  }
+void Config::incOptimizationStep(){
+    settings_.optimizationStep = min(settings_.optimizationStep+1,settings_.criteria.size()-1);
 }
 
 void Config::setPresolverResults(shared_ptr<Config::PresolverResults> _p){

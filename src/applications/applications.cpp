@@ -271,7 +271,7 @@ size_t Applications::getMaxChannelId(size_t app) const{
 }
 
 size_t Applications::getAppIdForChannel(size_t ch) const{
-  int id = 0;
+  size_t id = 0;
   for(size_t i=0; i<sdfApps.size(); i++){
     id += sdfApps[i]->n_channels();
     if(ch < id) return i;

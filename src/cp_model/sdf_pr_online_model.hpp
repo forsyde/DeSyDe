@@ -219,6 +219,8 @@ public:
     
     /** returns the values of the parameters that are under optimization */
     vector<int> getOptimizationValues();
+    /** returns the values of the parameters that are chosen for printing. */
+    vector<int> getPrintMetrics();
     
     /**
     * Returns the processor number which task i has to be allocated.

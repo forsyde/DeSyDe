@@ -64,7 +64,6 @@ public:
    */
   CPModelTemplate* presolve(Mapping* map) {
     size_t step = 0;
-    settings.setOptimizationStep(step);
     if(settings.doPresolve()){
       PresolverCPTemplate* pre_model = new PresolverCPTemplate(map, settings);
 
@@ -176,10 +175,10 @@ public:
         
         // +++ Now: Create the full model
         LOG_INFO("Creating full CP model from multi-step solver, step " + tools::toString(step+1));
+        settings.incOptimizationStep();
+        step++;
         map->resetFirstMapping();
         full_model = new CPModelTemplate(map, &settings);
-        step++;
-        settings.setOptimizationStep(step);
       }
     }
     
@@ -209,7 +208,7 @@ private:
     out << "Solution " << nodes << ":" << endl;
     out << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
     s->print(out);
-    out << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n";
+    out << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
 
   }
   ;
@@ -218,12 +217,15 @@ private:
    * Prints the solutions in the ofstreams (out and outCSV)
    */
   template<class SearchEngine> void printSolution(SearchEngine *e, CPModelTemplate* s) {
-    LOG_INFO(tools::toString(nodes) +" solution found in a search tree with " + tools::toString(e->statistics().node) + " nodes so far");
-    auto durAll = t_endAll - t_start;
-    auto durAll_ms = std::chrono::duration_cast<std::chrono::milliseconds>(durAll).count();
-    out << "*** Solution number: " << nodes << ", after " << durAll_ms << " ms" << ", search nodes: " << e->statistics().node << ", fail: " << e->statistics().fail << ", propagate: "
-        << e->statistics().propagate << ", depth: " << e->statistics().depth << ", nogoods: " << e->statistics().nogood << ", restarts: " << e->statistics().restart << " ***\n";
-    s->print(out);
+    LOG_INFO(tools::toString(nodes) +" solution found in a search tree with " + tools::toString(e->statistics().node) + " nodes so far (PRESOLVER)");
+    if(settings.settings().out_file_type == Config::ALL_OUT ||
+       settings.settings().out_file_type == Config::TXT){
+      auto durAll = t_endAll - t_start;
+      auto durAll_ms = std::chrono::duration_cast<std::chrono::milliseconds>(durAll).count();
+      out << "*** Solution number: " << nodes << ", after " << durAll_ms << " ms" << ", search nodes: " << e->statistics().node << ", fail: " << e->statistics().fail << ", propagate: "
+          << e->statistics().propagate << ", depth: " << e->statistics().depth << ", nogoods: " << e->statistics().nogood << ", restarts: " << e->statistics().restart << " ***\n";
+      s->print(out);
+    }
   }
   ;
 
@@ -234,9 +236,13 @@ private:
     DSESettings* dseSettings = new DSESettings(settings);
     nodes = 0;
     int fullNodes = 0;
-    out.open(settings.settings().output_path + "/out/" + "presolver_results.txt");
-    outFull.open(dseSettings->getOutputsPath(".txt"));
-    outFull << "~~~~~ *** BEGIN OF PRESOLVER SOLUTIONS *** ~~~~~" << endl;
+    out.open(settings.settings().output_path + "/out/" + "presolver_findings.txt");
+    
+    if(settings.settings().out_file_type == Config::ALL_OUT ||
+       settings.settings().out_file_type == Config::TXT){
+      outFull.open(settings.settings().output_path + "/out/" + "presolver_results.txt");
+      outFull << "~~~~~ *** BEGIN OF PRESOLVER SOLUTIONS *** ~~~~~" << endl;
+    }
 //    cout << "start searching for " << settings.settings().pre_search << " solutions \n";
     t_start = runTimer::now();
     while(Space * s = e->next()){
@@ -265,23 +271,45 @@ private:
       delete s;
 
       settings.setPresolverResults(results);
+      LOG_INFO("PRESOLVER executing full model - finding " + tools::toString(nodes));
       CPModelTemplate* full_model = new CPModelTemplate(map, &settings);
       DFS<CPModelTemplate> ef(full_model, geSearchOptions);
       if(CPModelTemplate * sf = ef.next()){
         fullNodes++;
-        outFull << "Pre-solution " << nodes << "----------" << endl;
-        sf->print(outFull);
-        outFull << "------------------------------" << endl << endl;
+        if(settings.settings().out_file_type == Config::ALL_OUT ||
+           settings.settings().out_file_type == Config::TXT){
+          outFull << "Pre-solution " << nodes << "----------" << endl;
+          sf->print(outFull);
+          outFull << "------------------------------" << endl << endl;
+        }
         //Mapping* mapRes = sf->extractResult();
         //settings.getPresolverResults()->periods.push_back(mapRes->getPeriods());
         //settings.getPresolverResults()->sys_energys.push_back(mapRes->getSysEnergy());
         t_endAll = runTimer::now();
-        settings.getPresolverResults()->optResults.push_back(Config::SolutionValues{t_endAll-t_start, sf->getOptimizationValues()});
+        
+        if(settings.doOptimize()){
+          settings.getPresolverResults()->optResults.push_back(Config::SolutionValues{t_endAll-t_start, sf->getOptimizationValues()});
+        }
+        if(!settings.settings().printMetrics.empty()){
+          settings.getPresolverResults()->printResults.push_back(Config::SolutionValues{t_endAll-t_start, sf->getPrintMetrics()});
+        }
+        
+        out << "Mapping in full CP model: Returned a valid solution.\n";
+        out << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
+        out << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n";
+        
         delete sf;
       }else{
-        outFull << "------------------------------" << endl << endl;
-        outFull << "Presolver mapping " << nodes << " does not give a solution." << endl;
-        outFull << "------------------------------" << endl << endl;
+        if(settings.settings().out_file_type == Config::ALL_OUT ||
+           settings.settings().out_file_type == Config::TXT){
+          outFull << "------------------------------" << endl << endl;
+          outFull << "Presolver mapping " << nodes << " does not give a solution." << endl;
+          outFull << "------------------------------" << endl << endl;
+            
+        }
+        out << "Mapping in full CP model: Does not give valid solution.\n";
+        out << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
+        out << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n";
       }
       delete full_model;
     }
@@ -299,15 +327,22 @@ private:
         << e->statistics().propagate << ", depth: " << e->statistics().depth << ", nogoods: " << e->statistics().nogood << " ***\n";
 
 
-    outFull << "===== search ended after: " << durAll_s << " s (" << durAll_ms << " ms)";
-    if(e->stopped()){
-      outFull << " due to time-out!";
+    if(settings.settings().out_file_type == Config::ALL_OUT ||
+       settings.settings().out_file_type == Config::TXT){
+      outFull << "===== search ended after: " << durAll_s << " s (" << durAll_ms << " ms)";
+      if(e->stopped()){
+        outFull << " due to time-out!";
+      }
+      outFull << " =====\n" << fullNodes << " solutions found\n" << "search nodes: " << e->statistics().node << ", fail: " << e->statistics().fail << ", propagate: "
+          << e->statistics().propagate << ", depth: " << e->statistics().depth << ", nogoods: " << e->statistics().nogood << " ***\n";
     }
-    outFull << " =====\n" << fullNodes << " solutions found\n" << "search nodes: " << e->statistics().node << ", fail: " << e->statistics().fail << ", propagate: "
-        << e->statistics().propagate << ", depth: " << e->statistics().depth << ", nogoods: " << e->statistics().nogood << " ***\n";
 
     out.close();
-    outFull.close();
+    
+    if(settings.settings().out_file_type == Config::ALL_OUT ||
+       settings.settings().out_file_type == Config::TXT){
+      outFull.close();
+    }
     // +++ Now: Create the full model
     LOG_INFO("Creating full CP model from Presolver...");
     results->it_mapping = results->oneProcMappings.size();
@@ -324,8 +359,10 @@ private:
     nodes = 0;
     size_t timerResets = 0;
     out.open(settings.settings().output_path + "/out/" + "out_step"+tools::toString(settings.settings().optimizationStep)+"_results.txt");
-    //outFull.open(cfg.settings().output_path+"out/out.txt");
+    //outFull.open(settings.settings().output_path+"out/out.txt");
     out << "~~~~~ *** BEGIN OF MULTI-STEP (STEP "+tools::toString(settings.settings().optimizationStep)+") SOLUTIONS *** ~~~~~" << endl;
+    
+    LOG_INFO("MULTI-STEP solving (STEP "+tools::toString(settings.settings().optimizationStep+1)+")");
     
     std::chrono::high_resolution_clock::duration presolver_delay(0);
     if(settings.doPresolve() && settings.is_presolved()){
@@ -351,9 +388,12 @@ private:
       }
       t_endAll = runTimer::now();
       
-      //cout << nodes << " solutions found." << endl;
-      settings.getPresolverResults()->optResults.push_back(Config::SolutionValues{t_endAll-t_start+presolver_delay, ((CPModelTemplate*)s)->getOptimizationValues()});
-      //cout << nodes << " solutions found." << endl;
+      if(settings.doOptimize()){
+        settings.getPresolverResults()->optResults.push_back(Config::SolutionValues{t_endAll-t_start+presolver_delay, ((CPModelTemplate*)s)->getOptimizationValues()});
+      }
+      if(!settings.settings().printMetrics.empty()){
+        settings.getPresolverResults()->printResults.push_back(Config::SolutionValues{t_endAll-t_start, ((CPModelTemplate*)s)->getPrintMetrics()});
+      }
 
       if(settings.settings().out_print_freq == Config::ALL_SOL){
           printSolution(e, (CPModelTemplate*)s);          

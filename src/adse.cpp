@@ -125,11 +125,11 @@ int main(int argc, const char* argv[]) {
 	
     
     vector<SDFGraph*> sdfs;
+    LOG_INFO("Parsing SDF3 graphs...");
     for (const auto& path : cfg.settings().inputs_paths) {
 		 
        if(path.find("/sdfs/") != string::npos){		
            XMLdoc xml(path);
-           LOG_INFO("Parsing SDF3 graphs...");
            xml.readXSD("sdf3", "noNamespaceSchemaLocation");
            sdfs.push_back(new SDFGraph(xml));
        }
@@ -148,7 +148,7 @@ int main(int argc, const char* argv[]) {
     }
     LOG_INFO(tools::toString(*appset));
 
-	LOG_INFO("Creating a mapping object ... " );
+	LOG_INFO("Creating a mapping object ... \n" );
     Mapping* map;
     XMLdoc xml_wcet(WCET_path);
     xml_wcet.read(false);

@@ -119,13 +119,14 @@ public:
 private:
   CPModelTemplate* model; /**< Pointer to the constraint model class. */
   Config& cfg; /**< pointer to the config class. */
-  int nodes; /**< Number of nodes. */
+  unsigned long nodes; /**< Number of nodes. */
   int timerResets; /**< Number of incremental timer resets. */
   Search::Options geSearchOptions; /**< Gecode search option object. */
-  ofstream out, outCSV, outMOSTCSV, outMappingCSV; /**< Output file streams: .txt and .csv. */
+  ofstream out, outCSV, outCSV_opt, outMOSTCSV, outMappingCSV; /**< Output file streams: .txt and .csv. */
   typedef std::chrono::high_resolution_clock runTimer; /**< Timer type. */
   runTimer::time_point t_start, t_endAll; /**< Timer objects for start and end of experiment. */
-  vector<Config::SolutionValues> solutionData;
+  vector<Config::SolutionValues> optData, solutionData;
+  unsigned long infoFreq; /**< Adapt the printing frequency of how many solutions have been found to the number of solutions. */
   
 
   void printMOSTCSV(Mapping* solution, int n, int split) {
@@ -293,20 +294,24 @@ private:
   }
 
   /**
-   * Prints the solutions in the ofstreams (out and outCSV)
+   * Prints the solutions in the ofstreams (out and outCSV_opt)
    */
   template<class SearchEngine> void printSolution(SearchEngine *e, CPModelTemplate* s) {
-    LOG_INFO(tools::toString(nodes) +" solution found in a search tree with " + tools::toString(e->statistics().node) + " nodes so far");
-    auto durAll = t_endAll - t_start;
-    auto durAll_ms = std::chrono::duration_cast<std::chrono::milliseconds>(durAll).count();
-    out << "*** Solution number: " << nodes << ", after " << durAll_ms << " ms" << ", search nodes: " << e->statistics().node << ", fail: " << e->statistics().fail << ", propagate: "
-        << e->statistics().propagate << ", depth: " << e->statistics().depth << ", nogoods: " << e->statistics().nogood << ", restarts: " << e->statistics().restart << " ***\n";
-    s->print(out);
+    
+    
+    if(cfg.settings().out_file_type == Config::ALL_OUT ||
+       cfg.settings().out_file_type == Config::TXT){
+      auto durAll = t_endAll - t_start;
+      auto durAll_ms = std::chrono::duration_cast<std::chrono::milliseconds>(durAll).count();
+      out << "*** Solution number: " << nodes << ", after " << durAll_ms << " ms" << ", search nodes: " << e->statistics().node << ", fail: " << e->statistics().fail << ", propagate: "
+          << e->statistics().propagate << ", depth: " << e->statistics().depth << ", nogoods: " << e->statistics().nogood << ", restarts: " << e->statistics().restart << " ***\n";
+      s->print(out);
+    }
     /// Printing CSV format output
     /*if(cfg.settings().out_file_type == Config::ALL_OUT ||
        cfg.settings().out_file_type == Config::CSV){    
-        outCSV << nodes << "," << durAll_ms << ",";
-        s->printCSV(outCSV);
+        outCSV_opt << nodes << "," << durAll_ms << ",";
+        s->printCSV(outCSV_opt);
         s->printMappingCSV(outMappingCSV);
     }*/
     /**
@@ -327,9 +332,16 @@ private:
   template<class SearchEngine> void loopSolutions(SearchEngine *e) {
     nodes = 0;
     timerResets = 0;
+    infoFreq = 1;
+    
     out.open(cfg.settings().output_path+"out/out.txt");
     LOG_INFO("Opened file for printing results: " +cfg.settings().output_path+"out/out.txt");
-    outCSV.open(cfg.settings().output_path+"out/out.csv");
+    if(cfg.doOptimize()){
+      outCSV_opt.open(cfg.settings().output_path+"out/out_opt.csv");
+    }
+    if(!cfg.settings().printMetrics.empty()){
+      outCSV.open(cfg.settings().output_path+"out/out.csv");
+    }
     //outMOSTCSV.open(cfg.settings().output_path+"out/out-MOST.csv");    
     //outMappingCSV.open(cfg.settings().output_path+"out/out_mapping.csv");
     LOG_INFO("started searching for " + cfg.get_search_type() + " solutions ");
@@ -338,7 +350,12 @@ private:
     
     std::chrono::high_resolution_clock::duration presolver_delay(0);
     if((cfg.doPresolve() && cfg.is_presolved()) || cfg.doMultiStep()){
-      solutionData = cfg.getPresolverResults()->optResults;
+      if(cfg.doOptimize()){
+        optData = cfg.getPresolverResults()->optResults;
+      }
+      if(!cfg.settings().printMetrics.empty()){
+        solutionData = cfg.getPresolverResults()->printResults;
+      }
       presolver_delay = cfg.getPresolverResults()->presolver_delay;
     }
     
@@ -360,27 +377,33 @@ private:
       t_endAll = runTimer::now();
       
       //cout << nodes << " solutions found." << endl;
-      solutionData.push_back(Config::SolutionValues{t_endAll-t_start+presolver_delay, s->getOptimizationValues()});
+      if(cfg.doOptimize()){
+        optData.push_back(Config::SolutionValues{t_endAll-t_start+presolver_delay, s->getOptimizationValues()});
+      }
+      if(!cfg.settings().printMetrics.empty()){
+        solutionData.push_back(Config::SolutionValues{t_endAll-t_start+presolver_delay, ((CPModelTemplate*)s)->getPrintMetrics()});
+      }
       //cout << nodes << " solutions found." << endl;
 
       if(cfg.settings().out_print_freq == Config::ALL_SOL){
-          LOG_INFO(tools::toString(nodes) +" solution found so far.");
           printSolution(e, s);          
       }
      /// We want to keep the last solution in case we only print the last one
       if(prev_sol != nullptr)
         delete prev_sol;
       prev_sol = s;
-
+      
       if(cfg.settings().out_print_freq == Config::FIRSTandLAST ||
-         cfg.settings().out_print_freq == Config::LAST){
-        if(nodes % 100 == 0){
-          cout << ".";
-          if(nodes % 2000 == 0)
-            cout.flush();
-          if(nodes % 10000 == 0)
-            cout << endl;
-        }
+         cfg.settings().out_print_freq == Config::LAST ||
+         cfg.settings().out_print_freq == Config::ALL_SOL){
+        //if(nodes%infoFreq == 0){
+          LOG_INFO(tools::toString(nodes) +" solution founds so far.");
+          //if(nodes == 10){ 
+          //  infoFreq = 5;
+          //}else if(nodes > 10 && nodes%(20*infoFreq) == 0){ 
+          //  infoFreq = 10*infoFreq;
+          //}
+        //}
       }
       
       if(cfg.settings().timeout_all){
@@ -418,17 +441,32 @@ private:
     out << " =====\n" << nodes << " solutions found\n" << "search nodes: " << e->statistics().node << ", fail: " << e->statistics().fail << ", propagate: "
         << e->statistics().propagate << ", depth: " << e->statistics().depth << ", nogoods: " << e->statistics().nogood << ", restarts: " << e->statistics().restart << " ***\n";
 
-    
-    for(auto i: solutionData){
-      outCSV << std::chrono::duration_cast<std::chrono::milliseconds>(i.time).count() << " ";
-      for(auto j: i.values){
-        outCSV << j << " ";
+    if(cfg.doOptimize()){
+      for(auto i: optData){
+        outCSV_opt << std::chrono::duration_cast<std::chrono::milliseconds>(i.time).count() << " ";
+        for(auto j: i.values){
+          outCSV_opt << j << " ";
+        }
+        outCSV_opt << endl;
       }
-      outCSV << endl;
+    }
+    if(!cfg.settings().printMetrics.empty()){
+      for(auto i: solutionData){
+        outCSV << std::chrono::duration_cast<std::chrono::milliseconds>(i.time).count() << " ";
+        for(auto j: i.values){
+          outCSV << j << " ";
+        }
+        outCSV << endl;
+      }
     }
 
     out.close();
-    outCSV.close();
+    if(cfg.doOptimize()){
+      outCSV_opt.close();
+    }
+    if(!cfg.settings().printMetrics.empty()){
+      outCSV.close();
+    }
     //outMOSTCSV.close();
     //outMappingCSV.close();
   }

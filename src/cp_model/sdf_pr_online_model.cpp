@@ -246,8 +246,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
           rel(*this, ic_mode == get<0>(cfg->getPresolverResults()->oneProcMappings[cfg->getPresolverResults()->it_mapping]));
         }
       } else { //...otherwise forbid all mappings in oneProcMappings
-        cout << "Now forbidding " << cfg->getPresolverResults()->oneProcMappings.size() << " mappings." << endl;
-        cout << endl;
+        LOG_INFO("Now forbidding " + tools::toString(cfg->getPresolverResults()->oneProcMappings.size()) + " mappings that have been explored by the PRESOLVER.");
         for (size_t i = 0;
             i < cfg->getPresolverResults()->oneProcMappings.size(); i++) {
           vector<tuple<int, int>> oneProcMapping =
@@ -305,6 +304,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
         //cout << "procsUsed >= " << (firstMapping.back().quot+1) << endl;
         rel(*this, procsUsed >= (firstMapping.back().quot+1));
       }else{ //use found solutions for improving solution
+        LOG_INFO("Setting solutions found in previous steps (<="+tools::toString(cfg->settings().optimizationStep)+")");
         
         if(cfg->doOptimizePower() && cfg->doOptimizeThput()){
           if(cfg->doOptimizePower(cfg->settings().optimizationStep) 
@@ -348,7 +348,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
         /**
          * Creating the branching strategy
          */
-        cout << endl << "  Branching:" << endl;
+        string branchStrat = "  Branching:\n";
 
         vector<double> ratio;
         vector<int> ids;
@@ -372,73 +372,118 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
                 }
             }
         }
-        cout << "    ";
+        branchStrat += "    ";
         if(!heaviestFirst)
-            cout << "not ";
-        cout << "heaviestFirst" << endl; 
+            branchStrat += "not ";
+        branchStrat += "heaviestFirst\n"; 
         
-        if(!cfg->doOptimizeThput(cfg->settings().optimizationStep))
-          cout << "do not ";
-        cout << "optimize throughput." << endl;
+        branchStrat += "    ";
+        if (!cfg->doMultiStep()){
+          if(!cfg->doOptimizeThput())
+            branchStrat += "do not ";
+          branchStrat += "optimize throughput.\n";
+        } else {
+          if(!cfg->doOptimizeThput()){
+            branchStrat += "do not optimize throughput.\n";
+          }else{
+            if(cfg->doOptimizeThput(cfg->settings().optimizationStep)){
+              branchStrat += "optimize throughput.\n";
+            }else{
+              bool before = false;
+              for(int i=0; i<cfg->settings().optimizationStep; i++){
+                if(cfg->doOptimizeThput(i)){
+                  branchStrat += "keep or optimize throughput.\n";
+                  before = true;
+                  break;
+                }
+              }
+              if(!before) branchStrat += "do not optimize throughput.\n";
+            }
+          }
+        }
         
-        if(!cfg->doOptimizePower(cfg->settings().optimizationStep))
-          cout << "do not ";
-        cout << "optimize power." << endl;
-
+        branchStrat += "    ";
+        if (!cfg->doMultiStep()){
+          if(!cfg->doOptimizePower())
+            branchStrat += "do not ";
+          branchStrat += "optimize power.\n";
+        } else {
+          if(!cfg->doOptimizePower()){
+            branchStrat += "do not optimize power.\n";
+          }else{
+            if(cfg->doOptimizePower(cfg->settings().optimizationStep)){
+              branchStrat += "optimize power.\n";
+            }else{
+              bool before = false;
+              for(int i=0; i<cfg->settings().optimizationStep; i++){
+                if(cfg->doOptimizePower(i)){
+                  branchStrat += "keep or optimize power.\n";
+                  before = true;
+                  break;
+                }
+              }
+              if(!before) branchStrat += "do not optimize power.\n";
+            }
+          }
+        }
+        
+        LOG_INFO(branchStrat);
+        branchStrat = "";
+        
         IntVarArgs procBranchOrderSAT;
         IntVarArgs procBranchOrderOPT;
         IntVarArgs procBranchOrderOther;
-        cout << "    procBranchOrderSAT: " << endl;
+        branchStrat += "    procBranchOrderSAT: \n";
         for(unsigned a = 0; a < ids.size(); a++){
             if(apps->getPeriodConstraint(ids[a]) > 0 && !cfg->doOptimizeThput()){
                 vector<int> branchProc = mapping->sortedByWCETs(ids[a]);
-                cout << "      " << apps->getGraphName(ids[a]) << " [";
+                branchStrat += "      " + apps->getGraphName(ids[a]) + " [";
                 for(int i = minA[ids[a]]; i <= maxA[ids[a]]; i++){
                     procBranchOrderSAT << proc[i];
                     //procBranchOrderSAT << rank[i];
-                    cout << i << " ";
+                    branchStrat += tools::toString(i) + " ";
                 }
-                cout << "]" << endl;
+                branchStrat += "]\n";
             }
         }
-        cout << "    procBranchOrderOPT: " << endl;
+        branchStrat += "    procBranchOrderOPT: \n";
         for(size_t a = 0; a < ids.size(); a++){
             if(apps->getPeriodConstraint(ids[a]) > 0 && cfg->doOptimizeThput()){
                 vector<int> branchProc = mapping->sortedByWCETs(ids[a]);
-                cout << "      " << apps->getGraphName(ids[a]) << " [";
+                branchStrat += "      " + apps->getGraphName(ids[a]) + " [";
                 for(int i = minA[ids[a]]; i <= maxA[ids[a]]; i++){
                     procBranchOrderOPT << proc[i];
                     //procBranchOrderOPT << rank[i];
-                    cout << i << " ";
+                    branchStrat += tools::toString(i) + " ";
                 }
-                cout << "]" << endl;
+                branchStrat += "]\n";
             }
         }
         for(size_t a = 0; a < apps->n_SDFApps(); a++){
             if(apps->getPeriodConstraint(a) < 0 && cfg->doOptimizeThput()){
                 vector<int> branchProc = mapping->sortedByWCETs(a);
-                cout << "      " << apps->getGraphName(a) << " [";
+                branchStrat += "      " + apps->getGraphName(a) + " [";
                 for(int i = minA[a]; i <= maxA[a]; i++){
                     procBranchOrderOPT << proc[i];
                     //procBranchOrderOPT << rank[i];
-                    cout << i << " ";
+                    branchStrat += tools::toString(i) + " ";
                 }
-                cout << "]" << endl;
+                branchStrat += "]\n";
             }
         }
-        cout << "    procBranchOrderOther: " << endl;
+        branchStrat += "    procBranchOrderOther: \n";
         for(unsigned a = 0; a < apps->n_SDFApps(); a++){
             if(apps->getPeriodConstraint(a) <= 0 && !cfg->doOptimizeThput()){
-                cout << "      " << apps->getGraphName(a) << " [";
+                branchStrat += "      " + apps->getGraphName(a) + " [";
                 for(int i = minA[a]; i <= maxA[a]; i++){
                     procBranchOrderOther << proc[i];
                     //procBranchOrderOther << rank[i];
-                    cout << i << " ";
+                    branchStrat += tools::toString(i) + " ";
                 }
-                cout << "]" << endl;
+                branchStrat += "]\n";
             }
         }
-        cout << endl;
+        LOG_INFO(branchStrat);
         //branch(*this, next, INT_VAR_NONE(), INT_VAL_MIN());
 
         if(!heaviestFirst && (procBranchOrderSAT.size() > 0 || procBranchOrderOPT.size() > 0)){
@@ -629,29 +674,35 @@ void SDFPROnlineModel::print(std::ostream& out) const {
     //    out << rank[ii] << " ";
     //}
     out << endl;
-    out << "TDMA slots: " << tdmaAlloc << endl;
-    //print TDN table
-    out << endl << "Chosen routes: " << chosenRoute << endl;
     
-    vector<tdn_graphNode> tdn_graph = platform->getTDNGraph();
-    out << endl << "TDN table: " << endl;
-    for(size_t ii = 0; ii < injectionTable.size(); ii++){
-      if(ii!=0 && ii%platform->getTDNCycles()==0){out << endl;}
-      if(ii%platform->getTDNCycles()==0){
-        out << ((tdn_graph[ii].link.from==-1)?"NI":("SW"+tools::toString(tdn_graph[ii].link.from))) << " -> ";
-        out << ((tdn_graph[ii].link.to==-1)?"NI":("SW"+tools::toString(tdn_graph[ii].link.to))) << ": ";
-      }
-      if(injectionTable[ii].assigned() && injectionTable[ii].val()==platform->nodes()){
-        out << "_";
-      }else{
-        out << injectionTable[ii];
-      }
-      out << " ";
-      
-      if(ii == platform->getTDNCycles()*platform->nodes()-1)
-        out << endl << "-------------------------------------------";
+    if(platform->getInterconnectType() == TDMA_BUS){
+      out << "TDMA slots: " << tdmaAlloc << endl;
     }
-    out << endl << endl;
+    
+    //print TDN table
+    if(platform->getInterconnectType() == TDN_NOC){
+      out << endl << "Chosen routes: " << chosenRoute << endl;
+      
+      vector<tdn_graphNode> tdn_graph = platform->getTDNGraph();
+      out << endl << "TDN table: " << endl;
+      for(size_t ii = 0; ii < injectionTable.size(); ii++){
+        if(ii!=0 && ii%platform->getTDNCycles()==0){out << endl;}
+        if(ii%platform->getTDNCycles()==0){
+          out << ((tdn_graph[ii].link.from==-1)?"NI":("SW"+tools::toString(tdn_graph[ii].link.from))) << " -> ";
+          out << ((tdn_graph[ii].link.to==-1)?"NI":("SW"+tools::toString(tdn_graph[ii].link.to))) << ": ";
+        }
+        if(injectionTable[ii].assigned() && injectionTable[ii].val()==platform->nodes()){
+          out << "_";
+        }else{
+          out << injectionTable[ii];
+        }
+        out << " ";
+        
+        if(ii == platform->getTDNCycles()*platform->nodes()-1)
+          out << endl << "-------------------------------------------";
+      }
+      out << endl << endl;
+    }
    
     //out << "Flits per link: " << endl;
     //size_t links = tdn_graph.size()/platform->getTDNCycles();
@@ -664,10 +715,10 @@ void SDFPROnlineModel::print(std::ostream& out) const {
     }
     out << endl << endl;*/
     
-    out << "S-order: " << sendNext << endl;
+    out << "Sending-order: " << sendNext << endl;
     //out << "wcct_b: " << wcct_b << endl;
     //out << "wcct_s: " << wcct_s << endl;
-    out << "R-order: " << recNext << endl;
+    out << "Receiving-order: " << recNext << endl;
     //out << "wcct_r: " << wcct_r << endl;
     out << "----------------------------------------" << endl;
 
@@ -721,6 +772,30 @@ vector<int> SDFPROnlineModel::getOptimizationValues(){
   
   return values;
 }
+
+
+/** returns the values of the parameters that are under optimization */
+vector<int> SDFPROnlineModel::getPrintMetrics(){
+  vector<int> values;
+  
+  for(auto i: cfg->settings().printMetrics){
+    switch(i){
+      case(Config::THROUGHPUT):
+        for(auto j : period){
+          if(j.assigned()) values.push_back(j.val());
+        }
+        break;
+      case(Config::POWER):
+        if(sys_power.assigned()) values.push_back(sys_power.val());
+        if(sysUsed_power.assigned()) values.push_back(sysUsed_power.val());
+        break;
+      default:
+        break;
+    }
+  }
+  return values;
+}
+
 /*
 int SDFPROnlineModel::valueProc(const Space& home, IntVar x, int i) {
     int min_slack_proc = x.min();
