@@ -92,7 +92,6 @@ int main(int argc, const char* argv[]) {
         }
       }else{
         taskset =  new TaskSet();
-        LOG_INFO("did not import any periodic tasks!");
       }
 	   /// Reading platform
        size_t found_platform=path.find("platform");

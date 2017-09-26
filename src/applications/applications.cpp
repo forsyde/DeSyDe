@@ -639,8 +639,8 @@ void Applications::swapPrTasks(int i, int j) {
 
 std::ostream& operator<< (std::ostream &out, const Applications &apps) {
   out                  << apps.n_sdfParentActors << " sdf parents, " <<
-    apps.n_sdfActors   << " actors "             <<
-    apps.n_sdfChannels << " channels "           <<
+    apps.n_sdfActors   << " actors, "             <<
+    apps.n_sdfChannels << " channels, and "           <<
     apps.n_iptTasks    << " pr tasks "           << 
     endl;
   return out;

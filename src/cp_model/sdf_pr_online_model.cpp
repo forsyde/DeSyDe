@@ -179,6 +179,18 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
         IntVar cycleLength(*this, 0, Int::Limits::max); //depends on chosen interconnect-mode
         //IntVarArgs sendbufferSz(*this, apps->n_programChannels(), 0, Int::Limits::max);                               /**< //sending buffer sizes. */
         //IntVarArgs recbufferSz(*this, apps->n_programChannels(), 1, Int::Limits::max);                                /**< //receiving buffer sizes. */
+        
+        vector<tdn_graphNode> tdn_graph;
+        size_t messages;
+        size_t links;
+        IntVarArgs flitsPerLink;
+        if(platform->getInterconnectType() == TDN_NOC){
+          tdn_graph = platform->getTDNGraph();
+          messages = channels.size(); 
+          links = tdn_graph.size()/platform->getTDNCycles();
+          IntVarArgs _flitsPerLink(*this, messages*links, 0, Int::Limits::max); 
+          flitsPerLink = _flitsPerLink;
+        }
 #include "wcct.constraints"
 
         /**

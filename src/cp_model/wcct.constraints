@@ -164,10 +164,6 @@ if(platform->getInterconnectType() == TDMA_BUS){
   rel(*this, sum(tdmaAlloc) <= platform->tdmaSlots());
   
 } else if(platform->getInterconnectType() == TDN_NOC){ //TDN-NoC ###############################################################################
-  vector<tdn_graphNode> tdn_graph = platform->getTDNGraph();
-  size_t messages = channels.size(); 
-  size_t links = tdn_graph.size()/platform->getTDNCycles();
-  IntVarArgs flitsPerLink(*this, messages*links, 0, Int::Limits::max); 
   
   LOG_INFO("TDN graph is of size " + tools::toString(tdn_graph.size()));
   //for the TDN table, values 0...platform->nodes()-1 means location is assigned to processor with that id
