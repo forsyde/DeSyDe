@@ -397,7 +397,7 @@ private:
          cfg.settings().out_print_freq == Config::LAST ||
          cfg.settings().out_print_freq == Config::ALL_SOL){
         //if(nodes%infoFreq == 0){
-          LOG_INFO(tools::toString(nodes) +" solution founds so far.");
+          LOG_INFO(tools::toString(nodes) +" solution found so far.");
           //if(nodes == 10){ 
           //  infoFreq = 5;
           //}else if(nodes > 10 && nodes%(20*infoFreq) == 0){ 

@@ -168,7 +168,7 @@ for(size_t i=0; i<mappingRules_do.size(); i++){
     rel(*this, proc[i] == mappingRules_do[i]);
     LOG_DEBUG(tools::toString(i) + ": do " + tools::toString(mappingRules_do[i]));
   }
-  for(j : mappingRules_doNot[i]){
+  for(auto j : mappingRules_doNot[i]){
     rel(*this, proc[i] != j);
     LOG_DEBUG(tools::toString(i) + ": do NOT " + tools::toString(j));
   }

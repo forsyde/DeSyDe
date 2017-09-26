@@ -116,7 +116,7 @@ public:
     SearchTypes               search;
     SearchTypes               pre_search;
     SearchTypes               pre_multi_step_search;
-    size_t                    optimizationStep;
+    size_t                    optimizationStep=0;
     std::vector<OptCriterion> criteria;
     unsigned long int         timeout_first;
     unsigned long int         timeout_all;

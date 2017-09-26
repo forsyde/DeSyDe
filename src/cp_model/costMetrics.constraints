@@ -30,10 +30,6 @@ rel(*this, sysUsed_cost == sum(procUsed_cost)+nocUsed_cost);
 
 //for the NoC
 if(platform->getInterconnectType() == TDN_NOC){
-  vector<tdn_graphNode> tdn_graph = platform->getTDNGraph();
-  size_t messages = channels.size(); 
-  size_t links = tdn_graph.size()/platform->getTDNCycles();
-  IntVarArgs flitsPerLink(*this, messages*links, 0, Int::Limits::max); 
   Matrix<IntVarArgs> flitsPerLinkM(flitsPerLink, links, messages);//derive flits per switch and flits per NI from this
   //area
   //IntVarArgs area_linkAtNode(*this, platform->nodes(), 0, Int::Limits::max);
