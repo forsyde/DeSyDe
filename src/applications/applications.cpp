@@ -59,29 +59,32 @@ void Applications::load_const(XMLdoc& xml)
     LOG_DEBUG("xml_constraints size="+tools::toString(xml_constraints.size()));
 	for (const auto& cons : xml_constraints)
 	{
-		string app_name = xml.getProp(cons, "app_name");
-    string period_cons_s;
-    int period_cons;
-    if(xml.hasProp(cons, "period")){
-      period_cons_s = xml.getProp(cons, "period");
-      period_cons = atoi(period_cons_s.c_str());
-    }else{
-      period_cons = 0;
+    
+    if(xml.hasProp(cons, "app_name")){
+      string app_name = xml.getProp(cons, "app_name");
+      string period_cons_s;
+      int period_cons;
+      if(xml.hasProp(cons, "period")){
+        period_cons_s = xml.getProp(cons, "period");
+        period_cons = atoi(period_cons_s.c_str());
+      }else{
+        period_cons = 0;
+      }
+      string latency_cons_s;
+      int latency_cons;
+      if(xml.hasProp(cons, "latency")){
+        latency_cons_s = xml.getProp(cons, "latency");
+        latency_cons = atoi(latency_cons_s.c_str());
+      }else{
+        latency_cons = 0;
+      }
+          
+      set_const(app_name, period_cons, latency_cons);
+          
+      LOG_DEBUG("Reading constraints for app: " + app_name + ":");
+      LOG_DEBUG("  Period <= " + tools::toString(period_cons));		
+      LOG_DEBUG("  Latency <= " + tools::toString(latency_cons));		
     }
-    string latency_cons_s;
-    int latency_cons;
-    if(xml.hasProp(cons, "latency")){
-      latency_cons_s = xml.getProp(cons, "latency");
-      latency_cons = atoi(latency_cons_s.c_str());
-    }else{
-      latency_cons = 0;
-    }
-        
-    set_const(app_name, period_cons, latency_cons);
-        
-		LOG_DEBUG("Reading constraints for app: " + app_name + ":");
-		LOG_DEBUG("  Period <= " + tools::toString(period_cons));		
-		LOG_DEBUG("  Latency <= " + tools::toString(latency_cons));		
 		
 	}	
 }
