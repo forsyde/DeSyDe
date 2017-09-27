@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<designConstraints>
-	<constraint app_name="a_sobel" period="1000" />
-    <constraint app_name="b_susan" period="2400" />
-    <constraint app_name="c_rasta" period="800" />
-    <constraint app_name="d_jpegEnc1" period="9500" />
-    <constraint app_name="e_vad" period="9500" />
-    <constraint app_name="g10_3_cycl" period="440" />
-</designConstraints>

@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- LE: <=, GE >=, EQ == -->
-<!-- system constraints: power LE, utilization GE, area LE, money LE, procUsed EQ -->
-<!-- utilization: max 100 -->
-<designConstraints>
-	<appConstraint app_name="a_sobel" period="13000"/>
-    <appConstraint app_name="b_susan" period="35000"/>
-    <systemConstraint area="140000" />
-</designConstraints>
