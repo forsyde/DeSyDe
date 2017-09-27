@@ -166,10 +166,10 @@ LOG_DEBUG("Mapping rules:");
 for(size_t i=0; i<mappingRules_do.size(); i++){
   if(mappingRules_do[i] > -1){
     rel(*this, proc[i] == mappingRules_do[i]);
-    LOG_DEBUG(tools::toString(i) + ": do " + tools::toString(mappingRules_do[i]));
+    LOG_DEBUG("  "+tools::toString(i) + ": do " + tools::toString(mappingRules_do[i]));
   }
   for(auto j : mappingRules_doNot[i]){
     rel(*this, proc[i] != j);
-    LOG_DEBUG(tools::toString(i) + ": do NOT " + tools::toString(j));
+    LOG_DEBUG("  "+tools::toString(i) + ": do NOT " + tools::toString(j));
   }
 }
