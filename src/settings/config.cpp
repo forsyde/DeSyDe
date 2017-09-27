@@ -78,6 +78,10 @@ int Config::parse(int argc, const char** argv) throw (IOException, InvalidArgume
       ("dump-cfg",
           po::value<string>()->implicit_value("config.cfg"),
           "creates a default configuration file and exits the program.")
+      ("config-TDN",
+          po::value<string>()->implicit_value("")->notifier(
+              boost::bind(&Config::setTDNconfig, this, _1)),
+          "provides a minimal TDN-configuration for the provided platform model that works for all-to-all communication.")
       ("output,o",
           po::value<string>()->default_value(".")->notifier(
               boost::bind(&Config::setOutputPaths, this, _1)),
@@ -321,6 +325,10 @@ void Config::setInputPaths(const vector<string> & paths) throw (IOException) {
   for (auto p : paths) {
     tools::append(settings_.inputs_paths, tools::getFileNames(p, ".xml"));
   }
+}
+
+void Config::setTDNconfig(const string &p){
+  settings_.configTDN = true;
 }
 
 void Config::setOutputPaths(const string &path) throw (IOException) {

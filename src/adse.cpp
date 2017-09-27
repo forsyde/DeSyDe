@@ -70,9 +70,11 @@ int main(int argc, const char* argv[]) {
   }
 
   try {
+    
 	  
 	  TaskSet* taskset;
 	  Platform* platform;
+    string platform_path;
 	  string WCET_path;
 	  string desConst_path;
 	  string mappingRules_path;
@@ -97,6 +99,7 @@ int main(int argc, const char* argv[]) {
        size_t found_platform=path.find("platform");
        if(found_platform != string::npos){
 			XMLdoc xml(path);
+      platform_path = path;
 			LOG_INFO("Parsing platform XML file...");
 			xml.read(false);
 			platform =  new Platform(xml);
@@ -124,17 +127,20 @@ int main(int argc, const char* argv[]) {
 	
     
     vector<SDFGraph*> sdfs;
-    LOG_INFO("Parsing SDF3 graphs...");
-    for (const auto& path : cfg.settings().inputs_paths) {
-		 
-       if(path.find("/sdfs/") != string::npos){		
-           XMLdoc xml(path);
-           xml.readXSD("sdf3", "noNamespaceSchemaLocation");
-           sdfs.push_back(new SDFGraph(xml));
+    if(!cfg.settings().configTDN){
+      LOG_INFO("Parsing SDF3 graphs...");
+      for (const auto& path : cfg.settings().inputs_paths) {
+       
+         if(path.find("/sdfs/") != string::npos){		
+             XMLdoc xml(path);
+             xml.readXSD("sdf3", "noNamespaceSchemaLocation");
+             sdfs.push_back(new SDFGraph(xml));
+         }
        }
+     }else{ //create an SDF based on platform
+        XMLdoc xml(platform_path); //because the SDFGraph class has an XMLdoc as a reference member
+        sdfs.push_back(new SDFGraph(platform, xml));
      }
-    /*for(auto &i : sdfXMLs)
-     sdfs.push_back(new SDFGraph(i));*/
 
     LOG_INFO("Creating an application object ... ");
     Applications* appset;
@@ -149,27 +155,31 @@ int main(int argc, const char* argv[]) {
 
 	LOG_INFO("Creating a mapping object ... \n" );
     Mapping* map;
-    XMLdoc xml_wcet(WCET_path);
-    xml_wcet.read(false);
     
-    if(mappingRules_path != ""){
-      XMLdoc xml_mapRules(mappingRules_path);
-      xml_mapRules.read(false);
-      if(desConst_path != ""){
-        XMLdoc xml_const(desConst_path);
-        xml_const.read(false);
-        map = new Mapping(appset, platform, xml_wcet, xml_const, xml_mapRules);
+    if(!cfg.settings().configTDN){
+      XMLdoc xml_wcet(WCET_path);
+      xml_wcet.read(false);
+      if(mappingRules_path != ""){
+        XMLdoc xml_mapRules(mappingRules_path);
+        xml_mapRules.read(false);
+        if(desConst_path != ""){
+          XMLdoc xml_const(desConst_path);
+          xml_const.read(false);
+          map = new Mapping(appset, platform, xml_wcet, xml_const, xml_mapRules);
+        }else{
+          map = new Mapping(appset, platform, xml_wcet, xml_mapRules);
+        }
       }else{
-        map = new Mapping(appset, platform, xml_wcet, xml_mapRules);
+        if(desConst_path != ""){
+          XMLdoc xml_const(desConst_path);
+          xml_const.read(false);
+          map = new Mapping(appset, platform, xml_wcet, xml_const);
+        }else{
+          map = new Mapping(appset, platform, xml_wcet);
+        }
       }
     }else{
-      if(desConst_path != ""){
-        XMLdoc xml_const(desConst_path);
-        xml_const.read(false);
-        map = new Mapping(appset, platform, xml_wcet, xml_const);
-      }else{
-        map = new Mapping(appset, platform, xml_wcet);
-      }
+      map = new Mapping(appset, platform);
     }
     
     if(appset->n_IPTTasks()>0){
@@ -196,9 +206,11 @@ int main(int argc, const char* argv[]) {
       
     }else{
       LOG_INFO("No PRESOLVER specified.");
-      model = new SDFPROnlineModel(map, &cfg);
+      
+      if(!cfg.settings().configTDN){
+        model = new SDFPROnlineModel(map, &cfg);
+      }
     }
-
 
 //    cout << messageStart + "Creating a constraint model object ... " << endl;
 //    SDFPROnlineModel* model = new SDFPROnlineModel(map, dseSettings);
@@ -209,7 +221,7 @@ int main(int argc, const char* argv[]) {
     Execution<SDFPROnlineModel> execObj(model, cfg);
     
     LOG_INFO("Running the model object ... ");
-    execObj.Execute();
+    execObj.Execute(map);
 
 //    Validation* val = new Validation(map, cfg);
 //    val->Validate();

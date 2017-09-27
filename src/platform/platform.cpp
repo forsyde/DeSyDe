@@ -401,6 +401,16 @@ void Platform::load_xml(XMLdoc& xml) throw (InvalidArgumentException)
   
   	
 }
+
+void Platform::setTDNconfig(size_t slots){
+  interconnect.tdnCycles = slots;
+  interconnect.tdnCyclesPerProc = 1;
+  tdn_graph.clear();
+  interconnect.all_routes.clear();
+  createTDNGraph();
+  createRouteTable();
+}
+
 Platform::~Platform(){
   //compNodes (they were potentially created with 'new'')
   for (size_t i=0; i<compNodes.size(); i++){

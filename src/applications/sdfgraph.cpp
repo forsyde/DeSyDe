@@ -24,6 +24,52 @@ SDFGraph::SDFGraph(XMLdoc& xmlAppGraph) : xml(xmlAppGraph) {
 
 }
 
+SDFGraph::SDFGraph(Platform* platform, XMLdoc& doc): xml(doc) {
+  graphName = "TDNconfigG";
+  parentActors 	     = platform->nodes();
+  period_constraint  = 0;
+  latency_constraint = 0;
+  
+  //generate actors
+  for(size_t a=0; a<platform->nodes(); a++){
+    actors.push_back(new SDFActor());
+    actors[a]->id = a;
+    actors[a]->name = "actor_"+tools::toString(a);
+    actors[a]->parent_id = a;
+    actors[a]->parent_name = "parent_"+tools::toString(a);
+    actors[a]->codeSize = 0;
+    actors[a]->dataSize = 0;
+  }
+  
+  //create path matrix
+  pathMatrix.assign(actors.size() * actors.size(), simplePath());
+  
+  //generate channels between all actors
+  size_t id = 0;
+  for(size_t src=0; src<actors.size(); src++){
+    for(size_t dst=0; dst<actors.size(); dst++){
+      channels.push_back(new SDFChannel());
+      channels[id]->id = id;
+      channels[id]->name = "ch_"+tools::toString(id);
+      channels[id]->source = src;
+      channels[id]->src_name = actors[src]->name;
+      channels[id]->prod = 1;
+      channels[id]->destination = dst;
+      channels[id]->dst_name = actors[dst]->name;
+      channels[id]->cons = 1;
+      channels[id]->initTokens = (src<dst) ? 0 : 1;
+      channels[id]->tokenSize = platform->getFlitSize();
+      channels[id]->messageSize = channels[id]->tokenSize;
+      
+      pathMatrix[src * actors.size() + dst].exists = 1;
+      pathMatrix[src * actors.size() + dst].initTokens = channels[id]->initTokens;
+      
+      id++;
+    }
+  }
+  LOG_DEBUG("Path matrix of generated SDFG for TDN configuration:\n"+printPathMatrix());
+}
+
 SDFGraph::~SDFGraph(){
   //delete actors and channels (they were created with 'new'')
   for (size_t i=0; i<actors.size(); i++){

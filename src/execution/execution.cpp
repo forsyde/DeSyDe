@@ -68,49 +68,55 @@ public:
    * (i) 	print()
    * (ii) printCSV()
    */
-  int Execute() {
-    switch (cfg.settings().search) {
-    case (Config::GIST_ALL): {
-      Gist::Print<CPModelTemplate> p("Print solution");
-      Gist::Options options;
-      options.inspect.click(&p);
-      Gist::dfs(model, options);
-      break;
+  int Execute(Mapping* map) {
+    if(!cfg.settings().configTDN){
+      switch (cfg.settings().search) {
+      case (Config::GIST_ALL): {
+        Gist::Print<CPModelTemplate> p("Print solution");
+        Gist::Options options;
+        options.inspect.click(&p);
+        Gist::dfs(model, options);
+        break;
+      }
+      case (Config::GIST_OPT): {
+        Gist::Print<CPModelTemplate> p("Print solution");
+        Gist::Options options;
+        options.inspect.click(&p);
+        Gist::bab(model, options);
+        break;
+      }
+      case (Config::FIRST):
+      case (Config::ALL): {
+        LOG_INFO("DFS engine ...");
+        DFS<CPModelTemplate> e(model, geSearchOptions);
+        loopSolutions<DFS<CPModelTemplate>>(&e);
+        break;
+      }
+      case (Config::OPTIMIZE): {
+        LOG_INFO("BAB engine, optimizing ... ");
+        BAB<CPModelTemplate> e(model, geSearchOptions);
+        loopSolutions<BAB<CPModelTemplate>>(&e);
+        break;
+      }
+      case (Config::OPTIMIZE_IT): {
+        LOG_INFO("BAB engine, optimizing iteratively ... ");
+        Search::Cutoff* cut = Search::Cutoff::luby(cfg.settings().luby_scale);
+        geSearchOptions.cutoff = cut;
+        geSearchOptions.nogoods_limit = cfg.settings().noGoodDepth;
+        //geSearchOptions.share_afc = true;
+        RBS<BAB, CPModelTemplate> e(model, geSearchOptions);
+        loopSolutions<RBS<BAB, CPModelTemplate>>(&e);
+
+        break;
+      }
+      default:
+        THROW_EXCEPTION(RuntimeException, "unknown search type for main solver.");
+        break;
+      }
+    }else{
+      loopForMinimalTDNConfig(map);
     }
-    case (Config::GIST_OPT): {
-      Gist::Print<CPModelTemplate> p("Print solution");
-      Gist::Options options;
-      options.inspect.click(&p);
-      Gist::bab(model, options);
-      break;
-    }
-    case (Config::FIRST):
-    case (Config::ALL): {
-      LOG_INFO("DFS engine ...");
-      DFS<CPModelTemplate> e(model, geSearchOptions);
-      loopSolutions<DFS<CPModelTemplate>>(&e);
-      break;
-    }
-    case (Config::OPTIMIZE): {
-      LOG_INFO("BAB engine, optimizing ... ");
-      BAB<CPModelTemplate> e(model, geSearchOptions);
-      loopSolutions<BAB<CPModelTemplate>>(&e);
-      break;
-    }
-    case (Config::OPTIMIZE_IT): {
-      LOG_INFO("BAB engine, optimizing iteratively ... ");
-      Search::Cutoff* cut = Search::Cutoff::luby(cfg.settings().luby_scale);
-      geSearchOptions.cutoff = cut;
-      geSearchOptions.nogoods_limit = cfg.settings().noGoodDepth;
-      //geSearchOptions.share_afc = true;
-      RBS<BAB, CPModelTemplate> e(model, geSearchOptions);
-      loopSolutions<RBS<BAB, CPModelTemplate>>(&e);
-      break;
-    }
-    default:
-      THROW_EXCEPTION(RuntimeException, "unknown search type for main solver.");
-      break;
-    }
+      
     LOG_INFO("End of exploration. Result files written to " +cfg.settings().output_path+"out/");
     return 1;
   }
@@ -469,6 +475,117 @@ private:
     }
     //outMOSTCSV.close();
     //outMappingCSV.close();
+  }
+  
+  template<class SearchEngine> bool findMinimalTDNConfig(SearchEngine *e) {
+    bool solFound = false;
+    if(CPModelTemplate * s = e->next()){ //"if" because one solution is sufficient
+      t_endAll = runTimer::now();
+      printSolution(e, s);
+      solFound = true;
+
+    }
+    auto durAll = runTimer::now() - t_start;
+    auto durAll_s = std::chrono::duration_cast<std::chrono::seconds>(durAll).count();
+    auto durAll_ms = std::chrono::duration_cast<std::chrono::milliseconds>(durAll).count();
+    
+    out << "===== search ended after: " << durAll_s << " s (" << durAll_ms << " ms)";
+    if(e->stopped()){
+      out << " due to time-out!";
+    }
+    nodes = solFound ? 1 : 0;
+    out << " =====\n" << nodes << " solutions found\n" << "search nodes: " << e->statistics().node << ", fail: " << e->statistics().fail << ", propagate: "
+        << e->statistics().propagate << ", depth: " << e->statistics().depth << ", nogoods: " << e->statistics().nogood << ", restarts: " << e->statistics().restart << " ***\n";
+    return solFound;
+  }
+  
+  /**
+   * Loops through the solutions and prints them using the input search engine
+   */
+  void loopForMinimalTDNConfig(Mapping* map) {
+    
+    out.open(cfg.settings().output_path+"out/TDNconfig_out.txt");
+    LOG_INFO("Opened file for printing results: " +cfg.settings().output_path+"out/TDNconfig_out.txt");
+    
+    LOG_INFO("started searching for " + cfg.get_search_type() + " solutions ");
+    out << "\n \n*** \n";    
+    
+    std::chrono::high_resolution_clock::duration presolver_delay(0);
+    if((cfg.doPresolve() && cfg.is_presolved()) || cfg.doMultiStep()){
+      if(cfg.doOptimize()){
+        optData = cfg.getPresolverResults()->optResults;
+      }
+      if(!cfg.settings().printMetrics.empty()){
+        solutionData = cfg.getPresolverResults()->printResults;
+      }
+      presolver_delay = cfg.getPresolverResults()->presolver_delay;
+    }
+    
+    t_start = runTimer::now();
+    bool solutionFound = false;
+    size_t tdn_slots = map->getPlatform()->nodes()+2;
+      LOG_INFO("Searching for minimal TDN config. Starting with "+tools::toString(tdn_slots)+" slots.");
+    while(!solutionFound){
+      LOG_INFO("   Trying "+tools::toString(tdn_slots)+" slots.");
+      map->getPlatform()->setTDNconfig(tdn_slots);
+      model = new CPModelTemplate(map, &cfg);
+      
+      switch (cfg.settings().search) {
+        case (Config::GIST_ALL): {
+          Gist::Print<CPModelTemplate> p("Print solution");
+          Gist::Options options;
+          options.inspect.click(&p);
+          Gist::dfs(model, options);
+          solutionFound = true; //only for testing/debugging
+          break;
+        }
+        case (Config::GIST_OPT): {
+          Gist::Print<CPModelTemplate> p("Print solution");
+          Gist::Options options;
+          options.inspect.click(&p);
+          Gist::bab(model, options);
+          solutionFound = true; //only for testing/debugging
+          break;
+        }
+        case (Config::FIRST):
+        case (Config::ALL): {
+          LOG_INFO("DFS engine ...");
+          DFS<CPModelTemplate> e(model, geSearchOptions);
+          solutionFound = findMinimalTDNConfig<DFS<CPModelTemplate>>(&e);
+          break;
+        }
+        case (Config::OPTIMIZE): {
+          LOG_INFO("BAB engine, optimizing ... ");
+          BAB<CPModelTemplate> e(model, geSearchOptions);
+          solutionFound = findMinimalTDNConfig<BAB<CPModelTemplate>>(&e);
+          break;
+        }
+        case (Config::OPTIMIZE_IT): {
+          LOG_INFO("BAB engine, optimizing iteratively ... ");
+          Search::Cutoff* cut = Search::Cutoff::luby(cfg.settings().luby_scale);
+          geSearchOptions.cutoff = cut;
+          geSearchOptions.nogoods_limit = cfg.settings().noGoodDepth;
+          RBS<BAB, CPModelTemplate> e(model, geSearchOptions);
+          solutionFound = findMinimalTDNConfig<RBS<BAB, CPModelTemplate>>(&e);
+
+          break;
+        }
+        default:
+          THROW_EXCEPTION(RuntimeException, "unknown search type for main solver.");
+          break;
+      }
+      if(!solutionFound) tdn_slots++;
+    }
+    
+    auto durAll = runTimer::now() - t_start;
+    auto durAll_s = std::chrono::duration_cast<std::chrono::seconds>(durAll).count();
+    auto durAll_ms = std::chrono::duration_cast<std::chrono::milliseconds>(durAll).count();
+    
+    out << "\n#####\n";
+    out << "===== search ended after: " << durAll_s << " s (" << durAll_ms << " ms)";
+    
+
+    out.close();
   }
 
 };

@@ -354,6 +354,11 @@ public:
 
    void load_xml(XMLdoc& xml) throw (InvalidArgumentException);
    
+  /**
+   * For TDN config, setting no of TDN slots and slots per proc.
+   */
+  void setTDNconfig(size_t slots);
+   
   // Gives the number of nodes
   size_t nodes() const;
   

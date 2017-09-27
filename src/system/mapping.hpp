@@ -139,6 +139,7 @@ public:
   int const max_utilization = 100; //TODO: add to configuration
 
   Mapping() {};
+  Mapping(Applications*, Platform*);
   Mapping(Applications*, Platform*, XMLdoc&);
   Mapping(Applications*, Platform*, XMLdoc&, XMLdoc&);
   Mapping(Applications*, Platform*, XMLdoc&, XMLdoc&, XMLdoc&);

@@ -128,6 +128,8 @@ public:
     OutputFileType            out_file_type;
     OutputPrintFrequency      out_print_freq;
     std::vector<OptCriterion> printMetrics;
+    
+    bool                      configTDN=false;
   };
   struct PresolverResults{
     size_t it_mapping; /**< Informs the CP model how to use oneProcMappings: <.size(): Enforce mapping, >=.size() Forbid all. */
@@ -190,6 +192,7 @@ private:
   void dumpConfigFile(std::string path, po::options_description opts) throw (IOException);
 
   void setInputPaths(const std::vector<std::string> &) throw (IOException);
+  void setTDNconfig(const string &p);
   void setOutputPaths(const std::string &) throw (IOException);
   void setLogPaths(const std::string &) throw (IOException);
   void setLogLevel(const std::vector<std::string> &) throw (IllegalStateException, InvalidFormatException);

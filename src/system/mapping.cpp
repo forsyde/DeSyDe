@@ -1,6 +1,59 @@
 #include "mapping.hpp"
 
 using namespace std;
+/** Constructor for TDN configuration. Generates WCETs and mapping rules */
+Mapping::Mapping(Applications* p_program, Platform* p_target) {
+  program = p_program;
+  target = p_target;
+  n_apps = program->n_SDFApps() + program->n_IPTTasks();
+  period.assign(n_apps, 0);
+  initLatency.assign(n_apps, 0);
+  proc_modes.assign(p_target->nodes(), 0);
+  proc_period.assign(p_target->nodes(), 0);
+  proc_utilization.assign(p_target->nodes(), 0);
+  proc_energy.assign(p_target->nodes(), 0);
+  proc_area.assign(p_target->nodes(), 0);
+  proc_cost.assign(p_target->nodes(), 0);
+  memLoad.assign(p_target->nodes(), 0);
+  procsUsed_utilization = 0;
+  sys_utilization = 0;
+  sys_energy = 0;
+  sys_cost = 0;
+
+  //initialize vector of vectors of vectors for WCETs (combination of entity, proc & mode)
+  wcets.insert(wcets.end(), program->n_programEntities(), //[Nima] n_SDFActors-->n_programEntities
+               vector<vector<int>>(p_target->nodes(),
+                                   vector<int>(p_target->getMaxModes(), std::numeric_limits<int>::max() - 1)));
+                                   
+  mappingRules_do.insert(mappingRules_do.end(), program->n_programEntities(), -1);
+  mappingRules_doNot.insert(mappingRules_doNot.end(), program->n_programEntities(), vector<int>());
+  
+  /// generate WCETs for TDN configuration
+  for (size_t i=0; i<program->n_programEntities(); i++){ //all entities
+    for (size_t j=0; j<target->nodes(); j++){  //all processors
+      wcets[i][j].resize(target->getModes(j));
+      for(size_t k=0; k<wcets[i][j].size(); k++){
+        wcets[i][j][k] = 10;
+      }
+    }
+  }
+
+  /// generate mapping rules for TDN configuration (force actor i on proc i)
+  for(size_t i=0; i<mappingRules_do.size(); i++){
+    mappingRules_do[i] = i;
+  }
+
+  commSched.insert(commSched.end(), p_target->nodes(), vector<int>());
+  //initialize buffers
+  send_buff.assign(program->n_programChannels(), 0);
+  rec_buff.assign(program->n_programChannels(), 0);
+  comm_delay.assign(program->n_programChannels(), div_t());
+  maxIterationsTransPhEntity.assign(p_program->n_programEntities(), 1);
+  maxIterationsTransPhChannel.assign(p_program->n_programChannels(), 1);
+  
+  sysConstr = SystemConstraints{0, 0, 0, 0, 0};
+}
+
 Mapping::Mapping(Applications* p_program, Platform* p_target, XMLdoc& p_xml_wcet) {
   program = p_program;
   target = p_target;
