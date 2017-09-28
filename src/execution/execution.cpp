@@ -483,6 +483,7 @@ private:
       t_endAll = runTimer::now();
       printSolution(e, s);
       solFound = true;
+      delete s;
     }
     auto durAll = runTimer::now() - t_start;
     auto durAll_s = std::chrono::duration_cast<std::chrono::seconds>(durAll).count();
@@ -495,6 +496,7 @@ private:
     nodes = solFound ? 1 : 0;
     out << " =====\n" << nodes << " solutions found\n" << "search nodes: " << e->statistics().node << ", fail: " << e->statistics().fail << ", propagate: "
         << e->statistics().propagate << ", depth: " << e->statistics().depth << ", nogoods: " << e->statistics().nogood << ", restarts: " << e->statistics().restart << " ***\n\n";
+    //delete e;
     return solFound;
   }
   
