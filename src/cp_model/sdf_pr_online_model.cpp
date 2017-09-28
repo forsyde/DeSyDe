@@ -5,7 +5,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
     platform(p_mapping->getPlatform()),
     mapping(p_mapping),
     cfg(_cfg),
-    next(*this, apps->n_SDFActors()+platform->nodes(), 0, apps->n_SDFActors()+platform->nodes()),
+    next(*this, apps->n_SDFActors()+platform->nodes(), 0, apps->n_SDFActors()+platform->nodes()-1),
     //rank(*this, apps->n_SDFActors(), 0, apps->n_SDFActors()-1),
     proc(*this, apps->n_programEntities(), 0, platform->nodes()-1),
     proc_mode(*this, platform->nodes(), 0, platform->getMaxModes()),
@@ -197,6 +197,12 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
          * Power consumption
          */
         LOG_INFO("Inserting power constraints ");
+        if(cfg->settings().configTDN){
+          rel(*this, ic_mode == 0);
+          for(size_t p=0; p<platform->nodes(); p++){
+            rel(*this, proc_mode[p]==0);
+          }
+        }
 #include "power.constraints"
 
         /**
@@ -402,7 +408,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
               branchStrat += "optimize throughput.\n";
             }else{
               bool before = false;
-              for(int i=0; i<cfg->settings().optimizationStep; i++){
+              for(size_t i=0; i<cfg->settings().optimizationStep; i++){
                 if(cfg->doOptimizeThput(i)){
                   branchStrat += "keep or optimize throughput.\n";
                   before = true;
@@ -427,7 +433,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
               branchStrat += "optimize power.\n";
             }else{
               bool before = false;
-              for(int i=0; i<cfg->settings().optimizationStep; i++){
+              for(size_t i=0; i<cfg->settings().optimizationStep; i++){
                 if(cfg->doOptimizePower(i)){
                   branchStrat += "keep or optimize power.\n";
                   before = true;
@@ -514,7 +520,11 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
          * ordering of sending and receiving messages with same
          * source (send) or destination (rec) for unresolved cases
          */
-        branch(*this, sendNext, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN());
+        if(cfg->settings().configTDN){
+          assign(*this, sendNext, INT_ASSIGN_MIN());
+        }else{
+          branch(*this, sendNext, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN());
+        }
  
         /**
          * ordering of receiving messages with same
@@ -539,22 +549,30 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
         }
         
         if(platform->getInterconnectType() == TDN_NOC){
-          if(cfg->doOptimizeThput(cfg->settings().optimizationStep)){
-            branch(*this, ic_mode,  INT_VAL_MAX());
-          }else if(cfg->doOptimizePower(cfg->settings().optimizationStep)){
-            branch(*this, ic_mode, INT_VAL_MIN());
+          if(cfg->settings().configTDN){
+            assign(*this, ic_mode, INT_ASSIGN_MIN());
           }else{
-            branch(*this, ic_mode, INT_VAL_MED());
+            if(cfg->doOptimizeThput(cfg->settings().optimizationStep)){
+              branch(*this, ic_mode,  INT_VAL_MAX());
+            }else if(cfg->doOptimizePower(cfg->settings().optimizationStep)){
+              branch(*this, ic_mode, INT_VAL_MIN());
+            }else{
+              branch(*this, ic_mode, INT_VAL_MED());
+            }
           }
         }
         
-        if(cfg->doOptimizeThput(cfg->settings().optimizationStep)){
-          branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VAL_MAX());
-        }else if(cfg->doOptimizePower(cfg->settings().optimizationStep)){
-          branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN());
+        if(cfg->settings().configTDN){
+          assign(*this, proc_mode, INT_ASSIGN_MIN());
         }else{
-          branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VAL_MED());
-        } 
+          if(cfg->doOptimizeThput(cfg->settings().optimizationStep)){
+            branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VAL_MAX());
+          }else if(cfg->doOptimizePower(cfg->settings().optimizationStep)){
+            branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN());
+          }else{
+            branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VAL_MED());
+          } 
+        }
         
         if(platform->getTDNCyclesPerProc()>1 && cfg->doOptimizeThput(cfg->settings().optimizationStep)){
           rnd.hw();
@@ -697,20 +715,20 @@ void SDFPROnlineModel::print(std::ostream& out) const {
       
       vector<tdn_graphNode> tdn_graph = platform->getTDNGraph();
       out << endl << "TDN table: " << endl;
-      for(size_t ii = 0; ii < injectionTable.size(); ii++){
+      for(int ii = 0; ii < injectionTable.size(); ii++){
         if(ii!=0 && ii%platform->getTDNCycles()==0){out << endl;}
         if(ii%platform->getTDNCycles()==0){
           out << ((tdn_graph[ii].link.from==-1)?"NI":("SW"+tools::toString(tdn_graph[ii].link.from))) << " -> ";
           out << ((tdn_graph[ii].link.to==-1)?"NI":("SW"+tools::toString(tdn_graph[ii].link.to))) << ": ";
         }
-        if(injectionTable[ii].assigned() && injectionTable[ii].val()==platform->nodes()){
+        if(injectionTable[ii].assigned() && injectionTable[ii].val()==(int)platform->nodes()){
           out << "_";
         }else{
           out << injectionTable[ii];
         }
         out << " ";
         
-        if(ii == platform->getTDNCycles()*platform->nodes()-1)
+        if(ii == (int)(platform->getTDNCycles()*platform->nodes()-1))
           out << endl << "-------------------------------------------";
       }
       out << endl << endl;

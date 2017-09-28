@@ -1,7 +1,0 @@
---- Experiments for DATE 2018 ---
-
---- Experiment 1, run 1 ...
-ons 27 sep 2017 14:59:44 CEST
-0 minutes and 15 seconds elapsed.
-end of experiment 1
-ons 27 sep 2017 14:59:59 CEST

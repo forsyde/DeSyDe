@@ -483,10 +483,10 @@ if(platform->getInterconnectType() == TDMA_BUS){
           //the channel without initial tokens should communicate first. But are there situations where it is
           //advantageous to not do that?
           rel(*this, (proc[dst_ch1]==proc[dst_ch2] && rank[dst_ch1] < rank[dst_ch2]) >> (sendNext[kj] != ki)); 
-          if(tok_ch1==tok_ch2){
+          if(tok_ch1==tok_ch2 && (src_ch2 != dst_ch2)){
             rel(*this, (proc[dst_ch1]!=proc[dst_ch2] && proc[src_ch1]==proc[dst_ch1]) >> (sendNext[kj] != ki)); 
           }
-          if(apps->dependsOn(dst_ch1,dst_ch2)){ 
+          if(apps->dependsOn(dst_ch1,dst_ch2) && tok_ch1 <= tok_ch2 && (src_ch2 != dst_ch2)){ 
             rel(*this, sendNext[kj] != ki); 
           }
         }

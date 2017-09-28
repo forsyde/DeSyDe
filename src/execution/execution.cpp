@@ -483,7 +483,6 @@ private:
       t_endAll = runTimer::now();
       printSolution(e, s);
       solFound = true;
-
     }
     auto durAll = runTimer::now() - t_start;
     auto durAll_s = std::chrono::duration_cast<std::chrono::seconds>(durAll).count();
@@ -495,7 +494,7 @@ private:
     }
     nodes = solFound ? 1 : 0;
     out << " =====\n" << nodes << " solutions found\n" << "search nodes: " << e->statistics().node << ", fail: " << e->statistics().fail << ", propagate: "
-        << e->statistics().propagate << ", depth: " << e->statistics().depth << ", nogoods: " << e->statistics().nogood << ", restarts: " << e->statistics().restart << " ***\n";
+        << e->statistics().propagate << ", depth: " << e->statistics().depth << ", nogoods: " << e->statistics().nogood << ", restarts: " << e->statistics().restart << " ***\n\n";
     return solFound;
   }
   
@@ -508,7 +507,6 @@ private:
     LOG_INFO("Opened file for printing results: " +cfg.settings().output_path+"out/TDNconfig_out.txt");
     
     LOG_INFO("started searching for " + cfg.get_search_type() + " solutions ");
-    out << "\n \n*** \n";    
     
     std::chrono::high_resolution_clock::duration presolver_delay(0);
     if((cfg.doPresolve() && cfg.is_presolved()) || cfg.doMultiStep()){
@@ -523,10 +521,11 @@ private:
     
     t_start = runTimer::now();
     bool solutionFound = false;
-    size_t tdn_slots = map->getPlatform()->nodes()+2;
-      LOG_INFO("Searching for minimal TDN config. Starting with "+tools::toString(tdn_slots)+" slots.");
+    size_t tdn_slots = map->getPlatform()->nodes();
+      LOG_INFO("Searching for minimal TDN config. Starting with "+tools::toString(tdn_slots)+" slots.\n");
     while(!solutionFound){
-      LOG_INFO("   Trying "+tools::toString(tdn_slots)+" slots.");
+      LOG_INFO("### Trying "+tools::toString(tdn_slots)+" slots. #########################################");
+      out << "Trying " << tdn_slots << " slots..." << endl;
       map->getPlatform()->setTDNconfig(tdn_slots);
       model = new CPModelTemplate(map, &cfg);
       
