@@ -9,7 +9,7 @@ To build the DeSyDe tool, the following dependencies have to be met:
  * a C++ compiler: developed and tested with `g++-5.4.1`
  * the `libxml2` library: developed and tested with 2.9.3
  * the `boost` libraries `boost_system`, `boost_filesystem`, `boost_program_options`, `boost_graph`: developed and tested with 1.58
- * complete [Gecode](http://www.gecode.org/download.html), including Gist: developed with v4.4.0 
+ * complete [Gecode](http://www.gecode.org/download.html) installation, including Gist: developed with v4.4.0 
 
 # Running the Experiments
 1. Run `make` in the DeSyDe root folder to build the tool.
