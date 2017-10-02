@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<platform name="demo_platform">
+	<processor model="microblaze" number="5">
+        <mode name="eco" cycle="65" mem="1048576" dynPower="536" staticPower="3850" area="24000" monetary="495"/>
+        <mode name="default" cycle="13" mem="1048576" dynPower="2680" staticPower="3850" area="24573" monetary="495"/>
+    </processor>
+    <interconnect>
+        <TDN_NoC name="2x2TDN" topology="mesh" x-dimension="5" y-dimension="1" routing="Y-X" 
+                 flitSize="128" cycles="4" maxCyclesPerProc="1">
+          <mode name="slow" cycleLength="8" 
+                dynPower_link="3" dynPower_NI="17000" dynPower_switch="718"
+                staticPower_link="28" staticPower_NI="600" staticPower_switch="72" 
+                area_link="59" area_NI="1663" area_switch="125"
+                monetary_link="495" monetary_NI="495" monetary_switch="495"/>
+          <mode name="default" cycleLength="4" 
+                dynPower_link="6" dynPower_NI="17000" dynPower_switch="1436" 
+                staticPower_link="56" staticPower_NI="600" staticPower_switch="144" 
+                area_link="118" area_NI="1663" area_switch="250" 
+                monetary_link="495" monetary_NI="495" monetary_switch="495"/>
+          <mode name="fast" cycleLength="1" 
+                dynPower_link="12" dynPower_NI="17000" dynPower_switch="2872"
+                staticPower_link="112" staticPower_NI="600" staticPower_switch="288" 
+                area_link="236" area_NI="1663" area_switch="500"
+                monetary_link="495" monetary_NI="495" monetary_switch="495"/>
+        </TDN_NoC>
+    </interconnect>
+</platform>
+<!--
+    <factors to convert the above integers to SI units/>
+        <power="1=0.00001Watt"/>
+        <cycle=""/>
+        <area="6-LUTs and a BRAM is converted to 512LUTs. DSP blocks are not considered"/>
+        <time_network="cycle/50000000"/>
+        <time_processor_small="cycle/50000000"/>
+        <time_processor_large="cycle/666667000"/>
+    </factors to convert the above integers to SI units>
+    
+    <Assumptions>    
+    	<TDN_NoC>
+    		<Time>
+		<slow:medium:fast="52:26:13"/>
+    		</Time>
+    		<Power>
+	        	<static power="baseline power including: leakage,short-circuit (crow-bar),clocking with no communication"/>
+	        	<Dynamic power="percentage of additional power when flits injection is maximum"/>
+	    		<Element>
+	    			<NI>
+	        		<slow:medium:fast="1:1:1 as it is assumed that NI remains the same"/>
+	    			</NI>
+	    			<Switch>
+	        		<slow:medium:fast="1:2:4 as it is assumed that the number of processed data and registers grows 2x"/>
+	    			</Switch>
+	    			<Link>
+	        		<slow:medium:fast"1:2:4 as it is assumed that the number of parallel links grows 2x"/>
+	    			</Link>
+	    		</Element>
+    		</Power>
+    		<Area>
+	    		<Element>
+	    			<NI>
+	        		<slow:medium:fast="1:1:1 as it is assumed that NI remains the same"/>
+	    			</NI>
+	    			<Switch>
+	        		<slow:medium:fast="1:2:4 as it is assumed that the number of processed data and registers grows 2x"/>
+	    			</Switch>
+	    			<Link>
+	        		<slow:medium:fast"1:2:4 as it is assumed that the number of parallel links grows 2x"/>
+	    			</Link>
+	    		</Element>
+    		</Area>
+    	</TDN_NoC>
+    	<PROC>
+    		<Time>
+	    		<Type>
+	    			<Small>
+	        		<eco:default="65:13 as it is assumed that processor can work 5xfrequency"/>
+	    			</Small>
+	    			<Large>
+	        		<eco:default="10:1 as it is assumed that processsor can work 10xfrequency"/>
+	    			</Large>
+	    		</Type>
+    		</Time>
+    		<Power>
+	        	<static power="baseline power for the system when (nops), including: leakage,short-circuit (crow-bar),clocking"/>
+	        	<Dynamic power="factor of utilisation over average additional power over nops baseline when processor is executing"/>
+	    		<Type>
+	    			<Small>
+	        		<eco:default="1:5 as it is assumed that processor can work 5xfrequency"/>
+	    			</Small>
+	    			<Large>
+	        		<eco:default="1:10 as it is assumed that processsor can work 10xfrequency"/>
+	    			</Large>
+	    		</Type>
+    		</Power>
+    		<Area/>
+    			<Small/>
+        		<eco:default="15:90 for processor only as peripherals and memory do not scale"/>
+    			</Small/>
+    			<Large/>
+        		<eco:default="1:1 as hardcore processsor is assumed here"/>
+    			</Large/>
+    		</Area>
+    		<Memory/>
+    			<Small/>
+        		<eco:default="131072:131072 do not scale and fixed to 128KiB"/>
+    			</Small/>
+    			<Large/>
+        		<eco:default="536870912:536870912 do not scale and fixed to 512MiB"/>
+    			</Large/>
+    		</Memory>
+    	</PROC>
+    		<Monetary/>
+		<price="495 USD"/>
+    		</Monetary>
+    </Assumptions>
+-->

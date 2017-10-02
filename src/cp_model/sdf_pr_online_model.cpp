@@ -536,7 +536,8 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
         
         if(platform->getInterconnectType() == TDN_NOC){
           if(platform->getTDNCyclesPerProc() == 1){
-            branch(*this, chosenRoute, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN()); 
+            //branch(*this, chosenRoute, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN());
+            branch(*this, chosenRoute, INT_VAR_NONE(), INT_VAL_MIN()); 
           }else if(platform->getTDNCyclesPerProc()>1 &&
             !cfg->doOptimizeThput(cfg->settings().optimizationStep)){
             rnd.hw();

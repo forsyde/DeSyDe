@@ -432,20 +432,30 @@ void Platform::createTDNGraph() throw (InvalidArgumentException){
     int yLoc_i = i/interconnect.columns;
     int xLoc_i = i%interconnect.columns;
     
-    //cout << "I am processor/NoC-node " << i << ", located at (" << xLoc_i << ", " << yLoc_i << "):";
-    if(xLoc_i % (interconnect.columns-1) == 0 && yLoc_i % (interconnect.rows-1) == 0){
-      //cout << " I am a CORNER node" << endl;
-      corner++;
-    }else if(xLoc_i % (interconnect.columns-1) == 0 || yLoc_i % (interconnect.rows-1) == 0){
-      //cout << " I am an EDGE node" << endl;
-      edge++;
-    }else{
-      //cout << " I am a MIDDLE node" << endl;
-      middle++;
+    if(interconnect.columns > 1 && interconnect.rows > 1){
+      //cout << "I am processor/NoC-node " << i << ", located at (" << xLoc_i << ", " << yLoc_i << "):";
+      if(xLoc_i % (interconnect.columns-1) == 0 && yLoc_i % (interconnect.rows-1) == 0){
+        //cout << " I am a CORNER node" << endl;
+        corner++;
+      }else if(xLoc_i % (interconnect.columns-1) == 0 || yLoc_i % (interconnect.rows-1) == 0){
+        //cout << " I am an EDGE node" << endl;
+        edge++;
+      }else{
+        //cout << " I am a MIDDLE node" << endl;
+        middle++;
+      }
+    }else{ //one of the dimensions is 1
+      middle = 0;
+      corner = min(2, max(interconnect.columns, interconnect.rows));
+      edge = nodes-corner;
     }
   }
     
-  totalTDN_nodes = (corner*4 + edge*5 + middle*6) * interconnect.tdnCycles;
+  if(interconnect.columns > 1 && interconnect.rows > 1){
+    totalTDN_nodes = (corner*4 + edge*5 + middle*6) * interconnect.tdnCycles;
+  }else{ //one of the dimensions is 1
+    totalTDN_nodes = (corner*3 + edge*4 ) * interconnect.tdnCycles;
+  }
   
   //vector<tdn_graphNode> tdn_graph(totalTDN_nodes);
   tdn_graph.assign(totalTDN_nodes, tdn_graphNode());
@@ -923,24 +933,38 @@ vector<int> Platform::getStaticPowerCons() const{
     int yLoc_i = i/interconnect.columns;
     int xLoc_i = i%interconnect.columns;
     
-    //cout << "I am processor/NoC-node " << i << ", located at (" << xLoc_i << ", " << yLoc_i << "):";
-    if(xLoc_i % (interconnect.columns-1) == 0 && yLoc_i % (interconnect.rows-1) == 0){
-      //cout << " I am a CORNER node" << endl;
-      corner++;
-    }else if(xLoc_i % (interconnect.columns-1) == 0 || yLoc_i % (interconnect.rows-1) == 0){
-      //cout << " I am an EDGE node" << endl;
-      edge++;
-    }else{
-      //cout << " I am a MIDDLE node" << endl;
-      middle++;
+    if(interconnect.columns > 1 && interconnect.rows > 1){
+      //cout << "I am processor/NoC-node " << i << ", located at (" << xLoc_i << ", " << yLoc_i << "):";
+      if(xLoc_i % (interconnect.columns-1) == 0 && yLoc_i % (interconnect.rows-1) == 0){
+        //cout << " I am a CORNER node" << endl;
+        corner++;
+      }else if(xLoc_i % (interconnect.columns-1) == 0 || yLoc_i % (interconnect.rows-1) == 0){
+        //cout << " I am an EDGE node" << endl;
+        edge++;
+      }else{
+        //cout << " I am a MIDDLE node" << endl;
+        middle++;
+      }
+    }else{ //one of the dimensions is 1
+      middle = 0;
+      corner = min(2, max(interconnect.columns, interconnect.rows));
+      edge = nodes-corner;
     }
     
   }
   
   for(size_t i=0; i<interconnect.modes.size(); i++){
-    int staticPower_total = nodes*interconnect.modes[i].staticPow_NI +
-                            nodes*interconnect.modes[i].staticPow_switch +
-                            (((corner*4 + edge*5 + middle*6))*interconnect.modes[i].staticPow_link);
+    int staticPower_total;
+    if(interconnect.columns > 1 && interconnect.rows > 1){
+      staticPower_total = nodes*interconnect.modes[i].staticPow_NI +
+                          nodes*interconnect.modes[i].staticPow_switch +
+                          (((corner*4 + edge*5 + middle*6))*interconnect.modes[i].staticPow_link);
+    }else{
+      staticPower_total = nodes*interconnect.modes[i].staticPow_NI +
+                          nodes*interconnect.modes[i].staticPow_switch +
+                          (((corner*3 + edge*4 ))*interconnect.modes[i].staticPow_link);
+    }
+      
     tmp.push_back(staticPower_total);
   }
   
@@ -956,21 +980,38 @@ vector<int> Platform::getStaticPowerCons_link(size_t node) const{
   int yLoc_node = node/interconnect.columns;
   int xLoc_node = node%interconnect.columns;
   
-  //cout << "I am processor/NoC-node " << i << ", located at (" << xLoc_node << ", " << yLoc_node << "):";
-  if(xLoc_node % (interconnect.columns-1) == 0 && yLoc_node % (interconnect.rows-1) == 0){
-    //cout << " I am a CORNER node" << endl;
-    for(size_t i=0; i<interconnect.modes.size(); i++){
-      tmp.push_back(2*interconnect.modes[i].staticPow_link); //without links to and from NI
-    }
-  }else if(xLoc_node % (interconnect.columns-1) == 0 || yLoc_node % (interconnect.rows-1) == 0){
-    //cout << " I am an EDGE node" << endl;
-    for(size_t i=0; i<interconnect.modes.size(); i++){
-      tmp.push_back(3*interconnect.modes[i].staticPow_link); //without links to and from NI
+  if(interconnect.columns > 1 && interconnect.rows > 1){
+    //cout << "I am processor/NoC-node " << i << ", located at (" << xLoc_node << ", " << yLoc_node << "):";
+    if(xLoc_node % (interconnect.columns-1) == 0 && yLoc_node % (interconnect.rows-1) == 0){
+      //cout << " I am a CORNER node" << endl;
+      for(size_t i=0; i<interconnect.modes.size(); i++){
+        tmp.push_back(2*interconnect.modes[i].staticPow_link); //without links to and from NI
+      }
+    }else if(xLoc_node % (interconnect.columns-1) == 0 || yLoc_node % (interconnect.rows-1) == 0){
+      //cout << " I am an EDGE node" << endl;
+      for(size_t i=0; i<interconnect.modes.size(); i++){
+        tmp.push_back(3*interconnect.modes[i].staticPow_link); //without links to and from NI
+      }
+    }else{
+      //cout << " I am a MIDDLE node" << endl;
+      for(size_t i=0; i<interconnect.modes.size(); i++){
+        tmp.push_back(4*interconnect.modes[i].staticPow_link); //without links to and from NI
+      }
     }
   }else{
-    //cout << " I am a MIDDLE node" << endl;
-    for(size_t i=0; i<interconnect.modes.size(); i++){
-      tmp.push_back(4*interconnect.modes[i].staticPow_link); //without links to and from NI
+    //cout << "I am processor/NoC-node " << i << ", located at (" << xLoc_node << ", " << yLoc_node << "):";
+    if((interconnect.rows == 1 && (xLoc_node == (interconnect.columns-1) || xLoc_node == 0)) ||
+      (interconnect.columns == 1 && (yLoc_node == (interconnect.rows-1) || yLoc_node == 0))){
+      //cout << " I am a CORNER node" << endl;
+      for(size_t i=0; i<interconnect.modes.size(); i++){
+        tmp.push_back(1*interconnect.modes[i].staticPow_link); //without links to and from NI
+      }
+    }else if((interconnect.rows == 1 && (xLoc_node < (interconnect.columns-1) && xLoc_node > 0)) ||
+             (interconnect.columns == 1 && (yLoc_node < (interconnect.rows-1) || yLoc_node > 0))){
+      //cout << " I am an EDGE node" << endl;
+      for(size_t i=0; i<interconnect.modes.size(); i++){
+        tmp.push_back(2*interconnect.modes[i].staticPow_link); //without links to and from NI
+      }
     }
   }
   
@@ -1018,24 +1059,37 @@ vector<int> Platform::interconnectAreaCost() const{
     int yLoc_i = i/interconnect.columns;
     int xLoc_i = i%interconnect.columns;
     
-    //cout << "I am processor/NoC-node " << i << ", located at (" << xLoc_i << ", " << yLoc_i << "):";
-    if(xLoc_i % (interconnect.columns-1) == 0 && yLoc_i % (interconnect.rows-1) == 0){
-      //cout << " I am a CORNER node" << endl;
-      corner++;
-    }else if(xLoc_i % (interconnect.columns-1) == 0 || yLoc_i % (interconnect.rows-1) == 0){
-      //cout << " I am an EDGE node" << endl;
-      edge++;
-    }else{
-      //cout << " I am a MIDDLE node" << endl;
-      middle++;
+    if(interconnect.columns > 1 && interconnect.rows > 1){
+      //cout << "I am processor/NoC-node " << i << ", located at (" << xLoc_i << ", " << yLoc_i << "):";
+      if(xLoc_i % (interconnect.columns-1) == 0 && yLoc_i % (interconnect.rows-1) == 0){
+        //cout << " I am a CORNER node" << endl;
+        corner++;
+      }else if(xLoc_i % (interconnect.columns-1) == 0 || yLoc_i % (interconnect.rows-1) == 0){
+        //cout << " I am an EDGE node" << endl;
+        edge++;
+      }else{
+        //cout << " I am a MIDDLE node" << endl;
+        middle++;
+      }
+    }else{ //one of the dimensions is 1
+      middle = 0;
+      corner = min(2, max(interconnect.columns, interconnect.rows));
+      edge = nodes-corner;
     }
     
   }
     
   for(size_t i=0; i<interconnect.modes.size(); i++){
-    int area_total = nodes*interconnect.modes[i].area_NI +
+    int area_total;
+    if(interconnect.columns > 1 && interconnect.rows > 1){
+      area_total = nodes*interconnect.modes[i].area_NI +
                             nodes*interconnect.modes[i].area_switch +
                             (((corner*4 + edge*5 + middle*6))*interconnect.modes[i].area_link);
+    }else{
+      area_total = nodes*interconnect.modes[i].area_NI +
+                            nodes*interconnect.modes[i].area_switch +
+                            (((corner*3 + edge*4))*interconnect.modes[i].area_link);
+    }
     tmp.push_back(area_total);
   }
   
@@ -1049,21 +1103,38 @@ vector<int> Platform::interconnectAreaCost_link(size_t node) const{
   int yLoc_node = node/interconnect.columns;
   int xLoc_node = node%interconnect.columns;
   
-  //cout << "I am processor/NoC-node " << i << ", located at (" << xLoc_node << ", " << yLoc_node << "):";
-  if(xLoc_node % (interconnect.columns-1) == 0 && yLoc_node % (interconnect.rows-1) == 0){
-    //cout << " I am a CORNER node" << endl;
-    for(size_t i=0; i<interconnect.modes.size(); i++){
-      tmp.push_back(2*interconnect.modes[i].area_link);//without links to and from NI
-    }
-  }else if(xLoc_node % (interconnect.columns-1) == 0 || yLoc_node % (interconnect.rows-1) == 0){
-    //cout << " I am an EDGE node" << endl;
-    for(size_t i=0; i<interconnect.modes.size(); i++){
-      tmp.push_back(3*interconnect.modes[i].area_link);//without links to and from NI
+  if(interconnect.columns > 1 && interconnect.rows > 1){
+    //cout << "I am processor/NoC-node " << i << ", located at (" << xLoc_node << ", " << yLoc_node << "):";
+    if(xLoc_node % (interconnect.columns-1) == 0 && yLoc_node % (interconnect.rows-1) == 0){
+      //cout << " I am a CORNER node" << endl;
+      for(size_t i=0; i<interconnect.modes.size(); i++){
+        tmp.push_back(2*interconnect.modes[i].area_link);//without links to and from NI
+      }
+    }else if(xLoc_node % (interconnect.columns-1) == 0 || yLoc_node % (interconnect.rows-1) == 0){
+      //cout << " I am an EDGE node" << endl;
+      for(size_t i=0; i<interconnect.modes.size(); i++){
+        tmp.push_back(3*interconnect.modes[i].area_link);//without links to and from NI
+      }
+    }else{
+      //cout << " I am a MIDDLE node" << endl;
+      for(size_t i=0; i<interconnect.modes.size(); i++){
+        tmp.push_back(4*interconnect.modes[i].area_link);//without links to and from NI
+      }
     }
   }else{
-    //cout << " I am a MIDDLE node" << endl;
-    for(size_t i=0; i<interconnect.modes.size(); i++){
-      tmp.push_back(4*interconnect.modes[i].area_link);//without links to and from NI
+    //cout << "I am processor/NoC-node " << i << ", located at (" << xLoc_node << ", " << yLoc_node << "):";
+    if((interconnect.rows == 1 && (xLoc_node == (interconnect.columns-1) || xLoc_node == 0)) ||
+      (interconnect.columns == 1 && (yLoc_node == (interconnect.rows-1) || yLoc_node == 0))){
+      //cout << " I am a CORNER node" << endl;
+      for(size_t i=0; i<interconnect.modes.size(); i++){
+        tmp.push_back(1*interconnect.modes[i].area_link); //without links to and from NI
+      }
+    }else if((interconnect.rows == 1 && (xLoc_node < (interconnect.columns-1) && xLoc_node > 0)) ||
+             (interconnect.columns == 1 && (yLoc_node < (interconnect.rows-1) || yLoc_node > 0))){
+      //cout << " I am an EDGE node" << endl;
+      for(size_t i=0; i<interconnect.modes.size(); i++){
+        tmp.push_back(2*interconnect.modes[i].area_link); //without links to and from NI
+      }
     }
   }
   
@@ -1109,25 +1180,39 @@ vector<int> Platform::interconnectMonetaryCost() const{
     int yLoc_i = i/interconnect.columns;
     int xLoc_i = i%interconnect.columns;
     
-    //cout << "I am processor/NoC-node " << i << ", located at (" << xLoc_i << ", " << yLoc_i << "):";
-    if(xLoc_i % (interconnect.columns-1) == 0 && yLoc_i % (interconnect.rows-1) == 0){
-      //cout << " I am a CORNER node" << endl;
-      corner++;
-    }else if(xLoc_i % (interconnect.columns-1) == 0 || yLoc_i % (interconnect.rows-1) == 0){
-      //cout << " I am an EDGE node" << endl;
-      edge++;
-    }else{
-      //cout << " I am a MIDDLE node" << endl;
-      middle++;
+    if(interconnect.columns > 1 && interconnect.rows > 1){
+      //cout << "I am processor/NoC-node " << i << ", located at (" << xLoc_i << ", " << yLoc_i << "):";
+      if(xLoc_i % (interconnect.columns-1) == 0 && yLoc_i % (interconnect.rows-1) == 0){
+        //cout << " I am a CORNER node" << endl;
+        corner++;
+      }else if(xLoc_i % (interconnect.columns-1) == 0 || yLoc_i % (interconnect.rows-1) == 0){
+        //cout << " I am an EDGE node" << endl;
+        edge++;
+      }else{
+        //cout << " I am a MIDDLE node" << endl;
+        middle++;
+      }
+    }else{ //one of the dimensions is 1
+      middle = 0;
+      corner = min(2, max(interconnect.columns, interconnect.rows));
+      edge = nodes-corner;
     }
     
   }
     
   for(size_t i=0; i<interconnect.modes.size(); i++){
-    int monetary_total = nodes*interconnect.modes[i].monetary_NI +
+    int monetary_total;
+    if(interconnect.columns > 1 && interconnect.rows > 1){
+      monetary_total = nodes*interconnect.modes[i].monetary_NI +
                             nodes*interconnect.modes[i].monetary_switch +
                             (((corner*4 + edge*5 + middle*6))*interconnect.modes[i].monetary_link);
+    }else{
+      monetary_total = nodes*interconnect.modes[i].monetary_NI +
+                            nodes*interconnect.modes[i].monetary_switch +
+                            (((corner*3 + edge*4))*interconnect.modes[i].monetary_link);
+    }
     tmp.push_back(monetary_total);
+    
   }
   
   return tmp;
@@ -1140,21 +1225,38 @@ vector<int> Platform::interconnectMonetaryCost_link(size_t node) const{
   int yLoc_node = node/interconnect.columns;
   int xLoc_node = node%interconnect.columns;
   
-  //cout << "I am processor/NoC-node " << i << ", located at (" << xLoc_node << ", " << yLoc_node << "):";
-  if(xLoc_node % (interconnect.columns-1) == 0 && yLoc_node % (interconnect.rows-1) == 0){
-    //cout << " I am a CORNER node" << endl;
-    for(size_t i=0; i<interconnect.modes.size(); i++){
-      tmp.push_back(2*interconnect.modes[i].monetary_link);//without links to and from NI
-    }
-  }else if(xLoc_node % (interconnect.columns-1) == 0 || yLoc_node % (interconnect.rows-1) == 0){
-    //cout << " I am an EDGE node" << endl;
-    for(size_t i=0; i<interconnect.modes.size(); i++){
-      tmp.push_back(3*interconnect.modes[i].monetary_link);//without links to and from NI
+  if(interconnect.columns > 1 && interconnect.rows > 1){
+    //cout << "I am processor/NoC-node " << i << ", located at (" << xLoc_node << ", " << yLoc_node << "):";
+    if(xLoc_node % (interconnect.columns-1) == 0 && yLoc_node % (interconnect.rows-1) == 0){
+      //cout << " I am a CORNER node" << endl;
+      for(size_t i=0; i<interconnect.modes.size(); i++){
+        tmp.push_back(2*interconnect.modes[i].monetary_link);//without links to and from NI
+      }
+    }else if(xLoc_node % (interconnect.columns-1) == 0 || yLoc_node % (interconnect.rows-1) == 0){
+      //cout << " I am an EDGE node" << endl;
+      for(size_t i=0; i<interconnect.modes.size(); i++){
+        tmp.push_back(3*interconnect.modes[i].monetary_link);//without links to and from NI
+      }
+    }else{
+      //cout << " I am a MIDDLE node" << endl;
+      for(size_t i=0; i<interconnect.modes.size(); i++){
+        tmp.push_back(4*interconnect.modes[i].monetary_link);//without links to and from NI
+      }
     }
   }else{
-    //cout << " I am a MIDDLE node" << endl;
-    for(size_t i=0; i<interconnect.modes.size(); i++){
-      tmp.push_back(4*interconnect.modes[i].monetary_link);//without links to and from NI
+    //cout << "I am processor/NoC-node " << i << ", located at (" << xLoc_node << ", " << yLoc_node << "):";
+    if((interconnect.rows == 1 && (xLoc_node == (interconnect.columns-1) || xLoc_node == 0)) ||
+      (interconnect.columns == 1 && (yLoc_node == (interconnect.rows-1) || yLoc_node == 0))){
+      //cout << " I am a CORNER node" << endl;
+      for(size_t i=0; i<interconnect.modes.size(); i++){
+        tmp.push_back(1*interconnect.modes[i].monetary_link); //without links to and from NI
+      }
+    }else if((interconnect.rows == 1 && (xLoc_node < (interconnect.columns-1) && xLoc_node > 0)) ||
+             (interconnect.columns == 1 && (yLoc_node < (interconnect.rows-1) || yLoc_node > 0))){
+      //cout << " I am an EDGE node" << endl;
+      for(size_t i=0; i<interconnect.modes.size(); i++){
+        tmp.push_back(2*interconnect.modes[i].monetary_link); //without links to and from NI
+      }
     }
   }
   
