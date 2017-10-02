@@ -9,7 +9,7 @@ To build the DeSyDe tool, the following dependencies have to be met:
  * a C++ compiler: developed and tested with `g++-5.4.1`
  * the `libxml2` library: developed and tested with 2.9.3
  * the `boost` libraries `boost_system`, `boost_filesystem`, `boost_program_options`, `boost_graph`: developed and tested with 1.58
- * [Gecode](http://www.gecode.org/download.html) : developed with v4.4.0 
+ * complete [Gecode](http://www.gecode.org/download.html), including Gist: developed with v4.4.0 
 
 # Running the Experiments
 1. Run `make` in the DeSyDe root folder to build the tool.
@@ -18,7 +18,7 @@ To build the DeSyDe tool, the following dependencies have to be met:
 4. The results of the experiment will be put into **examples/TODAES/exp_&ast;/out/**
 
 # The Input Files for DeSyDe
-This is just a very brief introduction to DeSyDe's input files. A more thorough one will be provided later
+This is a very brief introduction to DeSyDe's input files.
 * **exp_&ast;/config.cfg**: Configuration of the experiment. Specifies e.g. time-out (optional), type of solver, optimization criteria, output print frequency, input and output paths. A default config file is produced by the DeSyDe tool if the command line argument `-dump-cfg` is provided.
 * **exp_&ast;/sdfs/&ast;.&ast;sdf.xml**: The application graphs in [SDF3's xml format](http://www.es.ele.tue.nl/sdf3/manuals/xml/sdf/). The graphs can be SDFs or HSDFs.
 * **exp_&ast;/xmls/platform.xml**: Description of the platform with modes for processors.
