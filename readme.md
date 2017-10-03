@@ -1,6 +1,11 @@
 # DeSyDe
 
 DeSyDe is a design space exploration tool developed at KTH (ForSyDe research group).
+### Releases:
+* latest: 
+  [Release for our accepted TODAES article](https://github.com/forsyde/DeSyDe/tree/v0.2.1-todaes)
+* previous:
+  * [Release for our RAPIDO'17 publication](https://github.com/forsyde/DeSyDe/tree/v0.1.1-rapido)
 
 # Dependencies
 
