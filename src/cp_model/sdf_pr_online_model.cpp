@@ -329,7 +329,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
              && cfg->doOptimizeThput(cfg->settings().optimizationStep-1)){ //first throughput, then power
                
             for(size_t i=0;i<apps->n_SDFApps();i++){
-              if(apps->getPeriodConstraint(i) == -1){
+              if(apps->getPeriodConstraint(i) == -1 && !cfg->getPresolverResults()->optResults.empty()){
                 rel(*this, (period[i] < cfg->getPresolverResults()->optResults.back().values[i]) ||
                            ((period[i] == cfg->getPresolverResults()->optResults.back().values[i]) && 
                             (sys_power < cfg->getPresolverResults()->optResults.back().values[apps->n_SDFApps()])));
@@ -340,7 +340,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
              && cfg->doOptimizePower(cfg->settings().optimizationStep-1)){ //first power, then throughput
                
             for(size_t i=0;i<apps->n_SDFApps();i++){
-              if(apps->getPeriodConstraint(i) == -1){
+              if(apps->getPeriodConstraint(i) == -1 && !cfg->getPresolverResults()->optResults.empty()){
                 rel(*this, (sys_power < cfg->getPresolverResults()->optResults.back().values[apps->n_SDFApps()]) ||
                            ((sys_power == cfg->getPresolverResults()->optResults.back().values[apps->n_SDFApps()]) && (period[i] < cfg->getPresolverResults()->optResults.back().values[i])));
                 break;
@@ -349,12 +349,14 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
           }
         }else if(!cfg->doOptimizePower() && cfg->doOptimizeThput()){
           for(size_t i=0;i<apps->n_SDFApps();i++){
-            if(apps->getPeriodConstraint(i) == -1){
+            if(apps->getPeriodConstraint(i) == -1 && !cfg->getPresolverResults()->optResults.empty()){
               rel(*this, period[i] < cfg->getPresolverResults()->optResults.back().values[i]);break;
             }
           }
         }else if(cfg->doOptimizePower() && !cfg->doOptimizeThput()){
-          rel(*this, sys_power < cfg->getPresolverResults()->optResults.back().values[0]);
+          if(!cfg->getPresolverResults()->optResults.empty()){
+            rel(*this, sys_power < cfg->getPresolverResults()->optResults.back().values[0]);
+          }
         }//else... add the other metrics (area, money, ...)
       }
     }
@@ -470,7 +472,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
                 vector<int> branchProc = mapping->sortedByWCETs(ids[a]);
                 branchStrat += "      " + apps->getGraphName(ids[a]) + " [";
                 for(int i = minA[ids[a]]; i <= maxA[ids[a]]; i++){
-                    procBranchOrderOPT << proc[i];
+                    procBranchOrderSAT << proc[i];
                     //procBranchOrderOPT << rank[i];
                     branchStrat += tools::toString(i) + " ";
                 }
@@ -484,6 +486,17 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
                 for(int i = minA[a]; i <= maxA[a]; i++){
                     procBranchOrderOPT << proc[i];
                     //procBranchOrderOPT << rank[i];
+                    branchStrat += tools::toString(i) + " ";
+                }
+                branchStrat += "]\n";
+            }
+        }
+        for(unsigned a = 0; a < apps->n_SDFApps(); a++){
+            if(apps->getPeriodConstraint(a) == 0 && cfg->doOptimizeThput()){
+                branchStrat += "      " + apps->getGraphName(a) + " [";
+                for(int i = minA[a]; i <= maxA[a]; i++){
+                    procBranchOrderOther << proc[i];
+                    //procBranchOrderOther << rank[i];
                     branchStrat += tools::toString(i) + " ";
                 }
                 branchStrat += "]\n";
@@ -505,13 +518,18 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
         //branch(*this, next, INT_VAR_NONE(), INT_VAL_MIN());
 
         if(!heaviestFirst && (procBranchOrderSAT.size() > 0 || procBranchOrderOPT.size() > 0)){
-            branch(*this, procBranchOrderSAT, INT_VAR_NONE(), INT_VAL_MIN());
-            branch(*this, procBranchOrderOPT, INT_VAR_NONE(), INT_VAL_MIN());
+            rnd.hw();
+            branch(*this, procBranchOrderSAT, INT_VAR_AFC_MAX(0.99), INT_VAL_RND(rnd));
+            branch(*this, procBranchOrderOPT, INT_VAR_AFC_MAX(0.99), INT_VAL_RND(rnd));
+            branch(*this, procBranchOrderOther, INT_VAR_AFC_MAX(0.99), INT_VAL_RND(rnd));
         }else if(heaviestFirst && (procBranchOrderSAT.size() > 0 || procBranchOrderOPT.size() > 0)){
-            branch(*this, procBranchOrderSAT, INT_VAR_NONE(), INT_VAL_MIN());
+            branch(*this, procBranchOrderSAT, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN());
             branch(*this, procBranchOrderOPT, INT_VAR_NONE(), INT_VAL_MIN());
+            rnd.hw();
+            branch(*this, procBranchOrderOther, INT_VAR_AFC_MAX(0.99), INT_VAL_RND(rnd));
         }else{
-            branch(*this, procBranchOrderOther, INT_VAR_NONE(), INT_VAL_MIN());
+            rnd.hw();
+            branch(*this, procBranchOrderOther, INT_VAR_AFC_MAX(0.99), INT_VAL_RND(rnd));
         }
         
         //branch(*this, rank, INT_VAR_NONE(), INT_VAL_MIN());

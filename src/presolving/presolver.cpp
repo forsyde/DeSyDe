@@ -126,7 +126,7 @@ public:
         
         geSearchOptions.threads = settings.settings().threads;
         if(settings.settings().timeout_first > 0){
-          Search::TimeStop* stop = new Search::TimeStop(settings.settings().timeout_first);
+          Search::TimeStop* stop = new Search::TimeStop(settings.settings().timeout_first*0.1);
           geSearchOptions.stop = stop;
         }
         
@@ -162,6 +162,7 @@ public:
           LOG_DEBUG("    BAB engine, optimizing iteratively ...");
           Search::Cutoff* cut = Search::Cutoff::luby(settings.settings().luby_scale);
           geSearchOptions.cutoff = cut;
+          geSearchOptions.nogoods_limit = cfg.settings().noGoodDepth;
           RBS<BAB, CPModelTemplate> e(full_model, geSearchOptions);
           loopSolutions<RBS<BAB, CPModelTemplate>>(&e);
           break;
@@ -465,7 +466,7 @@ private:
     //Step 2: check how many procs are left to be distributed
     int n_extraProcs = map->getPlatform()->nodes() - map->getApplications()->n_SDFApps();
     if(n_extraProcs>0){
-      n_extraProcs = map->getPlatform()->nodes();
+      //n_extraProcs = map->getPlatform()->nodes();
       //Step 3: try to give all apps with throughput constraints as many as needed
       for(unsigned int i=0; i<map->getApplications()->n_SDFApps(); i++){
         if(map->getApplications()->getPeriodConstraint(i) > 0){
@@ -483,10 +484,13 @@ private:
             }
           }
           share[i] = ceil((double)sumMinWCETs/map->getApplications()->getPeriodConstraint(i));
-          n_extraProcs -= share[i];
+          share[i] = min(share[i], n_extraProcs+1);
+          n_extraProcs -= (share[i]-1);
         }
       }
     }
+    
+    cout << "n_extraProcs = " << n_extraProcs << endl;
 
     if(n_extraProcs>0){
       int optApps = 0;
@@ -500,7 +504,7 @@ private:
       remainder = n_extraProcs%optApps;
       for(unsigned int i=0; i<map->getApplications()->n_SDFApps(); i++){
         if(map->getApplications()->getPeriodConstraint(i) == -1){
-          share[i] = n_extraProcs/optApps;
+          share[i] += n_extraProcs/optApps;
           if(remainder>0){
             share[i]+=remainder;
             remainder = 0;
