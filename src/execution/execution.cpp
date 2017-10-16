@@ -104,8 +104,8 @@ public:
         geSearchOptions.cutoff = cut;
         geSearchOptions.nogoods_limit = cfg.settings().noGoodDepth;
         //geSearchOptions.share_afc = true;
-        RBS<BAB, CPModelTemplate> e(model, geSearchOptions);
-        loopSolutions<RBS<BAB, CPModelTemplate>>(&e);
+        RBS<CPModelTemplate, BAB> e(model, geSearchOptions);
+        loopSolutions<RBS<CPModelTemplate, BAB>>(&e);
 
         break;
       }
@@ -566,8 +566,8 @@ private:
           Search::Cutoff* cut = Search::Cutoff::luby(cfg.settings().luby_scale);
           geSearchOptions.cutoff = cut;
           geSearchOptions.nogoods_limit = cfg.settings().noGoodDepth;
-          RBS<BAB, CPModelTemplate> e(model, geSearchOptions);
-          solutionFound = findMinimalTDNConfig<RBS<BAB, CPModelTemplate>>(&e);
+          RBS<CPModelTemplate, BAB> e(model, geSearchOptions);
+          solutionFound = findMinimalTDNConfig<RBS<CPModelTemplate, BAB>>(&e);
 
           break;
         }

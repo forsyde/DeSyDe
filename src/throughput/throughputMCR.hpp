@@ -207,6 +207,8 @@ virtual Propagator* copy(Space& home, bool share);
 //TODO: do this right
 virtual PropCost cost(const Space& home, const ModEventDelta& med) const;
 
+virtual void reschedule(Space& home);
+
 virtual ExecStatus propagate(Space& home, const ModEventDelta&);
 
 };

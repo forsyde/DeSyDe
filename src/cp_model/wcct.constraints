@@ -137,8 +137,8 @@ if(platform->getInterconnectType() == TDMA_BUS){
       }
     }
   }
-  circuit(*this, sendNext, ICL_DOM);
-  circuit(*this, recNext, ICL_DOM);
+  circuit(*this, sendNext, IPL_DOM);
+  circuit(*this, recNext, IPL_DOM);
   
   //TDMA slot allocation
   //count how many channels on each proc communicate via the bus
@@ -530,8 +530,8 @@ if(platform->getInterconnectType() == TDMA_BUS){
       }
     }
   }
-  circuit(*this, sendNext, ICL_DOM);
-  circuit(*this, recNext, ICL_DOM);
+  circuit(*this, sendNext, IPL_DOM);
+  circuit(*this, recNext, IPL_DOM);
   
   //symmetry breaking for the TDN slot assignment
   //two cases: allocations of max 1 slot || allocation of more than 1 slots

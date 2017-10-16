@@ -99,8 +99,8 @@ public:
         cout << "BAB engine, optimizing iteratively ... \n";
         Search::Cutoff* cut = Search::Cutoff::luby(settings.settings().luby_scale);
         geSearchOptions.cutoff = cut;
-        RBS<BAB, PresolverCPTemplate> e(pre_model, geSearchOptions);
-        loopSolutions<RBS<BAB, PresolverCPTemplate>>(&e, map);
+        RBS<PresolverCPTemplate, BAB> e(pre_model, geSearchOptions);
+        loopSolutions<RBS<PresolverCPTemplate, BAB>>(&e, map);
         break;
       }
       default:
@@ -162,9 +162,9 @@ public:
           LOG_DEBUG("    BAB engine, optimizing iteratively ...");
           Search::Cutoff* cut = Search::Cutoff::luby(settings.settings().luby_scale);
           geSearchOptions.cutoff = cut;
-          geSearchOptions.nogoods_limit = cfg.settings().noGoodDepth;
-          RBS<BAB, CPModelTemplate> e(full_model, geSearchOptions);
-          loopSolutions<RBS<BAB, CPModelTemplate>>(&e);
+          geSearchOptions.nogoods_limit = settings.settings().noGoodDepth;
+          RBS<CPModelTemplate, BAB> e(full_model, geSearchOptions);
+          loopSolutions<RBS<CPModelTemplate, BAB>>(&e);
           break;
         }
         default:

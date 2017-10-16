@@ -123,6 +123,14 @@ PropCost ThroughputMCR::cost(const Space& home, const ModEventDelta& med) const 
   return PropCost::linear(PropCost::HI, next.size());
 }
 
+void ThroughputMCR::reschedule(Space& home){
+  sendingTime.reschedule(home, *this, Int::PC_INT_BND);
+  sendingLatency.reschedule(home, *this, Int::PC_INT_BND);
+  sendingNext.reschedule(home, *this, Int::PC_INT_VAL);
+  next.reschedule(home, *this, Int::PC_INT_VAL);
+  wcet.reschedule(home, *this, Int::PC_INT_BND);
+}
+
 void ThroughputMCR::constructMSAG() {
   if(printDebug)
     cout << "\tThroughputMCR::constructMSAG()" << endl;

@@ -30,14 +30,16 @@ size_t Schedulability::dispose(Space& home){
   return sizeof(*this);
 }
  
-
 Propagator* Schedulability::copy(Space& home, bool share){
   return new (home) Schedulability(home, share, *this);
 }
 
-
 PropCost Schedulability::cost(const Space& home, const ModEventDelta& med) const{
   return PropCost::linear(PropCost::HI,wcet.size());
+}
+
+void Schedulability::reschedule(Space& home){
+  proc.subscribe(home, *this, Int::PC_INT_VAL);
 }
 
 Schedulability::Schedulability(Space& home, bool share, Schedulability& p)

@@ -114,13 +114,13 @@
   //there must be at least one actor with rank=0
   count(*this, rank, 0, IRT_GQ, 1);
   
-  circuit(*this, next, ICL_DOM);
+  circuit(*this, next, IPL_DOM);
   
   //ordering of dummy nodes |A|...|A|+|P| 
   if(platform->nodes()>1){
     //...with emtpy processors
     for(size_t j=0; j<platform->nodes(); j++){
-      rel(*this, next[apps->n_SDFActors()+j]<apps->n_SDFActors() || next[apps->n_SDFActors()+j]>apps->n_SDFActors()+j, ICL_DOM);
+      rel(*this, next[apps->n_SDFActors()+j]<apps->n_SDFActors() || next[apps->n_SDFActors()+j]>apps->n_SDFActors()+j, IPL_DOM);
 //      cout << "next["<<apps->n_SDFActors()+j<<"]<="<<apps->n_SDFActors() <<"||"<<" next["<<apps->n_SDFActors()+j<<"]>"<<apps->n_SDFActors()+j<<endl;
       //...with emtpy processors
       rel(*this, (nSDFAsOnProc[(j+1)%platform->nodes()]==0) == (next[apps->n_SDFActors()+j]==apps->n_SDFActors()+((j+1)%platform->nodes())));

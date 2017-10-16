@@ -172,6 +172,13 @@ PropCost ThroughputSSE::cost(const Space& home, const ModEventDelta& med) const{
   return PropCost::linear(PropCost::HI,next.size());
 }
 
+void ThroughputSSE::reschedule(Space& home){
+  sendingTime.subscribe(home, *this, Int::PC_INT_BND);
+  sendingNext.subscribe(home, *this, Int::PC_INT_VAL);
+  next.subscribe(home, *this, Int::PC_INT_VAL);
+  wcet.subscribe(home, *this, Int::PC_INT_BND);
+}
+
 void ThroughputSSE::debug_constructMSAG(){
   //if(printDebug) cout << "\tThroughputSSE::debug_constructMSAG()" << endl;
   //first, figure out how many actors there will be in the MSAG, in order to
