@@ -208,24 +208,24 @@ struct tdn_graphNode{
  */
 struct InterconnectMode {
   string name;
-  int cycleLength;
-  int roundLength;
-  int dynPower_link;
-  int dynPower_NI;
-  int dynPower_switch;
-  int dynPower_bus;
-  int staticPow_link;
-  int staticPow_NI;
-  int staticPow_switch;
-  int staticPow_bus;
-  int area_link;
-  int area_NI;
-  int area_switch;
-  int area_bus;
-  int monetary_link;
-  int monetary_NI;
-  int monetary_switch;
-  int monetary_bus;
+  size_t cycleLength;
+  size_t roundLength;
+  size_t dynPower_link;
+  size_t dynPower_NI;
+  size_t dynPower_switch;
+  size_t dynPower_bus;
+  size_t staticPow_link;
+  size_t staticPow_NI;
+  size_t staticPow_switch;
+  size_t staticPow_bus;
+  size_t area_link;
+  size_t area_NI;
+  size_t area_switch;
+  size_t area_bus;
+  size_t monetary_link;
+  size_t monetary_NI;
+  size_t monetary_switch;
+  size_t monetary_bus;
   
 };
 
@@ -238,15 +238,15 @@ class Interconnect {
 public:
   enum InterconnectType type;
   string name;
-  int dataPerSlot;
-  int dataPerRound;
-  int tdmaSlots;
-  int roundLength;
-  int columns;
-  int rows;
-  int flitSize;
-  int tdnCycles;
-  int tdnCyclesPerProc;
+  size_t dataPerSlot;
+  size_t dataPerRound;
+  size_t tdmaSlots;
+  size_t roundLength;
+  size_t columns;
+  size_t rows;
+  size_t flitSize;
+  size_t tdnCycles;
+  size_t tdnCyclesPerProc;
   vector<InterconnectMode> modes;
   vector<tdn_route> all_routes; //all routes, without time (TDN cycles) - unlink in the tdn graph
   
@@ -256,8 +256,8 @@ public:
   };
 
  
-  Interconnect(InterconnectType p_type, string p_name, int p_dps, int p_tdma, int p_roundLength, 
-               int p_col, int p_row, int p_fs, int p_tdnC, int p_tdnCPP){
+  Interconnect(InterconnectType p_type, string p_name, size_t p_dps, size_t p_tdma, size_t p_roundLength, 
+               size_t p_col, size_t p_row, size_t p_fs, size_t p_tdnC, size_t p_tdnCPP){
     type         = p_type;
     name         = p_name;
     dataPerSlot  = p_dps;
@@ -272,36 +272,36 @@ public:
   }
   
   void addMode(string _name,
-               int _cycleLength,
-               int _dynPower_link,
-               int _dynPower_NI,
-               int _dynPower_switch,
-               int _staticPow_link,
-               int _staticPow_NI,
-               int _staticPow_switch,
-               int _area_link,
-               int _area_NI,
-               int _area_switch,
-               int _monetary_link,
-               int _monetary_NI,
-               int _monetary_switch){
-    modes.push_back(InterconnectMode{_name, _cycleLength, _cycleLength*max(tdmaSlots, tdnCycles),
+               size_t _cycleLength,
+               size_t _dynPower_link,
+               size_t _dynPower_NI,
+               size_t _dynPower_switch,
+               size_t _staticPow_link,
+               size_t _staticPow_NI,
+               size_t _staticPow_switch,
+               size_t _area_link,
+               size_t _area_NI,
+               size_t _area_switch,
+               size_t _monetary_link,
+               size_t _monetary_NI,
+               size_t _monetary_switch){
+    modes.push_back(InterconnectMode{_name, _cycleLength, _cycleLength*(size_t)max(tdmaSlots, tdnCycles),
                       _dynPower_link, _dynPower_NI, _dynPower_switch, 0,
                       _staticPow_link, _staticPow_NI, _staticPow_switch, 0, 
                       _area_link, _area_NI, _area_switch, 0, 
                       _monetary_link, _monetary_NI, _monetary_switch, 0});
   }
   void addMode(string _name,
-               int _cycleLength,
-               int _dynPower_NI,
-               int _dynPower_bus,
-               int _staticPow_NI,
-               int _staticPow_bus,
-               int _area_NI,
-               int _area_bus,
-               int _monetary_NI,
-               int _monetary_bus){
-    modes.push_back(InterconnectMode{_name, _cycleLength, _cycleLength*max(tdmaSlots, tdnCycles),
+               size_t _cycleLength,
+               size_t _dynPower_NI,
+               size_t _dynPower_bus,
+               size_t _staticPow_NI,
+               size_t _staticPow_bus,
+               size_t _area_NI,
+               size_t _area_bus,
+               size_t _monetary_NI,
+               size_t _monetary_bus){
+    modes.push_back(InterconnectMode{_name, _cycleLength, _cycleLength*(size_t)max(tdmaSlots, tdnCycles),
                       0, _dynPower_NI, 0, _dynPower_bus,
                       0, _staticPow_NI, 0, _staticPow_bus, 
                       0, _area_NI, 0, _area_bus, 
@@ -368,7 +368,7 @@ public:
   // Gives the TDN Graph / Table
   vector<tdn_graphNode> getTDNGraph() const;
   
-  int getTDNCycles() const;
+  size_t getTDNCycles() const;
   
   int getTDNCyclesPerProc() const;
   

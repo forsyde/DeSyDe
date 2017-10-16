@@ -120,6 +120,8 @@ public:
     std::vector<OptCriterion> criteria;
     unsigned long int         timeout_first;
     unsigned long int         timeout_all;
+    unsigned long int         pre_timeout_first;
+    unsigned long int         pre_timeout_all;
 
     unsigned long int         luby_scale;
     unsigned int              threads;
@@ -202,6 +204,7 @@ private:
   void setCriteria(const std::vector<std::string> &) throw (InvalidFormatException);
   void setThPropagator(const std::string &) throw (InvalidFormatException);
   void setTimeout(const std::vector<unsigned long int> &) throw (IllegalStateException);
+  void setTimeout_presolver(const std::vector<unsigned long int> &) throw (IllegalStateException);
   void setThreads(unsigned int) throw ();
   void setNoGoodDepth(unsigned long int) throw ();
   void setLubyScale(unsigned long int) throw ();

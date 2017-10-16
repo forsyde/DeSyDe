@@ -132,7 +132,12 @@ int Config::parse(int argc, const char** argv) throw (IOException, InvalidArgume
                po::value<string>()->default_value(string("NONESEARCH"))->notifier(
                   boost::bind(&Config::setMultiStepSearch, this, _1)),
              "Search type for the heuristic steps. Final step uses search type as defined in dse.search. \n"
-             "Valid options NONESEARCH, FIRST, ALL, OPTIMIZE, OPTIMIZE_IT, GIST_ALL, GIST_OPT. ");
+             "Valid options NONESEARCH, FIRST, ALL, OPTIMIZE, OPTIMIZE_IT, GIST_ALL, GIST_OPT. ")
+    ("presolver.timeout",
+        po::value<vector<unsigned long int>>()->multitoken()->default_value({0,0},
+            "0 0")->notifier(boost::bind(&Config::setTimeout_presolver, this, _1)),
+        "search timeout. 0 means infinite. If two values are provided, the first one specifies "
+        "the timeout for the first solution, and the second one for incremental time-out which is reset after each found solution.");
 
   po::options_description dse("DSE options");
   dse.add_options()
@@ -155,7 +160,7 @@ int Config::parse(int argc, const char** argv) throw (IOException, InvalidArgume
           po::value<vector<unsigned long int>>()->multitoken()->default_value({0,0},
               "0 0")->notifier(boost::bind(&Config::setTimeout, this, _1)),
           "search timeout. 0 means infinite. If two values are provided, the first one specifies "
-          "the timeout for the first solution, and the second one for all solutions.")
+          "the timeout for the first solution, and the second one for incremental time-out which is reset after each found solution.")
       ("dse.threads",
           po::value<unsigned int>()->default_value(0)->notifier(
               boost::bind(&Config::setThreads, this, _1)),
@@ -481,6 +486,16 @@ void Config::setCriteria(const vector<string> &str) throw (InvalidFormatExceptio
   for (string s : str)
     if (s.length() != 0)
       settings_.criteria.push_back(stringToCriterion(tools::trim(s)));
+}
+
+
+void Config::setTimeout_presolver(const vector<unsigned long int> &touts) throw (IllegalStateException) {
+  try {
+    settings_.pre_timeout_first = (touts.size() < 1) ? 0 : touts[0];
+    settings_.pre_timeout_all   = (touts.size() < 2) ? 0 : touts[1];
+  } catch (std::exception& e) {
+    THROW_EXCEPTION(IllegalStateException, "internal error");
+  }
 }
 
 void Config::setTimeout(const vector<unsigned long int> &touts) throw (IllegalStateException) {

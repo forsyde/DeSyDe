@@ -1,6 +1,6 @@
 // *** GENERAL CONSTRAINTS ***
 //find maximum message size (should be in application class in the future)
-int maxMessageSize = 0;
+size_t maxMessageSize = 0;
 for(unsigned int ki=0; ki<channels.size(); ki++){
   if(maxMessageSize < channels[ki]->messageSize) maxMessageSize = channels[ki]->messageSize;
 }
@@ -196,7 +196,7 @@ if(platform->getInterconnectType() == TDMA_BUS){
     
     for(size_t r=0; r<all_routes.size(); r++){
       vector<int> linksNotUsed;
-      for(int l=0; l<links; l++){
+      for(size_t l=0; l<links; l++){
         std::vector<int>::iterator it;
         it = find (all_routes[r].tdn_nodePath.begin(), all_routes[r].tdn_nodePath.end(), l);
         if (it == all_routes[r].tdn_nodePath.end()){ //not found
@@ -222,7 +222,7 @@ if(platform->getInterconnectType() == TDMA_BUS){
     rel(*this, (proc[src_ch]==proc[dst_ch]) >> (sum(flitsPerLinkM.row(ki))==0));
     
     for(size_t j=0; j<platform->nodes(); j++){
-      for(int l=0; l<links; l++){
+      for(size_t l=0; l<links; l++){
         IntVar j_count(*this, 0, platform->getTDNCycles());
         count(*this, tdnTableM.row(l), j, IRT_EQ, j_count);
         rel(*this, ((proc[src_ch]==j) && (j_count==0)) >> (flitsPerLinkM(l,ki)==0));
@@ -254,6 +254,7 @@ if(platform->getInterconnectType() == TDMA_BUS){
       if(ji!=jj){
         IntVarArgs routes;
         int routeHops;
+        
         //cout << "... processor " << jj << endl;
         for(size_t k=0; k<platform->getTDNCycles(); k++){
           int t = ji * platform->getTDNCycles() + k;
@@ -264,7 +265,6 @@ if(platform->getInterconnectType() == TDMA_BUS){
         for(unsigned int ki=0; ki<channels.size(); ki++){
           int src_ch1 = channels[ki]->source;
           int dst_ch1 = channels[ki]->destination;
-          int tok_ch1 = channels[ki]->initTokens;
           
           //get number of hops for channel
           rel(*this, ((proc[src_ch1]==ji) && (proc[dst_ch1]==jj))
@@ -293,7 +293,7 @@ if(platform->getInterconnectType() == TDMA_BUS){
     }
   }
   
-  for(int t=platform->getTDNCycles()*platform->nodes(); t<tdn_graph.size()-platform->getTDNCycles()*platform->nodes(); t++){
+  for(size_t t=platform->getTDNCycles()*platform->nodes(); t<tdn_graph.size()-platform->getTDNCycles()*platform->nodes(); t++){
     //cout << "Routes going through TDN graph node " << t << ": [";
     //cout << tdn_graph[t].link.from << " -> " << tdn_graph[t].link.to << " @" << tdn_graph[t].link.cycle << "]"  << endl;
     for(size_t r=0; r<tdn_graph[t].tdn_routes.size(); r++){

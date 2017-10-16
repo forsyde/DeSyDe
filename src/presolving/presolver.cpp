@@ -125,8 +125,8 @@ public:
         }
         
         geSearchOptions.threads = settings.settings().threads;
-        if(settings.settings().timeout_first > 0){
-          Search::TimeStop* stop = new Search::TimeStop(settings.settings().timeout_first*0.1);
+        if(settings.settings().pre_timeout_first > 0){
+          Search::TimeStop* stop = new Search::TimeStop(settings.settings().pre_timeout_first);
           geSearchOptions.stop = stop;
         }
         
@@ -415,9 +415,9 @@ private:
         }
       }
       
-      if(settings.settings().timeout_all){
+      if(settings.settings().pre_timeout_all){
         ((Search::TimeStop*)geSearchOptions.stop)->reset();
-        ((Search::TimeStop*)geSearchOptions.stop)->limit(settings.settings().timeout_all);
+        ((Search::TimeStop*)geSearchOptions.stop)->limit(settings.settings().pre_timeout_all);
         timerResets++;
       }
     }
@@ -445,7 +445,7 @@ private:
     if(e->stopped()){
       out << " due to time-out!";
     }
-    if(settings.settings().timeout_all){
+    if(settings.settings().pre_timeout_all){
       out << " (with " << timerResets << " incremental timer reset(s).)";
     }
     out << " =====\n" << nodes << " solutions found\n" << "search nodes: " << e->statistics().node << ", fail: " << e->statistics().fail << ", propagate: "

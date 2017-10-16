@@ -446,7 +446,7 @@ void Platform::createTDNGraph() throw (InvalidArgumentException){
       }
     }else{ //one of the dimensions is 1
       middle = 0;
-      corner = min(2, max(interconnect.columns, interconnect.rows));
+      corner = min((size_t)2, max(interconnect.columns, interconnect.rows));
       edge = nodes-corner;
     }
   }
@@ -800,7 +800,7 @@ vector<tdn_graphNode> Platform::getTDNGraph() const{
   return tdn_graph;  
 }
 
-int Platform::getTDNCycles() const{
+size_t Platform::getTDNCycles() const{
   return interconnect.tdnCycles;
 }
 
@@ -947,7 +947,7 @@ vector<int> Platform::getStaticPowerCons() const{
       }
     }else{ //one of the dimensions is 1
       middle = 0;
-      corner = min(2, max(interconnect.columns, interconnect.rows));
+      corner = min((size_t)2, max(interconnect.columns, interconnect.rows));
       edge = nodes-corner;
     }
     
@@ -1073,7 +1073,7 @@ vector<int> Platform::interconnectAreaCost() const{
       }
     }else{ //one of the dimensions is 1
       middle = 0;
-      corner = min(2, max(interconnect.columns, interconnect.rows));
+      corner = min((size_t)2, max(interconnect.columns, interconnect.rows));
       edge = nodes-corner;
     }
     
@@ -1194,7 +1194,7 @@ vector<int> Platform::interconnectMonetaryCost() const{
       }
     }else{ //one of the dimensions is 1
       middle = 0;
-      corner = min(2, max(interconnect.columns, interconnect.rows));
+      corner = min((size_t)2, max(interconnect.columns, interconnect.rows));
       edge = nodes-corner;
     }
     
