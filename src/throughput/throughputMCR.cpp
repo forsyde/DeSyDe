@@ -1762,7 +1762,7 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
   return ES_FIX;
 }
 
-/* next: |#actors|
+/* next: |#actors+#procs|
  * execCycles: |#actors*#actors|
  * wcet: |#actors|
  * sendingTime: |#channels|
@@ -1774,8 +1774,8 @@ void throughputMCR(Space& home, const IntVar latency, const IntVar period,
     const IntVarArgs& sendbufferSz, const IntVarArgs& recbufferSz, const IntVarArgs& next, const IntVarArgs& wcet, const IntVarArgs& sendingTime,
     const IntVarArgs& sendingLatency, const IntVarArgs& sendingNext, const IntVarArgs& receivingTime, const IntVarArgs& receivingNext, const IntArgs& ch_src,
     const IntArgs& ch_dst, const IntArgs& tok, const IntArgs& minIndices, const IntArgs& maxIndices) {
-  if(latency.size() != wcet.size()){
-    throw Gecode::Int::ArgumentSizeMismatch("Throughput constraint, latency & next");
+  if(next.size() < wcet.size()){
+    throw Gecode::Int::ArgumentSizeMismatch("Throughput constraint, next & wcet");
   }
   if(sendingTime.size() != sendingLatency.size()){
     throw Gecode::Int::ArgumentSizeMismatch("Throughput constraint, sendingTime & sendingLatency");
@@ -1844,8 +1844,8 @@ void throughputMCR(Space& home, const IntVar latency, const IntVar period,
     const IntVarArgs& sendbufferSz, const IntVarArgs& recbufferSz, const IntVarArgs& next, const IntVarArgs& wcet, const IntVarArgs& sendingTime,
     const IntVarArgs& sendingLatency, const IntVarArgs& sendingNext, const IntVarArgs& receivingTime, const IntVarArgs& receivingNext, const IntArgs& ch_src,
     const IntArgs& ch_dst, const IntArgs& tok) {
-  if(latency.size() != wcet.size()){
-    throw Gecode::Int::ArgumentSizeMismatch("Throughput constraint, iterations & next");
+  if(next.size() < wcet.size()){
+    throw Gecode::Int::ArgumentSizeMismatch("Throughput constraint, next & wcet");
   }
   if(sendingTime.size() != sendingLatency.size()){
     throw Gecode::Int::ArgumentSizeMismatch("Throughput constraint, sendingTime & sendingLatency");

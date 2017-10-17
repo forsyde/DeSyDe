@@ -393,12 +393,12 @@ void Mapping::load_designConstraints(XMLdoc& xml)
 void Mapping::setMappingRules(string taskType, int _mapOn, vector<int> _notMapOn){
   for (size_t i = 0; i < program->n_programEntities(); i++) {      
     if (taskType.compare(program->getType(i)) == 0) {
-      if (_mapOn != -1 && (wcets[i].size() <= _mapOn)) {
+      if (_mapOn != -1 && (wcets[i].size() <= (size_t)_mapOn)) {
         THROW_EXCEPTION(InvalidArgumentException,"proc id for doMap of "+ taskType +" out of bound\n");
       }
       mappingRules_do[i] = _mapOn;
-      for(j: _notMapOn){
-        if (wcets[i].size() <= j) {
+      for(int j: _notMapOn){
+        if (wcets[i].size() <= (size_t)j) {
           THROW_EXCEPTION(InvalidArgumentException,"proc id for doNotMap of "+ taskType +" out of bound\n");
         }
         mappingRules_doNot[i].push_back(j);

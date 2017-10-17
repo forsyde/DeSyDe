@@ -197,7 +197,7 @@ if(platform->getInterconnectType() == TDMA_BUS){
     for(size_t r=0; r<all_routes.size(); r++){
       vector<int> linksNotUsed;
       for(size_t l=0; l<links; l++){
-        std::vector<int>::iterator it;
+        std::vector<size_t>::iterator it;
         it = find (all_routes[r].tdn_nodePath.begin(), all_routes[r].tdn_nodePath.end(), l);
         if (it == all_routes[r].tdn_nodePath.end()){ //not found
           linksNotUsed.push_back(l);
@@ -253,14 +253,14 @@ if(platform->getInterconnectType() == TDMA_BUS){
     //for(size_t r=0; r<tdn_graph[t].tdn_routes.size(); r++){
       if(ji!=jj){
         IntVarArgs routes;
-        int routeHops;
+        //int routeHops;
         
         //cout << "... processor " << jj << endl;
-        for(size_t k=0; k<platform->getTDNCycles(); k++){
-          int t = ji * platform->getTDNCycles() + k;
-          routeHops = tdn_graph[t].tdn_routes[dst]->tdn_nodePath.size();
+        //for(size_t k=0; k<platform->getTDNCycles(); k++){
+          //int t = ji * platform->getTDNCycles() + k;
+          //routeHops = tdn_graph[t].tdn_routes[dst]->tdn_nodePath.size();
           //cout << "\t like this: " << tools::toString(tdn_graph[t].tdn_routes[dst]->tdn_nodePath) << endl;
-        }
+        //}
         
         for(unsigned int ki=0; ki<channels.size(); ki++){
           int src_ch1 = channels[ki]->source;
@@ -376,7 +376,7 @@ if(platform->getInterconnectType() == TDMA_BUS){
     count(*this, chosenRoutesOnJ, cyclesForJ);
     for(unsigned int ki=0; ki<channels.size(); ki++){
       int src_ch1 = channels[ki]->source;
-      int dst_ch1 = channels[ki]->destination;
+      //int dst_ch1 = channels[ki]->destination;
       rel(*this, (proc[src_ch1]==j)
                     >> (chosenRoutesOnJ[ki] == chosenRoute[ki]));
       rel(*this, (proc[src_ch1]!=j) 
@@ -400,7 +400,7 @@ if(platform->getInterconnectType() == TDMA_BUS){
     for(unsigned int kj=0; kj<channels.size(); kj++){
       int src_ch2 = channels[kj]->source;
       int dst_ch2 = channels[kj]->destination;
-      int tok_ch2 = channels[kj]->initTokens;
+      //int tok_ch2 = channels[kj]->initTokens;
       
       //if TDN slots per processor is restricted to one
       if(platform->getTDNCyclesPerProc() == 1){
@@ -425,7 +425,7 @@ if(platform->getInterconnectType() == TDMA_BUS){
     vector<int> fullRoundsNeeded;
     fullRoundsNeeded.push_back(0); //for 0 tdn slots assigned
     fullRoundsNeeded.push_back(slotsNeeded-1); //for 1 tdn slots assigned
-    for(int s=2; s<=platform->getTDNCycles(); s++){
+    for(size_t s=2; s<=platform->getTDNCycles(); s++){
       int tmp_roundsNeeded = floor(((double)slotsNeeded)/s);
       if(slotsNeeded%s==0) tmp_roundsNeeded -= 1; //for making sending time less conservative, depending on which slots are assigned
       fullRoundsNeeded.push_back(tmp_roundsNeeded);

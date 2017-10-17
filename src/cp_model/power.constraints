@@ -54,7 +54,7 @@ if(platform->getInterconnectType() == TDN_NOC){
   element(*this, IntArgs(platform->getDynPowerCons_switch()), ic_mode, dynPower_switch);
   element(*this, IntArgs(platform->getDynPowerCons_NI()), ic_mode, dynPower_NI);
   element(*this, IntArgs(platform->getStaticPowerCons()), ic_mode, statPower_noc);
-  for(int p=0; p<platform->nodes(); p++){
+  for(size_t p=0; p<platform->nodes(); p++){
     element(*this, IntArgs(platform->getStaticPowerCons_link(p)), ic_mode, statPower_linkAtNode[p]);
   }
   element(*this, IntArgs(platform->getStaticPowerCons_link()), ic_mode, statPower_link);
@@ -91,7 +91,7 @@ if(platform->getInterconnectType() == TDN_NOC){
     vector<neighborNode> neighbors = platform->getNeighborNodes(j);
     IntVarArgs activeLinks(*this, neighbors.size(), 0, 1);
     IntVarArgs activeNeighbors(*this, neighbors.size(), 0, 1);
-    for(int n=0; n<neighbors.size(); n++){
+    for(size_t n=0; n<neighbors.size(); n++){
       rel(*this, ((max(flitsPerLinkM.col(neighbors[n].link_to))==0)
                    && (max(flitsPerLinkM.col(neighbors[n].link_from))==0)) >> (activeLinks[n]==0));
       rel(*this, ((max(flitsPerLinkM.col(neighbors[n].link_to))>0)

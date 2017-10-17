@@ -51,7 +51,7 @@ public:
   std::string type;
   std::string model;
   vector<std::string> modes;
-  int n_modes;
+  size_t n_modes;
   vector<double> cycle_length;
   vector<int> memorySize;
   vector<int> dynPowerCons;
@@ -183,22 +183,22 @@ public:
 struct tdn_link{
   int from; /*!< Value -1: from NI to switch at NoC-node \ref tdn_link.to */
   int to; /*!< Value -1: from switch to NI at NoC-node \ref tdn_link.from */
-  int cycle; /*!< TDN cycle */
+  size_t cycle; /*!< TDN cycle */
 };
 
 //! Struct to capture a route through the TDN NoC.
 /*! Combines the destination processor with a path of nodes in the TDN graph.
  * The \ref tnd_route.tdn_nodePath combines information about location with time (TND cycle). */
 struct tdn_route{
-  int srcProc;
-  int dstProc; /*!< Id of the destination processor / NoC node. */
-  vector<int> tdn_nodePath; /*!< The sequence of node Ids of the TDN-graph nodes, starting with the root node, ending with the node corresponding to \ref tdn_route.dstProc. */
+  size_t srcProc;
+  size_t dstProc; /*!< Id of the destination processor / NoC node. */
+  vector<size_t> tdn_nodePath; /*!< The sequence of node Ids of the TDN-graph nodes, starting with the root node, ending with the node corresponding to \ref tdn_route.dstProc. */
 };
 
 //! Struct to capture a node in the TDN graph.
 /*!  */
 struct tdn_graphNode{
-    set<int> passingProcs; /*!< All processors whose messages can pass this link. */
+    set<size_t> passingProcs; /*!< All processors whose messages can pass this link. */
     tdn_link link; /*!< The link of the NoC that this node represents. */
     vector<shared_ptr<tdn_route>> tdn_routes; /*!< All routes that go through this node. */
 };

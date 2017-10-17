@@ -420,7 +420,7 @@ Platform::~Platform(){
 
 void Platform::createTDNGraph() throw (InvalidArgumentException){
   LOG_DEBUG("Creating the TDN graph / table: ");
-  int nodes = interconnect.rows * interconnect.columns;
+  size_t nodes = interconnect.rows * interconnect.columns;
   
   int tdn_nodeId = 0;
   int corner = 0;
@@ -428,7 +428,7 @@ void Platform::createTDNGraph() throw (InvalidArgumentException){
   int middle = 0;
   int totalTDN_nodes;
   
-  for(int i=0; i<nodes; i++){
+  for(size_t i=0; i<nodes; i++){
     int yLoc_i = i/interconnect.columns;
     int xLoc_i = i%interconnect.columns;
     
@@ -462,12 +462,12 @@ void Platform::createTDNGraph() throw (InvalidArgumentException){
   LOG_DEBUG("Initialized TDN graph with " +  tools::toString(tdn_graph.size()) + " nodes. Now filling with info...");    
   
   LOG_DEBUG("#### OUT FROM NI ###########");  
-  for(int i=0; i<nodes; i++){
+  for(size_t i=0; i<nodes; i++){
     //int yLoc_i = i/interconnect.columns;
     //int xLoc_i = i%interconnect.columns;
     
     //root nodes of the TDN graph: all links from NIs to switch, for each TDN cycle
-    for(int k=0; k<interconnect.tdnCycles; k++){
+    for(size_t k=0; k<interconnect.tdnCycles; k++){
       //cout << "I am node " << tdn_nodeId << " of the TDN graph." << endl;
       //cout << "\t I represent the link from NI to switch at NoC-node " << i << " (" << xLoc_i << ", " << yLoc_i << ")";
       //cout << " at TDN cycle " << k << endl;
@@ -475,7 +475,7 @@ void Platform::createTDNGraph() throw (InvalidArgumentException){
       
       //add node to graph
       tdn_graph[tdn_nodeId].passingProcs.emplace(i);
-      tdn_graph[tdn_nodeId].link = {-1, i, k};
+      tdn_graph[tdn_nodeId].link = {-1, (int)i, k};
       
       tdn_nodeId++;
     }
@@ -485,12 +485,12 @@ void Platform::createTDNGraph() throw (InvalidArgumentException){
   //"middle" nodes of the TDN graph: all links from switch to switch in all cycles
   //first upwards...
   LOG_DEBUG("#### UP ###########");
-  for(int col=0; col<interconnect.columns; col++){
-    for(int row=0; row<interconnect.rows-1; row++){
+  for(size_t col=0; col<interconnect.columns; col++){
+    for(size_t row=0; row<interconnect.rows-1; row++){
       int from = row*interconnect.columns+col;
       int to = (row+1)*interconnect.columns+col;
       
-      for(int k=0; k<interconnect.tdnCycles; k++){
+      for(size_t k=0; k<interconnect.tdnCycles; k++){
         //cout << "I am node " << tdn_nodeId << " of the TDN graph." << endl;
         //cout << "\t I represent the link from switch " << from << " (" << col << ", " << row << ")" <<  " to switch " << to << " (" << col << ", " << (row+1) << ")";
         //cout << " at TDN cycle " << k << endl;
@@ -507,12 +507,12 @@ void Platform::createTDNGraph() throw (InvalidArgumentException){
   }
   //then downwards...
   LOG_DEBUG("#### DOWN ###########");
-  for(int col=0; col<interconnect.columns; col++){
-    for(int row=interconnect.rows-1; row>0; row--){
+  for(size_t col=0; col<interconnect.columns; col++){
+    for(size_t row=interconnect.rows-1; row>0; row--){
       int from = row*interconnect.columns+col;
       int to = (row-1)*interconnect.columns+col;
       
-      for(int k=0; k<interconnect.tdnCycles; k++){
+      for(size_t k=0; k<interconnect.tdnCycles; k++){
         //cout << "I am node " << tdn_nodeId << " of the TDN graph." << endl;
         //cout << "\t I represent the link from switch " << from << " (" << col << ", " << row << ")" <<  " to switch " << to << " (" << col << ", " << (row-1) << ")";
         //cout << " at TDN cycle " << k << endl;
@@ -529,12 +529,12 @@ void Platform::createTDNGraph() throw (InvalidArgumentException){
   }
   //...then right
   LOG_DEBUG("#### RIGHT ###########");
-  for(int row=0; row<interconnect.rows; row++){
-    for(int col=0; col<interconnect.columns-1; col++){
+  for(size_t row=0; row<interconnect.rows; row++){
+    for(size_t col=0; col<interconnect.columns-1; col++){
       int from = row*interconnect.columns+col;
       int to = row*interconnect.columns+col+1;
       
-      for(int k=0; k<interconnect.tdnCycles; k++){
+      for(size_t k=0; k<interconnect.tdnCycles; k++){
         //cout << "I am node " << tdn_nodeId << " of the TDN graph." << endl;
         //cout << "\t I represent the link from switch " << from << " (" << col << ", " << row << ")" <<  " to switch " << to << " (" << (col+1) << ", " << row << ")";
         //cout << " at TDN cycle " << k << endl;
@@ -551,12 +551,12 @@ void Platform::createTDNGraph() throw (InvalidArgumentException){
   }
   //...and then left
   LOG_DEBUG("#### LEFT ###########");
-  for(int row=0; row<interconnect.rows; row++){
-    for(int col=interconnect.columns-1; col>0; col--){
+  for(size_t row=0; row<interconnect.rows; row++){
+    for(size_t col=interconnect.columns-1; col>0; col--){
       int from = row*interconnect.columns+col;
       int to = row*interconnect.columns+col-1;
       
-      for(int k=0; k<interconnect.tdnCycles; k++){
+      for(size_t k=0; k<interconnect.tdnCycles; k++){
         //cout << "I am node " << tdn_nodeId << " of the TDN graph." << endl;
         //cout << "\t I represent the link from switch " << from << " (" << col << ", " << row << ")" <<  " to switch " << to << " (" << (col-1) << ", " << row << ")";
         //cout << " at TDN cycle " << k << endl;
@@ -573,19 +573,19 @@ void Platform::createTDNGraph() throw (InvalidArgumentException){
   //...and finally back into the NI
   
   LOG_DEBUG("#### TO NI ###########");
-  for(int i=0; i<nodes; i++){
+  for(size_t i=0; i<nodes; i++){
     //int yLoc_i = i/interconnect.columns;
     //int xLoc_i = i%interconnect.columns;
     
     //leaf nodes of the TDN graph: all links from switch to NI, for each TDN cycle
-    for(int k=0; k<interconnect.tdnCycles; k++){
+    for(size_t k=0; k<interconnect.tdnCycles; k++){
       //cout << "I am node " << tdn_nodeId << " of the TDN graph." << endl;
       //cout << "\t I represent the link from switch to NI at NoC-node " << i << " (" << xLoc_i << ", " << yLoc_i << ")";
       //cout << " at TDN cycle " << k << endl;
       //cout << "==========" << endl;
         
         //add node to graph
-        tdn_graph[tdn_nodeId].link = {i, -1, k};
+        tdn_graph[tdn_nodeId].link = {(int)i, -1, k};
         
       tdn_nodeId++;
     }
@@ -597,12 +597,12 @@ void Platform::createTDNGraph() throw (InvalidArgumentException){
     
   tdn_nodeId = 0;
   LOG_DEBUG("\n Now, let's travel through the entire NoC...");
-  for(int i=0; i<nodes; i++){
+  for(size_t i=0; i<nodes; i++){
     int yLoc_i = i/interconnect.columns;
     int xLoc_i = i%interconnect.columns;
     
     
-    for(int k=0; k<interconnect.tdnCycles; k++){
+    for(size_t k=0; k<interconnect.tdnCycles; k++){
       
       tdn_nodeId = i * interconnect.tdnCycles + k;
       int tdn_srcNodeId = tdn_nodeId;
@@ -612,7 +612,7 @@ void Platform::createTDNGraph() throw (InvalidArgumentException){
       //cout << "\n\t starting from NI to switch at NoC-node " << i << " at (" << xLoc_i << ", " << yLoc_i << ")";
       //cout << " in cycle " << k << " (TDN-Node: "<< tdn_nodeId << ")" << endl;
     
-      for(int j=0; j<nodes; j++){
+      for(size_t j=0; j<nodes; j++){
         int yLoc_j = j/interconnect.columns;
         int xLoc_j = j%interconnect.columns;
         
@@ -702,16 +702,16 @@ void Platform::createTDNGraph() throw (InvalidArgumentException){
 }
 
 void Platform::createRouteTable(){
-  int nodes = interconnect.rows * interconnect.columns;
+  size_t nodes = interconnect.rows * interconnect.columns;
   
-  for(int i=0; i<nodes; i++){
+  for(size_t i=0; i<nodes; i++){
     int yLoc_i = i/interconnect.columns;
     int xLoc_i = i%interconnect.columns;
     
     int srcLinkId = i;
     int linkId;
         
-    for(int j=0; j<nodes; j++){
+    for(size_t j=0; j<nodes; j++){
       int yLoc_j = j/interconnect.columns;
       int xLoc_j = j%interconnect.columns;
       
@@ -825,11 +825,11 @@ vector<tdn_route> Platform::getAllRoutes() const{
 vector<neighborNode> Platform::getNeighborNodes(size_t node) const{
   vector<neighborNode> tmp;
   
-  int yLoc_node = node/interconnect.columns;
-  int xLoc_node = node%interconnect.columns;
+  size_t yLoc_node = node/interconnect.columns;
+  size_t xLoc_node = node%interconnect.columns;
   int xLoc_neighbor;
   int yLoc_neighbor;
-  int nodes = interconnect.rows * interconnect.columns;
+  size_t nodes = interconnect.rows * interconnect.columns;
   
   //west
   if(xLoc_node>0){
@@ -886,7 +886,7 @@ vector<neighborNode> Platform::getNeighborNodes(size_t node) const{
 /*! Gets the cycle length, depending on the NoC mode. */
 vector<int> Platform::getTDNCycleLengths() const{
   vector<int> tmp;
-  for(int i=0; i<interconnect.modes.size(); i++){
+  for(size_t i=0; i<interconnect.modes.size(); i++){
     tmp.push_back(interconnect.modes[i].cycleLength);
   }
   
@@ -896,7 +896,7 @@ vector<int> Platform::getTDNCycleLengths() const{
 /*! Gets the dynamic power consumption of a link */
 vector<int> Platform::getDynPowerCons_link() const{
   vector<int> tmp; 
-  for(int i=0; i<interconnect.modes.size(); i++){
+  for(size_t i=0; i<interconnect.modes.size(); i++){
     tmp.push_back(interconnect.modes[i].dynPower_link);
   }
   
@@ -905,7 +905,7 @@ vector<int> Platform::getDynPowerCons_link() const{
 /*! Gets the dynamic power consumption of a link */
 vector<int> Platform::getDynPowerCons_NI() const{
   vector<int> tmp; 
-  for(int i=0; i<interconnect.modes.size(); i++){
+  for(size_t i=0; i<interconnect.modes.size(); i++){
     tmp.push_back(interconnect.modes[i].dynPower_NI);
   }
   
@@ -914,7 +914,7 @@ vector<int> Platform::getDynPowerCons_NI() const{
 /*! Gets the dynamic power consumption of a link */
 vector<int> Platform::getDynPowerCons_switch() const{
   vector<int> tmp; 
-  for(int i=0; i<interconnect.modes.size(); i++){
+  for(size_t i=0; i<interconnect.modes.size(); i++){
     tmp.push_back(interconnect.modes[i].dynPower_switch);
   }
   
@@ -924,7 +924,7 @@ vector<int> Platform::getDynPowerCons_switch() const{
 /*! Gets the static power consumption of the entire NoC for each mode. */
 vector<int> Platform::getStaticPowerCons() const{
   vector<int> tmp; 
-  int nodes = interconnect.rows * interconnect.columns;
+  size_t nodes = interconnect.rows * interconnect.columns;
   int corner = 0;
   int edge = 0;
   int middle = 0;
@@ -977,8 +977,8 @@ vector<int> Platform::getStaticPowerCons() const{
 vector<int> Platform::getStaticPowerCons_link(size_t node) const{
   vector<int> tmp; 
   
-  int yLoc_node = node/interconnect.columns;
-  int xLoc_node = node%interconnect.columns;
+  size_t yLoc_node = node/interconnect.columns;
+  size_t xLoc_node = node%interconnect.columns;
   
   if(interconnect.columns > 1 && interconnect.rows > 1){
     //cout << "I am processor/NoC-node " << i << ", located at (" << xLoc_node << ", " << yLoc_node << "):";
@@ -1021,7 +1021,7 @@ vector<int> Platform::getStaticPowerCons_link(size_t node) const{
 /*! Gets the dynamic power consumption of a link at node node for each mode. */
 vector<int> Platform::getStaticPowerCons_link() const{
   vector<int> tmp; 
-  for(int i=0; i<interconnect.modes.size(); i++){
+  for(size_t i=0; i<interconnect.modes.size(); i++){
     tmp.push_back(interconnect.modes[i].staticPow_link);
   }
   
@@ -1031,7 +1031,7 @@ vector<int> Platform::getStaticPowerCons_link() const{
 /*! Gets the dynamic power consumption of an NI for each mode. */
 vector<int> Platform::getStaticPowerCons_NI() const{
   vector<int> tmp; 
-  for(int i=0; i<interconnect.modes.size(); i++){
+  for(size_t i=0; i<interconnect.modes.size(); i++){
     tmp.push_back(interconnect.modes[i].staticPow_NI);
   }
   
@@ -1041,7 +1041,7 @@ vector<int> Platform::getStaticPowerCons_NI() const{
 /*! Gets the dynamic power consumption of a switch for each mode. */
 vector<int> Platform::getStaticPowerCons_switch() const{
   vector<int> tmp; 
-  for(int i=0; i<interconnect.modes.size(); i++){
+  for(size_t i=0; i<interconnect.modes.size(); i++){
     tmp.push_back(interconnect.modes[i].staticPow_switch);
   }
   
@@ -1052,7 +1052,7 @@ vector<int> Platform::getStaticPowerCons_switch() const{
 /*! Gets the area cost of the NoC, depending on the mode. */
 vector<int> Platform::interconnectAreaCost() const{
   vector<int> tmp; 
-  int nodes = interconnect.rows * interconnect.columns;
+  size_t nodes = interconnect.rows * interconnect.columns;
   size_t corner=0, edge=0, middle = 0;
   
   for(size_t i=0; i<nodes; i++){
@@ -1100,8 +1100,8 @@ vector<int> Platform::interconnectAreaCost() const{
 vector<int> Platform::interconnectAreaCost_link(size_t node) const{
   vector<int> tmp; 
   
-  int yLoc_node = node/interconnect.columns;
-  int xLoc_node = node%interconnect.columns;
+  size_t yLoc_node = node/interconnect.columns;
+  size_t xLoc_node = node%interconnect.columns;
   
   if(interconnect.columns > 1 && interconnect.rows > 1){
     //cout << "I am processor/NoC-node " << i << ", located at (" << xLoc_node << ", " << yLoc_node << "):";
@@ -1144,7 +1144,7 @@ vector<int> Platform::interconnectAreaCost_link(size_t node) const{
 /*! Gets the area cost of a link for each mode. */
 vector<int> Platform::interconnectAreaCost_link() const{
   vector<int> tmp; 
-  for(int i=0; i<interconnect.modes.size(); i++){
+  for(size_t i=0; i<interconnect.modes.size(); i++){
     tmp.push_back(interconnect.modes[i].area_link);
   }
   
@@ -1154,7 +1154,7 @@ vector<int> Platform::interconnectAreaCost_link() const{
 /*! Gets the area cost of an NI for each mode. */
 vector<int> Platform::interconnectAreaCost_NI() const{
   vector<int> tmp; 
-  for(int i=0; i<interconnect.modes.size(); i++){
+  for(size_t i=0; i<interconnect.modes.size(); i++){
     tmp.push_back(interconnect.modes[i].area_NI);
   }
   
@@ -1164,7 +1164,7 @@ vector<int> Platform::interconnectAreaCost_NI() const{
 /*! Gets the area cost of a switch for each mode. */
 vector<int> Platform::interconnectAreaCost_switch() const{
   vector<int> tmp; 
-  for(int i=0; i<interconnect.modes.size(); i++){
+  for(size_t i=0; i<interconnect.modes.size(); i++){
     tmp.push_back(interconnect.modes[i].area_switch);
   }
   
@@ -1173,7 +1173,7 @@ vector<int> Platform::interconnectAreaCost_switch() const{
 /*! Gets the monetary cost of the NoC, depending on the mode. */
 vector<int> Platform::interconnectMonetaryCost() const{
   vector<int> tmp; 
-  int nodes = interconnect.rows * interconnect.columns;
+  size_t nodes = interconnect.rows * interconnect.columns;
   size_t corner=0, edge=0, middle = 0;
   
   for(size_t i=0; i<nodes; i++){
@@ -1222,8 +1222,8 @@ vector<int> Platform::interconnectMonetaryCost() const{
 vector<int> Platform::interconnectMonetaryCost_link(size_t node) const{
   vector<int> tmp; 
   
-  int yLoc_node = node/interconnect.columns;
-  int xLoc_node = node%interconnect.columns;
+  size_t yLoc_node = node/interconnect.columns;
+  size_t xLoc_node = node%interconnect.columns;
   
   if(interconnect.columns > 1 && interconnect.rows > 1){
     //cout << "I am processor/NoC-node " << i << ", located at (" << xLoc_node << ", " << yLoc_node << "):";
@@ -1266,7 +1266,7 @@ vector<int> Platform::interconnectMonetaryCost_link(size_t node) const{
 /*! Gets the monetary cost of a link for each mode. */
 vector<int> Platform::interconnectMonetaryCost_link() const{
   vector<int> tmp; 
-  for(int i=0; i<interconnect.modes.size(); i++){
+  for(size_t i=0; i<interconnect.modes.size(); i++){
     tmp.push_back(interconnect.modes[i].monetary_link);
   }
   
@@ -1276,7 +1276,7 @@ vector<int> Platform::interconnectMonetaryCost_link() const{
 /*! Gets the monetary cost of a NI for each mode. */
 vector<int> Platform::interconnectMonetaryCost_NI() const{
   vector<int> tmp; 
-  for(int i=0; i<interconnect.modes.size(); i++){
+  for(size_t i=0; i<interconnect.modes.size(); i++){
     tmp.push_back(interconnect.modes[i].monetary_NI);
   }
   
@@ -1286,7 +1286,7 @@ vector<int> Platform::interconnectMonetaryCost_NI() const{
 /*! Gets the monetary cost of a switch for each mode. */
 vector<int> Platform::interconnectMonetaryCost_switch() const{
   vector<int> tmp; 
-  for(int i=0; i<interconnect.modes.size(); i++){
+  for(size_t i=0; i<interconnect.modes.size(); i++){
     tmp.push_back(interconnect.modes[i].monetary_switch);
   }
   
@@ -1329,7 +1329,7 @@ const vector<int> Platform::maxCommTimes(int tokSize) const{
 
   std::vector<int> sendingTimes;
   sendingTimes.push_back(-1); //for tdma_alloc=0, sendingTime = -1 (used in CP model)
-  for (auto i=1; i<=interconnect.tdmaSlots; i++){ //max sendingTime depends on allocated TDM slots
+  for (size_t i=1; i<=interconnect.tdmaSlots; i++){ //max sendingTime depends on allocated TDM slots
     double initBlock = interconnect.roundLength - (i-1)*slotLength;
     int roundsNeeded = ceil(slotsNeeded/i);
     double slotDelay = (roundsNeeded-1) * (interconnect.roundLength - (i*slotLength));
@@ -1352,7 +1352,7 @@ const vector<int> Platform::maxBlockingTimes() const{
 
   std::vector<int> blockingTimes;
   blockingTimes.push_back(0); //for tdma_alloc=0, blockingTime = 0 (used in CP model)
-  for (auto i=1; i<=interconnect.tdmaSlots; i++){ //max blocking depends on allocated TDM slots
+  for (size_t i=1; i<=interconnect.tdmaSlots; i++){ //max blocking depends on allocated TDM slots
     double initBlock = interconnect.roundLength - (i-1)*slotLength;
     blockingTimes.push_back(ceil(initBlock));
   }
@@ -1376,7 +1376,7 @@ const vector<int> Platform::maxTransferTimes(int tokSize) const{
 
   std::vector<int> transferTimes;
   transferTimes.push_back(0); //for tdma_alloc=0, transerTime = -1 (used in CP model)
-  for (auto i=1; i<=interconnect.tdmaSlots; i++){ //max sendingTime depends on allocated TDM slots
+  for (size_t i=1; i<=interconnect.tdmaSlots; i++){ //max sendingTime depends on allocated TDM slots
     int roundsNeeded = ceil(slotsNeeded/i);
     double slotDelay = (roundsNeeded-1) * (interconnect.roundLength - (i*slotLength));
 
@@ -1454,7 +1454,7 @@ bool Platform::homogeneousModeNodes(int node0, int node1) const{
       return false;
   }
 
-  for (auto m=0; m<compNodes[node0]->n_modes; m++){
+  for (size_t m=0; m<compNodes[node0]->n_modes; m++){
     if(compNodes[node0]->cycle_length[m] != compNodes[node1]->cycle_length[m] ||
        compNodes[node0]->memorySize[m] != compNodes[node1]->memorySize[m] ||
        compNodes[node0]->dynPowerCons[m] != compNodes[node1]->dynPowerCons[m] ||

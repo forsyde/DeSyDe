@@ -56,7 +56,7 @@ if(platform->getInterconnectType() == TDN_NOC){
     vector<neighborNode> neighbors = platform->getNeighborNodes(j);
     IntVarArgs activeLinks(*this, neighbors.size(), 0, 1);
     IntVarArgs activeNeighbors(*this, neighbors.size(), 0, 1);
-    for(int n=0; n<neighbors.size(); n++){
+    for(size_t n=0; n<neighbors.size(); n++){
       rel(*this, ((max(flitsPerLinkM.col(neighbors[n].link_to))==0)
                    && (max(flitsPerLinkM.col(neighbors[n].link_from))==0)) >> (activeLinks[n]==0));
       rel(*this, ((max(flitsPerLinkM.col(neighbors[n].link_to))>0)
@@ -95,7 +95,7 @@ if(platform->getInterconnectType() == TDN_NOC){
     vector<neighborNode> neighbors = platform->getNeighborNodes(j);
     IntVarArgs activeLinks(*this, neighbors.size(), 0, 1);
     IntVarArgs activeNeighbors(*this, neighbors.size(), 0, 1);
-    for(int n=0; n<neighbors.size(); n++){
+    for(size_t n=0; n<neighbors.size(); n++){
       rel(*this, ((max(flitsPerLinkM.col(neighbors[n].link_to))==0)
                    && (max(flitsPerLinkM.col(neighbors[n].link_from))==0)) >> (activeLinks[n]==0));
       rel(*this, ((max(flitsPerLinkM.col(neighbors[n].link_to))>0)
