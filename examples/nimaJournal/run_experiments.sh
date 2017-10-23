@@ -45,14 +45,14 @@ for (( i=$first_exp;i<=$last_exp;i++)); do
         SECONDS=0
         #sudo chrt --rr 99 ./../../bin/adse --config 3.1.1.1/config.cfg --dse.th_prop MCR --output 3.1.1.1/MCR/
         #sudo chrt --rr 99 
-        #./../../bin/adse --config 4.3.2.1/config.cfg --dse.th_prop MCR --output 4.3.2.1/run$r/
-        #./../../bin/adse --config 4.4.2.1/config.cfg --dse.th_prop MCR --output 4.4.2.1/run$r/
-        #./../../bin/adse --config 3.1.3.1/config.cfg --dse.th_prop MCR --output 3.1.3.1/run$r/
-        #./../../bin/adse --config 3.1.1.1/config.cfg --dse.th_prop MCR --output 3.1.1.1/run$r/
-        #./../../bin/adse --config 3.1.2.3/config.cfg --dse.th_prop MCR --output 3.1.2.3/run$r/
-        #./../../bin/adse --config 3.1.4.1/config.cfg --dse.th_prop MCR --output 3.1.4.1/run$r/
+        ./../../bin/adse --config 3.1.3.1/config.cfg --dse.th_prop MCR --output 3.1.3.1/run$r/
+        ./../../bin/adse --config 3.1.1.1/config.cfg --dse.th_prop MCR --output 3.1.1.1/run$r/
+        ./../../bin/adse --config 3.1.2.3/config.cfg --dse.th_prop MCR --output 3.1.2.3/run$r/
+        ./../../bin/adse --config 3.1.4.1/config.cfg --dse.th_prop MCR --output 3.1.4.1/run$r/
         ./../../bin/adse --config 4.1.1.1/config.cfg --dse.th_prop MCR --output 4.1.1.1/run$r/
-        #./../../bin/adse --config 4.1.2.1/config.cfg --dse.th_prop MCR --output 4.1.2.1/run$r/
+        ./../../bin/adse --config 4.1.2.1/config.cfg --dse.th_prop MCR --output 4.1.2.1/run$r/
+        ./../../bin/adse --config 4.3.2.1/config.cfg --dse.th_prop MCR --output 4.3.2.1/run$r/
+        ./../../bin/adse --config 4.4.2.1/config.cfg --dse.th_prop MCR --output 4.4.2.1/run$r/
         duration=$SECONDS
         echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed." >> log.txt
         echo "end of experiment "$i >> log.txt

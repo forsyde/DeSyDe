@@ -519,8 +519,8 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
 
         if(!heaviestFirst && (procBranchOrderSAT.size() > 0 || procBranchOrderOPT.size() > 0)){
             rnd.hw();
-            branch(*this, procBranchOrderSAT, INT_VAR_AFC_MAX(0.99), INT_VAL_RND(rnd));
-            branch(*this, procBranchOrderOPT, INT_VAR_AFC_MAX(0.99), INT_VAL_RND(rnd));
+            branch(*this, procBranchOrderSAT, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN());
+            branch(*this, procBranchOrderOPT, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN());
             branch(*this, procBranchOrderOther, INT_VAR_AFC_MAX(0.99), INT_VAL_RND(rnd));
         }else if(heaviestFirst && (procBranchOrderSAT.size() > 0 || procBranchOrderOPT.size() > 0)){
             branch(*this, procBranchOrderSAT, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN());
