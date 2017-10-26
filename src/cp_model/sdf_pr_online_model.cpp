@@ -626,6 +626,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
           branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VAL_MED());
         }
     }
+    LOG_INFO("Model created.");
 }
 
 SDFPROnlineModel::SDFPROnlineModel(bool share, SDFPROnlineModel& s):
