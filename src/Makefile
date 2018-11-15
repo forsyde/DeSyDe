@@ -57,11 +57,16 @@
 # defining LDFLAGS!<program binary path> and LDLIBS!<program binary path>, in
 # the same was as the MODULES variables are defined.
 
+#=====================
+# DEPENDENCY VARIABLES
+#=====================
 
+GECODE_VERSION := 5.1.0
 
-#===================
-# PROGRAM VARIABLES
-#===================
+GECODE_PATH := /opt/gecode/$(GECODE_VERSION)/include
+GECODE_LIB  := /opt/gecode/$(GECODE_VERSION)/lib
+LIBXML_PATH := /usr/include/libxml2
+BOOST_PATH  := /usr/include/boost
 
 GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)
 
@@ -82,10 +87,11 @@ MODULES!adse := \
 
 # Flags common to all program builds
 CXXFLAGS += -Wall -Wno-maybe-uninitialized -Wno-unused-result -std=c++11 -g -O1 \
-            -I/usr/include/boost -I/usr/include/libxml2 -I. \
+            -I$(BOOST_PATH)/ -I$(LIBXML_PATH)/ -I$(GECODE_PATH)/  -I. \
             -DVERSION=\"$(GIT_VERSION)\"
 LDFLAGS  += 
-LDLIBS   += -L/usr/local/lib/ -lgecodeint -lgecodeset -lgecodesearch -lgecodekernel \
+LDLIBS   += -L$(GECODE_LIB)/ -L/usr/local/lib/ \
+            -lgecodeint -lgecodeset -lgecodesearch -lgecodekernel \
             -lgecodesupport -lgecodeminimodel -lgecodegist -lgecodefloat \
             -lxml2 -lboost_system \
             -lboost_filesystem -lboost_program_options 
