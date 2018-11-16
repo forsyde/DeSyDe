@@ -68,7 +68,8 @@ GECODE_LIB  := /opt/gecode/$(GECODE_VERSION)/lib
 LIBXML_PATH := /usr/include/libxml2
 BOOST_PATH  := /usr/include/boost
 
-GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)
+# GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)
+GIT_VERSION := scal-0.1
 
 OBJ := obj
 BIN := bin
