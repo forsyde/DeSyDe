@@ -501,17 +501,19 @@ private:
           optApps++;
         }
       }
-      remainder = n_extraProcs%optApps;
-      for(unsigned int i=0; i<map->getApplications()->n_SDFApps(); i++){
-        if(map->getApplications()->getPeriodConstraint(i) == -1){
-          share[i] += n_extraProcs/optApps;
-          if(remainder>0){
-            share[i]+=remainder;
-            remainder = 0;
+      if(optApps > 0){
+        remainder = n_extraProcs%optApps;
+        for(unsigned int i=0; i<map->getApplications()->n_SDFApps(); i++){
+          if(map->getApplications()->getPeriodConstraint(i) == -1){
+            share[i] += n_extraProcs/optApps;
+            if(remainder>0){
+              share[i]+=remainder;
+              remainder = 0;
+            }
+            share[i] = min((int)map->getApplications()->n_SDFActorsOfApp(i), share[i]);
+            n_extraProcs -= share[i];
+            optApps--;
           }
-          share[i] = min((int)map->getApplications()->n_SDFActorsOfApp(i), share[i]);
-          n_extraProcs -= share[i];
-          optApps--;
         }
       }
     }
