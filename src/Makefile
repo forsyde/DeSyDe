@@ -89,7 +89,7 @@ CXXFLAGS += -Wall -Wno-maybe-uninitialized -Wno-unused-result -std=c++11 -g -O1 
             -I$(BOOST_PATH)/ -I$(LIBXML_PATH)/ -I$(GECODE_PATH)/  -I. \
             -DVERSION=\"$(GIT_VERSION)\"
 LDFLAGS  += -Wl,-rpath,$(GECODE_PATH) \
-						\-Wl,-rpath,$$ORIGIN
+						-Wl,-rpath,$$ORIGIN
 LDLIBS   += -L$(GECODE_LIB)/ -L/usr/local/lib/ \
             -lgecodeint -lgecodeset -lgecodesearch -lgecodekernel \
             -lgecodesupport -lgecodeminimodel -lgecodegist -lgecodefloat \
