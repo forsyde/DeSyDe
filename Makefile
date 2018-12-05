@@ -47,7 +47,7 @@ export DOMAKE     = $(MAKE) --no-print-directory
 build: bin/adse
 
 bin/adse: dependencies
-	@$(DOMAKE) -C ./src
+	@$(MAKE) -C ./src
 
 dependencies: gecode
 
@@ -59,6 +59,7 @@ gecode:
 	@printf "Done.\n$(SEP)\n"
 
 distclean:
+	@rm -rf gecode
 	@$(DOMAKE) -C ./src distclean
 
 docs:
