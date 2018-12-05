@@ -40,6 +40,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <list>
+#include <vector>
 #include <boost/algorithm/string/join.hpp>
 using namespace std;
 

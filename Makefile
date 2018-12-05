@@ -1,8 +1,9 @@
 # Copyright (c) 2011-2016
 #     Gabriel Hjort Blindell <ghb@kth.se>
 #     George Ungureanu <ugeorge@kth.se>
+#     Rodolfo Jordao <jordao@kth.se>
 # All rights reserved.
-# 
+#
 # Redistribution and use in src and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
 #     * Redistributions of src code must retain the above copyright notice,
@@ -10,7 +11,7 @@
 #     * Redistributions in binary form must reproduce the above copyright
 #       notice, this list of conditions and the following disclaimer in the
 #       documentation and/or other materials provided with the distribution.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -43,13 +44,22 @@ export TARGET     = bin
 export TARGETPATH = $(CURDIR)/$(TARGET)
 export DOMAKE     = $(MAKE) --no-print-directory
 
-build: 
+build: bin/adse
+
+bin/adse: dependencies
 	@$(DOMAKE) -C ./src
 
-distclean: 
+dependencies: gecode
+
+gecode:
+	@printf "$(SEP)\n Gecode\n$(SEP)\n"
+	@printf "Downloading from git and compiling right version...\n"
+	git clone https://github.com/Gecode/gecode
+	cd gecode && git checkout 1e8c55c && ./configure && $(DOMAKE) && cd ..
+	@printf "Done.\n$(SEP)\n"
+
+distclean:
 	@$(DOMAKE) -C ./src distclean
-
-
 
 docs:
 	@$(DOMAKE) -C ./src docs
