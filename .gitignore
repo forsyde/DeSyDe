@@ -38,3 +38,6 @@
 **/latex/**
 **/figures/*.pdf
 adse/experiments/*
+
+# gecode submodules
+gecode

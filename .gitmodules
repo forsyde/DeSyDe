@@ -1,0 +1,4 @@
+[submodule "gecode"]
+	path = gecode
+	url = https://github.com/Gecode/gecode.git
+  branch = 1e8c55c
