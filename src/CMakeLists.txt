@@ -19,7 +19,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 # include libxml files
 include_directories(${LIBXML2_INCLUDE_DIRS})
 # include gecode files, assuming they have been compiled
-include_directories(${gecode_INCLUDE_DIRS})
+include_directories(${CMAKE_BINARY_DIR}/gecode)
 
 add_executable(adse adse.cpp ${SRCS})
 target_link_libraries(adse ${Boost_GRAPH_LIBRARY} ${LIBXML2_LIBRARY} ${gecode_LIBRARY})
