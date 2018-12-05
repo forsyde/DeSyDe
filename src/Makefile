@@ -61,14 +61,13 @@
 # DEPENDENCY VARIABLES
 #=====================
 
-GECODE_PATH := ../gecode
+GECODE_PATH := $(ROOTPATH)gecode
 GECODE_INC  := $(GECODE_PATH)/gecode
 GECODE_LIB  := $(GECODE_PATH)
 LIBXML_PATH := /usr/include/libxml2
 BOOST_PATH  := /usr/include/boost
 
-# GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)
-GIT_VERSION := scal-0.1-port
+GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)
 
 OBJ := obj
 BIN := bin
@@ -89,7 +88,8 @@ MODULES!adse := \
 CXXFLAGS += -Wall -Wno-maybe-uninitialized -Wno-unused-result -std=c++11 -g -O1 \
             -I$(BOOST_PATH)/ -I$(LIBXML_PATH)/ -I$(GECODE_PATH)/  -I. \
             -DVERSION=\"$(GIT_VERSION)\"
-LDFLAGS  += "-Wl,-rpath,$(ROOTPATH)gecode"
+LDFLAGS  += -Wl,-rpath,$(GECODE_PATH) \
+						-Wl,-rpath,\$ORIGIN
 LDLIBS   += -L$(GECODE_LIB)/ -L/usr/local/lib/ \
             -lgecodeint -lgecodeset -lgecodesearch -lgecodekernel \
             -lgecodesupport -lgecodeminimodel -lgecodegist -lgecodefloat \
