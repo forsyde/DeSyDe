@@ -49,7 +49,25 @@ build: bin/adse
 bin/adse: dependencies
 	@$(MAKE) -C ./src
 
-dependencies: gecode
+dependencies: gecode boost libxml2
+
+libxml2:
+	@printf "$(SEP)\n Libxml (2)\n$(SEP)\n"
+	@printf "Downloading from git and compiling right version...\n"
+	git clone https://github.com/GNOME/libxml2
+	cd libxml2 && git checkout f8a8c1f && sh autogen.sh --prefix=`pwd`/build
+	@mkdir -p libxml2/build
+	$(MAKE) -C ./libxml2
+	$(MAKE) -C ./libxml2 install
+	@printf "Done.\n$(SEP)\n"
+
+boost:
+	@printf "$(SEP)\n Boost\n$(SEP)\n"
+	@printf "Downloading from git and compiling right version...\n"
+	git clone --recursive https://github.com/boostorg/boost.git
+	@mkdir -p boost/build
+	cd boost && ./bootstrap.sh --prefix=`pwd`/build && ./b2 --prefix=`pwd`/build --with-graph install
+	@printf "Done.\n$(SEP)\n"
 
 gecode:
 	@printf "$(SEP)\n Gecode\n$(SEP)\n"

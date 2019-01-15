@@ -64,8 +64,8 @@
 GECODE_PATH := $(ROOTPATH)gecode
 GECODE_INC  := $(GECODE_PATH)/gecode
 GECODE_LIB  := $(GECODE_PATH)
-LIBXML_PATH := /usr/include/libxml2
-BOOST_PATH  := /usr/include/boost
+LIBXML_PATH := $(ROOTPATH)libxml2/build/include/libxml2
+BOOST_PATH  := $(ROOTPATH)boost/build
 
 GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)
 
