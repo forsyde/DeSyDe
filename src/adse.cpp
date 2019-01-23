@@ -188,6 +188,7 @@ int main(int argc, const char* argv[]) {
       LOG_INFO(tools::toString(*taskset));
     }
 
+    SDFPROnlineModel* model;
     //PRESOLVING +++
     
     SDFPROnlineModel* model;
