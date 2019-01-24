@@ -7,7 +7,7 @@ DeSyDe is a design space exploration tool developed at KTH (ForSyDe research gro
 The main way in which DeSyDe is meant to be 'installed' is via compilation, which means that
 we, the ForSyDe group, tried as much as possible to provide automated scripts for compilation
 of DeSyDe, specially for linux machines. The idea is quite simple: the script downloads almost
-everything necessary so that nothing on your system is touched as possible and then proceeds to
+everything necessary so that nothing on your system is touched and then proceeds to
 compile everything. This sandboxing comes with the cost of added compilation time, but since
 this should be a one-time process, the larger time frame is a good trade-off for flexibility.
 
