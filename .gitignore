@@ -41,3 +41,6 @@ adse/experiments/*
 
 # gecode submodules
 gecode
+libxml
+libxml2
+boost
