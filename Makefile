@@ -58,7 +58,6 @@ libxml2:
 	cd libxml2 && git checkout f8a8c1f && sh autogen.sh --prefix=`pwd`/build
 	@mkdir -p libxml2/build
 	$(MAKE) -C ./libxml2
-	$(MAKE) -C ./libxml2 install
 	@printf "Done.\n$(SEP)\n"
 
 boost:

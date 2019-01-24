@@ -1,0 +1,6 @@
+language: cpp
+before_install:
+  - sudo apt-get install -y qt5-default
+addons:
+  apt:
+    update: true
