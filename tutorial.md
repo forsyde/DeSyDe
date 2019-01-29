@@ -83,3 +83,26 @@ is that some additional tags exists for the interconnection, such as the dimensi
 the routing algorithm to be used, the flit size, TDN slots as `cycles` and the maximum number of TDN Slots per Processor.
 the `link` terminology in the mode specification represents how much of that number is applied to each real
 interconnect link, e.g. a 2 x 2 grid has 4 links.
+
+### Applications
+
+We shall model two applications that must be run on the platform of our choice before and just for fun we'll do it
+in two different ways: in a single file with both applications and with each one in its own file. We'll start with
+the single file approach.
+
+The applications here will a SDF description of Sobel and of Susan as follows:
+
+    Sobel:
+              6 gx 1
+            >        \
+           /          >
+          6            1
+    getPx                abs
+          6            1
+           \          >
+            >        /
+              6 gy 1
+
+    Susan:
+   
+    getLm 1 -> 1 usan 2 -> 2 dir 3 -> 3 thin 2 -> 2 putLm
