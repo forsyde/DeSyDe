@@ -90,6 +90,7 @@ for exp in experiments_to_gen:
             for tdn_noc in xml.iter('TDN_NoC'):
               tdn_noc.attrib['name'] = '{0}x{1}TDN_{2}slots'.format(x, y, channel_num)
               tdn_noc.attrib['cycles'] = str(channel_num)
+              tdn_noc.attrib['maxCyclesPerProc'] = str(channel_num)
               tdn_noc.attrib['x-dimension'] = str(x)
               tdn_noc.attrib['y-dimension'] = str(y)
             xml.write(os.path.join(os.path.join(base_folder, 'xmls'), 'platform.xml'))
