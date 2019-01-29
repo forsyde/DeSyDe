@@ -48,28 +48,37 @@ build: bin/adse
 
 # Ideally the small parts should be compiled independently, but
 # to make things easier, let's do check up every time
-bin/adse: download
+bin/adse: boost/b2 libxml2/Makefile gecode/Makefile
 	@printf "$(SEP)\n Compile Libxml (2)\n$(SEP)\n"
-	cd libxml2 && git checkout f8a8c1f && sh autogen.sh --prefix=`pwd`/build
-	@mkdir -p libxml2/build
 	$(MAKE) -C ./libxml2
 	@printf "Done.\n$(SEP)\n"
 	@printf "$(SEP)\n Compile Boost\n$(SEP)\n"
 	@mkdir -p boost/build
-	cd boost && ./bootstrap.sh --prefix=`pwd`/build && ./b2 --prefix=`pwd`/build --with-graph install
+	cd boost && ./b2 --prefix=`pwd`/build --with-graph install && cd ..
 	@printf "Done.\n$(SEP)\n"
 	@printf "$(SEP)\n Compile Gecode\n$(SEP)\n"
-	cd gecode && git checkout 1e8c55c && ./configure && $(DOMAKE) && cd ..
+	cd gecode && $(DOMAKE) && cd ..
 	@printf "Done.\n$(SEP)\n"
 	@$(MAKE) -C ./src
 
-download: gecode boost libxml2
+download: boost
+
+libxml2/Makefile: libxml2
+	@if [ ! -f "./libxml2/Makefile" ]; then\
+		cd libxml2 && sh autogen.sh --prefix=`pwd`/build;\
+  fi
 
 libxml2:
 	@printf "$(SEP)\n Libxml (2)\n$(SEP)\n"
 	@printf "Downloading from git...\n"
-	# git clone https://github.com/GNOME/libxml2
+	git clone https://github.com/GNOME/libxml2
+	cd libxml2 && git checkout f8a8c1f
 	@printf "Done.\n$(SEP)\n"
+
+boost/b2: boost
+	@if [ ! -f "./boost/b2" ]; then\
+		cd boost && ./bootstrap.sh --prefix=`pwd`/build;\
+  fi
 
 boost:
 	@printf "$(SEP)\n Boost\n$(SEP)\n"
@@ -79,11 +88,16 @@ boost:
 	# cd boost && ./bootstrap.sh --prefix=`pwd`/build && ./b2 --prefix=`pwd`/build --with-graph install
 	@printf "Done.\n$(SEP)\n"
 
+gecode/Makefile: gecode
+	@if [ ! -f "./gecode/Makefile" ]; then\
+		cd gecode && ./configure;\
+  fi
+
 gecode:
 	@printf "$(SEP)\n Gecode\n$(SEP)\n"
 	@printf "Downloading from git and compiling right version...\n"
 	git clone https://github.com/Gecode/gecode
-	# cd gecode && git checkout 1e8c55c && ./configure && $(DOMAKE) && cd ..
+	cd gecode && git checkout 1e8c55c
 	@printf "Done.\n$(SEP)\n"
 
 distclean:
