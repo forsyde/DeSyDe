@@ -160,3 +160,101 @@ The applications here are SDF descriptions of Sobel and of Susan as follows:
         |  putLm  |
         +---------+
     ```
+
+So, if we want to write a file `applications.xml`, we can start by adding the actors with ports and then connecting
+everything with channels. This is the content of the file:
+
+    <?xml version="1.0"?>
+    <sdf3 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.0" type="sdf" xsi:noNamespaceSchemaLocation="http://www.es.ele.tue.nl/sdf3/xsd/sdf3-sdf.xsd">
+      <applicationGraph name="a_sobel">
+        <sdf name="a_sobel" type="SOBEL">
+          <actor name="get_pixel" type="getPixel">
+            <port name="p0_0" type="out" rate="1"/>
+            <port name="p0_1" type="out" rate="1"/>
+            <port name="p0_2" type="out" rate="1"/>
+            <port name="p0_3" type="out" rate="1"/>
+            <port name="p0_4" type="out" rate="1"/>
+            <port name="p0_5" type="out" rate="1"/>
+            <port name="p1_0" type="out" rate="1"/>
+            <port name="p1_1" type="out" rate="1"/>
+            <port name="p1_2" type="out" rate="1"/>
+            <port name="p1_3" type="out" rate="1"/>
+            <port name="p1_4" type="out" rate="1"/>
+            <port name="p1_5" type="out" rate="1"/>
+          </actor>
+          <actor name="gx" type="GX">
+            <port name="p0_0" type="in" rate="1"/>
+            <port name="p0_1" type="in" rate="1"/>
+            <port name="p0_2" type="in" rate="1"/>
+            <port name="p0_3" type="in" rate="1"/>
+            <port name="p0_4" type="in" rate="1"/>
+            <port name="p0_5" type="in" rate="1"/>
+            <port name="p1_0" type="out" rate="1"/>
+          </actor>
+          <actor name="gy" type="GY">
+            <port name="p0_0" type="in" rate="1"/>
+            <port name="p0_1" type="in" rate="1"/>
+            <port name="p0_2" type="in" rate="1"/>
+            <port name="p0_3" type="in" rate="1"/>
+            <port name="p0_4" type="in" rate="1"/>
+            <port name="p0_5" type="in" rate="1"/>
+            <port name="p1_0" type="out" rate="1"/>
+          </actor>
+          <actor name="abs" type="ABS">
+            <port name="p0_0" type="in" rate="1"/>
+            <port name="p1_0" type="in" rate="1"/>
+          </actor>
+          <channel name="chSo1_0" srcActor="get_pixel" srcPort="p0_0" dstActor="gx" dstPort="p0_0"/>
+          <channel name="chSo1_1" srcActor="get_pixel" srcPort="p0_1" dstActor="gx" dstPort="p0_1"/>
+          <channel name="chSo1_2" srcActor="get_pixel" srcPort="p0_2" dstActor="gx" dstPort="p0_2"/>
+          <channel name="chSo1_3" srcActor="get_pixel" srcPort="p0_3" dstActor="gx" dstPort="p0_3"/>
+          <channel name="chSo1_4" srcActor="get_pixel" srcPort="p0_4" dstActor="gx" dstPort="p0_4"/>
+          <channel name="chSo1_5" srcActor="get_pixel" srcPort="p0_5" dstActor="gx" dstPort="p0_5"/>
+          <channel name="chSo2_0" srcActor="get_pixel" srcPort="p1_0" dstActor="gy" dstPort="p0_0"/>
+          <channel name="chSo2_1" srcActor="get_pixel" srcPort="p1_1" dstActor="gy" dstPort="p0_1"/>
+          <channel name="chSo2_2" srcActor="get_pixel" srcPort="p1_2" dstActor="gy" dstPort="p0_2"/>
+          <channel name="chSo2_3" srcActor="get_pixel" srcPort="p1_3" dstActor="gy" dstPort="p0_3"/>
+          <channel name="chSo2_4" srcActor="get_pixel" srcPort="p1_4" dstActor="gy" dstPort="p0_4"/>
+          <channel name="chSo2_5" srcActor="get_pixel" srcPort="p1_5" dstActor="gy" dstPort="p0_5"/>
+          <channel name="chSo3_0" srcActor="gx" srcPort="p1_0" dstActor="abs" dstPort="p0_0"/>
+          <channel name="chSo4_0" srcActor="gy" srcPort="p1_0" dstActor="abs" dstPort="p1_0"/>
+        </sdf>
+        <sdf name="b_susan" type="SUSAN">
+          <actor name="getImage" type="GI">
+            <port name="p0_0" type="out" rate="1"/>
+          </actor>
+          <actor name="usan" type="USAN">
+            <port name="p0_0" type="in" rate="1"/>
+            <port name="p0_1" type="out" rate="1"/>
+            <port name="p0_2" type="out" rate="1"/>
+          </actor>
+          <actor name="direction" type="DIR">
+            <port name="p0_0" type="in" rate="1"/>
+            <port name="p0_1" type="in" rate="1"/>
+            <port name="p0_2" type="out" rate="1"/>
+            <port name="p0_3" type="out" rate="1"/>
+            <port name="p0_4" type="out" rate="1"/>
+          </actor>
+          <actor name="thin" type="THIN">
+            <port name="p0_0" type="in" rate="1"/>
+            <port name="p0_1" type="in" rate="1"/>
+            <port name="p0_2" type="in" rate="1"/>
+            <port name="p0_3" type="out" rate="1"/>
+            <port name="p0_4" type="out" rate="1"/>
+          </actor>
+          <actor name="putImage" type="PI">
+            <port name="p0_0" type="in" rate="1"/>
+            <port name="p0_1" type="in" rate="1"/>
+          </actor>
+          <channel name="chSu0_0" srcActor="getImage" srcPort="p0_0" dstActor="usan" dstPort="p0_0"/>
+          <channel name="chSu0_1" srcActor="usan" srcPort="p0_1" dstActor="direction" dstPort="p0_0"/>
+          <channel name="chSu0_2" srcActor="usan" srcPort="p0_2" dstActor="direction" dstPort="p0_1"/>
+          <channel name="chSu0_3" srcActor="direction" srcPort="p0_2" dstActor="thin" dstPort="p0_0"/>
+          <channel name="chSu0_4" srcActor="direction" srcPort="p0_3" dstActor="thin" dstPort="p0_1"/>
+          <channel name="chSu0_5" srcActor="direction" srcPort="p0_4" dstActor="thin" dstPort="p0_2"/>
+          <channel name="chSu0_6" srcActor="thin" srcPort="p0_3" dstActor="putImage" dstPort="p0_0"/>
+          <channel name="chSu0_7" srcActor="thin" srcPort="p0_4" dstActor="putImage" dstPort="p0_1"/>
+        </sdf>
+      </applicationGraph>
+    </sdf3>
+
