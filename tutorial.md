@@ -90,19 +90,69 @@ We shall model two applications that must be run on the platform of our choice b
 in two different ways: in a single file with both applications and with each one in its own file. We'll start with
 the single file approach.
 
-The applications here will a SDF description of Sobel and of Susan as follows:
+The applications here are SDF descriptions of Sobel and of Susan as follows:
+
+* Dot File:
+    digraph {
+      getPx -> gx[label="6 -> 6"];
+      getPx -> gy[label="6 -> 6"];
+      gx -> abs[label="1 -> 1"];
+      gy -> abs[label="1 -> 1"];
+    }
+
+    digraph {
+      getLm -> usan[label="1 -> 1"];
+      usan -> dir[label="1 -> 1"];
+      dir -> thin[label="1 -> 1"];
+      thin -> putLm[label="1 -> 1"];
+    }
+
+* Visual ASCII representation:
 
     Sobel:
-              6 gx 1
-            >        \
-           /          >
-          6            1
-    getPx                abs
-          6            1
-           \          >
-            >        /
-              6 gy 1
+
+    +----+  6 -> 6   +---------+
+    | gy | <-------- |  getPx  |
+    +----+           +---------+
+      |                |
+      |                | 6 -> 6
+      |                v
+      |              +---------+
+      |              |   gx    |
+      |              +---------+
+      |                |
+      |                | 1 -> 1
+      |                v
+      |    1 -> 1    +---------+
+      +------------> |   abs   |
+                    +---------+
 
     Susan:
    
-    getLm 1 -> 1 usan 2 -> 2 dir 3 -> 3 thin 2 -> 2 putLm
+    +---------+
+    |  getLm  |
+    +---------+
+      |
+      | 1 -> 1
+      v
+    +---------+
+    |  usan   |
+    +---------+
+      |
+      | 1 -> 1
+      v
+    +---------+
+    |   dir   |
+    +---------+
+      |
+      | 1 -> 1
+      v
+    +---------+
+    |  thin   |
+    +---------+
+      |
+      | 1 -> 1
+      v
+    +---------+
+    |  putLm  |
+    +---------+
