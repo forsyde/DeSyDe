@@ -1,11 +1,4 @@
-# Setting up an exploration problem
-
-What we need is a description of the platform that the system is going to be mapped into, the execution
-and communication times of the SDF actors on each mapped processor so the DSE solver can reason about it and
-optionally some constraints that the solution must obey. In terms of input, we then need four different files:
-
-  1. `platform.xml` which describes the platform being mapped.
-  2. `applications.xml`, `application1.xml`, `application2.xml`, etc that describes the applications being mapped.
+mapped.
   The applications can be separated in different files if desired, as DeSyDe read all SDF3 xmls given and build ups
   a model via the union of the provided applications.
   3. `WCETs.xml` which describes the worst case scenario execution time for any actor in any
