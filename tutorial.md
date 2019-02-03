@@ -342,3 +342,19 @@ the file `WCET.xml` would look like for our ongoing example:
 
 Note that the important attribute to be described is rather the WCET of each task in each processor and mode pair. Once this file is written
 with meaningful WCETs DeSyDe can be run in the directory that contains these files and specifically in which `config.cfg` is present.
+Also observe that there is no particular unit attached to the execution times provided, as long a they make sense in the overall problem solution;
+e.g. they can be clock cycles, microseconds, nanoseconds etc.
+
+### Constraints
+
+Optionally, global constraints such as throughput and latency can be specified for each of the application sets in a file `desConst.xml` as follows:
+
+
+    <?xml version="1.0" encoding="UTF-8"?>
+    <designConstraints>
+        <constraint app_name="a_sobel" period="690" latency="8000"></constraint> 
+        <constraint app_name="b_susan" period="1350" latency="8000"></constraint> 
+    </designConstraints>
+
+where the `period` attribute refers to the throughput calculated for that application is the total time for the very first token to be
+produced by that same application.
