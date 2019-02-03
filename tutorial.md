@@ -286,3 +286,10 @@ tags `sdf3` and `applicationGraph`, and DeSyDe will interpolate these into the f
           </sdf>
         </applicationGraph>
       </sdf3>
+
+Then in the `config.cgf` we add an additional line to instruct DeSyDe in where to find these files we just wrote:
+
+    inputs=template/sdfs/
+    inputs=template/xmls/
+    
+There can be as many `inputs` directives as necessary in the configuration file, DeSyDe simply scans through all of them.
