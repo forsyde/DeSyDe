@@ -1,13 +1,4 @@
-f reading a conf. File so
-that these tweaks are parsed in the same manner as if they were given at the CLI. Thus, issue the following
-command so that the binary can give an empty configuration file named `config.cfg`:
-
-    adse --dump-cfg
-    
-Once all the configuration aspects are set up, running DeSyDe in that experiment is a matter of invoking `adse`
-in the experiment/example folder.
-
-## Setting up an exploration problem
+# Setting up an exploration problem
 
 What we need is a description of the platform that the system is going to be mapped into, the execution
 and communication times of the SDF actors on each mapped processor so the DSE solver can reason about it and
@@ -23,7 +14,7 @@ optionally some constraints that the solution must obey. In terms of input, we t
 
 We will write these files in the order provided, starting with the platform.
 
-### Platform
+## Platform
 
 The knobs available for now are the processor types and size of the overall platform. For instance, checkout the
 following `xml` platform description file and let us build upon it:
@@ -71,7 +62,7 @@ the routing algorithm to be used, the flit size, TDN slots as `cycles` and the m
 the `link` terminology in the mode specification represents how much of that number is applied to each real
 interconnect link, e.g. a 2 x 2 grid has 4 links.
 
-### Applications
+## Applications
 
 We shall model two applications that must be run on the platform of our choice before and just for fun we'll do it
 in two different ways: in a single file with both applications and with each one in its own file. We'll start with
@@ -281,7 +272,7 @@ Then in the `config.cgf` we add an additional line to instruct DeSyDe in where t
     
 There can be as many `inputs` directives as necessary in the configuration file, DeSyDe simply scans through all of them.
 
-### Execution timing
+## Execution timing
 
 After declaring the platform and the application set, the last necessary bundle of information that DeSyDe needs is
 the execution time for the application set in the described platform, otherwise it is impossible to reason
@@ -345,7 +336,7 @@ with meaningful WCETs DeSyDe can be run in the directory that contains these fil
 Also observe that there is no particular unit attached to the execution times provided, as long a they make sense in the overall problem solution;
 e.g. they can be clock cycles, microseconds, nanoseconds etc.
 
-### Constraints
+## Constraints
 
 Optionally, global constraints such as throughput and latency can be specified for each of the application sets in a file `desConst.xml` as follows:
 
