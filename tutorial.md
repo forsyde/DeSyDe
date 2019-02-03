@@ -1,17 +1,4 @@
-# Tutorial
-
-## CLI Invocation
-
-This short tutorial will guide you through testing a small SDF application on a TDN NoC frabic as discussed
-on the 2018 paper -MUST REFER LATER-.
-
-First, make sure that you have DeSyDe installed and that it is callable in your system in someway. Now,
-if you issue in your command line:
-
-    adse --help
-    
-You will see that there are quite a handful of options to tweak the exploration. Fortunately you don't have to
-specify these knobs on the invocation everytime! DeSyDe also provides the option of reading a conf. File so
+f reading a conf. File so
 that these tweaks are parsed in the same manner as if they were given at the CLI. Thus, issue the following
 command so that the binary can give an empty configuration file named `config.cfg`:
 
@@ -30,8 +17,8 @@ optionally some constraints that the solution must obey. In terms of input, we t
   2. `applications.xml`, `application1.xml`, `application2.xml`, etc that describes the applications being mapped.
   The applications can be separated in different files if desired, as DeSyDe read all SDF3 xmls given and build ups
   a model via the union of the provided applications.
-  3. `desConst.xml` which describes the extra functional constraints of the final design.
-  4. `WCETs.xml` which describes the worst case scenario execution time for any actor in any
+  3. `WCETs.xml` which describes the worst case scenario execution time for any actor in any
+  4. `desConst.xml` which describes the extra functional constraints of the final design.
   processor.
 
 We will write these files in the order provided, starting with the platform.
@@ -282,7 +269,7 @@ tags `sdf3` and `applicationGraph`, and DeSyDe will interpolate these into the f
       <?xml version="1.0"?>
       <sdf3 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.0" type="sdf" xsi:noNamespaceSchemaLocation="http://www.es.ele.tue.nl/sdf3/xsd/sdf3-sdf.xsd">
         <applicationGraph name="susan">
-          <sdf name="susan" type="SUSAN">
+          <sdf name="b_susan" type="SUSAN">
           ...
           </sdf>
         </applicationGraph>
@@ -290,7 +277,68 @@ tags `sdf3` and `applicationGraph`, and DeSyDe will interpolate these into the f
 
 Then in the `config.cgf` we add an additional line to instruct DeSyDe in where to find these files we just wrote:
 
-    inputs=template/sdfs/
-    inputs=template/xmls/
+    inputs=/path/to/root/of/xmls/relative/to/config
     
 There can be as many `inputs` directives as necessary in the configuration file, DeSyDe simply scans through all of them.
+
+### Execution timing
+
+After declaring the platform and the application set, the last necessary bundle of information that DeSyDe needs is
+the execution time for the application set in the described platform, otherwise it is impossible to reason
+the static order of execution that happens in the model.
+
+Unlike application specification, the execution times must be given in the same file. For instance, this is how
+the file `WCET.xml` would look like for our ongoing example:
+
+    <WCET_table>
+    <!-- SOBEL -->
+        <mapping task_type="get_pixel">
+            <wcet processor="simple" mode="default" wcet="320"/>
+            <wcet processor="powerfull" mode="default" wcet="224"/>
+            <wcet processor="powerfull" mode="eco" wcet="288"/>
+        </mapping>
+        <mapping task_type="gx">
+            <wcet processor="simple" mode="default" wcet="77"/>
+            <wcet processor="powerfull" mode="default" wcet="54"/>
+            <wcet processor="powerfull" mode="eco" wcet="69"/>
+        </mapping>
+        <mapping task_type="gy">
+            <wcet processor="simple" mode="default" wcet="77"/>
+            <wcet processor="powerfull" mode="default" wcet="54"/>
+            <wcet processor="powerfull" mode="eco" wcet="69"/>
+        </mapping>
+        <mapping task_type="abs">
+            <wcet processor="simple" mode="default" wcet="123"/>
+            <wcet processor="powerfull" mode="default" wcet="86"/>
+            <wcet processor="powerfull" mode="eco" wcet="111"/>
+        </mapping>
+    <!--SUSAN -->
+        <mapping task_type="getImage">
+            <wcet processor="simple" mode="default" wcet="15"/>
+            <wcet processor="powerfull" mode="default" wcet="10"/>
+            <wcet processor="powerfull" mode="eco" wcet="13"/>
+        </mapping>
+        <mapping task_type="usan">
+            <wcet processor="simple" mode="default" wcet="1177"/>
+            <wcet processor="powerfull" mode="default" wcet="824"/>
+            <wcet processor="powerfull" mode="eco" wcet="1059"/>
+        </mapping>
+        <mapping task_type="direction">
+            <wcet processor="simple" mode="default" wcet="833"/>
+            <wcet processor="powerfull" mode="default" wcet="583"/>
+            <wcet processor="powerfull" mode="eco" wcet="750"/>
+        </mapping>
+        <mapping task_type="thin">
+            <wcet processor="simple" mode="default" wcet="32"/>
+            <wcet processor="powerfull" mode="default" wcet="22"/>
+            <wcet processor="powerfull" mode="eco" wcet="29"/>
+        </mapping>
+        <mapping task_type="putImage">
+            <wcet processor="simple" mode="default" wcet="15"/>
+            <wcet processor="powerfull" mode="default" wcet="10"/>
+            <wcet processor="powerfull" mode="eco" wcet="13"/>
+        </mapping>
+    </WCET_table>
+
+Note that the important attribute to be described is rather the WCET of each task in each processor and mode pair. Once this file is written
+with meaningful WCETs DeSyDe can be run in the directory that contains these files and specifically in which `config.cfg` is present.
