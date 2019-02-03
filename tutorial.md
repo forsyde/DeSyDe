@@ -93,19 +93,20 @@ the single file approach.
 The applications here are SDF descriptions of Sobel and of Susan as follows:
 
 * Dot File:
-    digraph {
-      getPx -> gx[label="6 -> 6"];
-      getPx -> gy[label="6 -> 6"];
-      gx -> abs[label="1 -> 1"];
-      gy -> abs[label="1 -> 1"];
-    }
 
-    digraph {
-      getLm -> usan[label="1 -> 1"];
-      usan -> dir[label="1 -> 1"];
-      dir -> thin[label="1 -> 1"];
-      thin -> putLm[label="1 -> 1"];
-    }
+      digraph {
+        getPx -> gx[label="6 -> 6"];
+        getPx -> gy[label="6 -> 6"];
+        gx -> abs[label="1 -> 1"];
+        gy -> abs[label="1 -> 1"];
+      }
+
+      digraph {
+        getLm -> usan[label="1 -> 1"];
+        usan -> dir[label="1 -> 1"];
+        dir -> thin[label="1 -> 1"];
+        thin -> putLm[label="1 -> 1"];
+      }
 
 * Visual ASCII representation:
 
