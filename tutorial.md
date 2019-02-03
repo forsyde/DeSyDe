@@ -258,3 +258,31 @@ everything with channels. This is the content of the file:
       </applicationGraph>
     </sdf3>
 
+note that to transcribe a channel with non-homogeneous production and consumption token rates, it is necessary to declare multiple ports and connect
+then accordingly. In essence, a channel in the SDF3 format is reduce to a single port pair, so a channel on the pure SDF model correspond
+to many channels in the SDF3 description format.
+
+To make this same exact set of applications in different files, we just need to extract each `sdf` tag into its own file while maintaining the two parent
+tags `sdf3` and `applicationGraph`, and DeSyDe will interpolate these into the final true application graph to be solved. Like this:
+
+* sobel.xml:
+
+      <?xml version="1.0"?>
+      <sdf3 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.0" type="sdf" xsi:noNamespaceSchemaLocation="http://www.es.ele.tue.nl/sdf3/xsd/sdf3-sdf.xsd">
+        <applicationGraph name="sobel">
+          <sdf name="a_sobel" type="SOBEL">
+          ...
+          </sdf>
+        </applicationGraph>
+      </sdf3>
+
+* susan.xml:
+
+      <?xml version="1.0"?>
+      <sdf3 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.0" type="sdf" xsi:noNamespaceSchemaLocation="http://www.es.ele.tue.nl/sdf3/xsd/sdf3-sdf.xsd">
+        <applicationGraph name="susan">
+          <sdf name="susan" type="SUSAN">
+          ...
+          </sdf>
+        </applicationGraph>
+      </sdf3>
