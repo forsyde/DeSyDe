@@ -5,8 +5,8 @@ and communication times of the SDF actors on each mapped processor so the DSE so
 optionally some constraints that the solution must obey. In terms of input, we then need four different files:
 
   1. `platform.xml` which describes the platform being mapped.
-  2. `applications.xml`, `application1.xml`, `application2.xml`, etc that describes the applications being mapped.
-  The applications can be separated in different files if desired, as DeSyDe read all SDF3 xmls given and build ups
+  2. `application1.xml`, `application2.xml`, etc that describes the applications being mapped.
+  The applications needs to be separated in different files, as DeSyDe read all SDF3 xmls given and build ups
   a model via the union of the provided applications.
   3. `WCETs.xml` which describes the worst case scenario execution time for any actor in any
   4. `desConst.xml` which describes the extra functional constraints of the final design.
@@ -64,11 +64,8 @@ interconnect link, e.g. a 2 x 2 grid has 4 links.
 
 ## Applications
 
-We shall model two applications that must be run on the platform of our choice before and just for fun we'll do it
-in two different ways: in a single file with both applications and with each one in its own file. We'll start with
-the single file approach.
-
-The applications here are SDF descriptions of Sobel and of Susan as follows:
+We shall model two applications that must be run on the platform of our choice. Let's start with
+the Sobel and SUSAN applications. Their SDF descriptions of Sobel and of Susan as follows:
 
 * Dot File:
 
@@ -140,7 +137,7 @@ The applications here are SDF descriptions of Sobel and of Susan as follows:
         +---------+
     ```
 
-So, if we want to write a file `applications.xml`, we can start by adding the actors with ports and then connecting
+So, starting with Sobel, we want to write a file `sobel.xml` by adding the actors with ports and then connecting
 everything with channels. This is the content of the file:
 
     <?xml version="1.0"?>
@@ -198,6 +195,14 @@ everything with channels. This is the content of the file:
           <channel name="chSo3_0" srcActor="gx" srcPort="p1_0" dstActor="abs" dstPort="p0_0"/>
           <channel name="chSo4_0" srcActor="gy" srcPort="p1_0" dstActor="abs" dstPort="p1_0"/>
         </sdf>
+      </applicationGraph>
+    </sdf3>
+        
+The same would be made for a file name `susan.xml`: 
+
+    <?xml version="1.0"?>
+    <sdf3 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.0" type="sdf" xsi:noNamespaceSchemaLocation="http://www.es.ele.tue.nl/sdf3/xsd/sdf3-sdf.xsd">
+      <applicationGraph name="a_sobel">
         <sdf name="b_susan" type="SUSAN">
           <actor name="getImage" type="GI">
             <port name="p0_0" type="out" rate="1"/>
@@ -240,31 +245,6 @@ everything with channels. This is the content of the file:
 note that to transcribe a channel with non-homogeneous production and consumption token rates, it is necessary to declare multiple ports and connect
 then accordingly. In essence, a channel in the SDF3 format is reduce to a single port pair, so a channel on the pure SDF model correspond
 to many channels in the SDF3 description format.
-
-To make this same exact set of applications in different files, we just need to extract each `sdf` tag into its own file while maintaining the two parent
-tags `sdf3` and `applicationGraph`, and DeSyDe will interpolate these into the final true application graph to be solved. Like this:
-
-* sobel.xml:
-
-      <?xml version="1.0"?>
-      <sdf3 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.0" type="sdf" xsi:noNamespaceSchemaLocation="http://www.es.ele.tue.nl/sdf3/xsd/sdf3-sdf.xsd">
-        <applicationGraph name="sobel">
-          <sdf name="a_sobel" type="SOBEL">
-          ...
-          </sdf>
-        </applicationGraph>
-      </sdf3>
-
-* susan.xml:
-
-      <?xml version="1.0"?>
-      <sdf3 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.0" type="sdf" xsi:noNamespaceSchemaLocation="http://www.es.ele.tue.nl/sdf3/xsd/sdf3-sdf.xsd">
-        <applicationGraph name="susan">
-          <sdf name="b_susan" type="SUSAN">
-          ...
-          </sdf>
-        </applicationGraph>
-      </sdf3>
 
 Then in the `config.cgf` we add an additional line to instruct DeSyDe in where to find these files we just wrote:
 
@@ -349,3 +329,58 @@ Optionally, global constraints such as throughput and latency can be specified f
 
 where the `period` attribute refers to the throughput calculated for that application is the total time for the very first token to be
 produced by that same application.
+
+## Running and interpreting the output
+
+The simplest structure of a folder to contain both the inputs and outputs of the experiment will look like this:
+
+    exp-root
+    | - config.cfg       
+    | - platform.xml     
+    | - desConst.xml     
+    | - application1.xml 
+    | - application2.xml 
+    | - ...
+    | - applicationN.xml 
+    | - WCETs.xml         
+    | - out
+
+Note that the creation of the out folder is necessary as DeSyDe needs the output folder to have in itself a `out` folder
+to dump all results inside. Running the binary in this folder will produce a .txt file in the `out` folder after finishing
+the exploration. The command would be similar to:
+
+    exp-root$ /bin/path/adse 
+
+And the produced result file will have at least one solution like this (unless you configured it to output `NONE`):
+
+    *** Solution number: 33, after 52 ms, search nodes: 23, fail: 1, propagate: 61941, depth: 22, nogoods: 0, restarts: 0 ***
+    ----------------------------------------
+    Proc: {0, 1, 2, 3}
+    proc mode: {0, 0, 0, 0}
+    ic mode: 0
+    Period: {720}
+    Sys utilization: 1
+    ProcsUsed utilization: 1
+    sys power: 1134
+    sys power (only used parts): 1134
+    sys area: 188
+    sys area (only used parts): 188
+    sys cost: 200
+    sys cost (only used parts): 200
+    Next: 4 5 6 7 || 1 2 3 0 
+
+
+    Chosen routes: {4, 0, 0, 0, 0, 4, 0, 0, 2, 2, 4, 2, 2, 2, 2, 4}
+
+    TDN table: 
+    NI -> SW0: 0 _ _ _ 
+    NI -> SW1: 1 _ _ _ 
+    NI -> SW2: _ _ 2 _ 
+    NI -> SW3: _ _ 3 _ 
+    -------------------------------------------
+
+    Sending-order: {1, 2, 3, 16, 6, 4, 7, 17, 9, 11, 8, 18, 13, 14, 19, 12, 5, 10, 15, 0}
+    Receiving-order: {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 1, 2, 3, 0}
+    ----------------------------------------
+
+where there are 3 variables sets of major interest: `Proc` and `proc mode`, `Next` and `TDN table`. First, `Proc` describes 
