@@ -386,16 +386,19 @@ And the produced result file will have at least one solution like this (unless y
     ----------------------------------------
 
 where there are 3 variables sets of major interest: `Proc` and `proc mode`, `Next` and `TDN table`. 
+
 First, `Proc` describes in which processor the actors from the provided SDFs were mapped into,
 as counted in a name-description major order. For our example, since sobel.sdf.xml comes first than susan.sdf.xml,
 the first four actors are those from Sobel, as seen in their order of declaration
 in that file, while the same applies to susan in the remaining five actors. `proc mode` describes the chosen mode of
 operation for that given processor, also in the described order as seen in `platform.xml`.
+
 Second, `Next` describes the firing order for the actors of all applications. For this example,
 actor 1, `Sobel:get_pixel` is run before `Sobel:GX`, the 2nd actor, which is run before `Sobel:GY` the 3rd actor
 and finally `Sobel:ABS` is run before the order is lopped to the start of processor 0's schedule, as the number 9
 is the first index for the processors, since we have 9 actors altogether (index 9 - actors 9 = processor 0). The
 same logic applies to the other 5 actors which loop independently on processor 1.
+
 Third and last, the `TDN Table` is empty since no connection was necessary as the applications were able
 to be executed into separated processors successfully, otherwise there would be processor indexes into the
 empty slots `_` like `1` or `5`.
