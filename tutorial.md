@@ -142,8 +142,8 @@ everything with channels. This is the content of the file:
 
     <?xml version="1.0"?>
     <sdf3 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.0" type="sdf" xsi:noNamespaceSchemaLocation="http://www.es.ele.tue.nl/sdf3/xsd/sdf3-sdf.xsd">
-      <applicationGraph name="a_sobel">
-        <sdf name="a_sobel" type="SOBEL">
+      <applicationGraph name="sobel">
+        <sdf name="sobel" type="SOBEL">
           <actor name="get_pixel" type="getPixel">
             <port name="p0_0" type="out" rate="1"/>
             <port name="p0_1" type="out" rate="1"/>
@@ -202,8 +202,8 @@ The same would be made for a file name `susan.xml`:
 
     <?xml version="1.0"?>
     <sdf3 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.0" type="sdf" xsi:noNamespaceSchemaLocation="http://www.es.ele.tue.nl/sdf3/xsd/sdf3-sdf.xsd">
-      <applicationGraph name="a_sobel">
-        <sdf name="b_susan" type="SUSAN">
+      <applicationGraph name="susan">
+        <sdf name="susan" type="SUSAN">
           <actor name="getImage" type="GI">
             <port name="p0_0" type="out" rate="1"/>
           </actor>
@@ -320,11 +320,10 @@ e.g. they can be clock cycles, microseconds, nanoseconds etc.
 
 Optionally, global constraints such as throughput and latency can be specified for each of the application sets in a file `desConst.xml` as follows:
 
-
     <?xml version="1.0" encoding="UTF-8"?>
     <designConstraints>
-        <constraint app_name="a_sobel" period="690" latency="8000"></constraint> 
-        <constraint app_name="b_susan" period="1350" latency="8000"></constraint> 
+      <constraint app_name="sobel" period="2290" latency="9000"></constraint>
+      <constraint app_name="susan" period="2850" latency="9000"></constraint>
     </designConstraints>
 
 where the `period` attribute refers to the throughput calculated for that application is the total time for the very first token to be
@@ -353,34 +352,43 @@ the exploration. The command would be similar to:
 
 And the produced result file will have at least one solution like this (unless you configured it to output `NONE`):
 
-    *** Solution number: 33, after 52 ms, search nodes: 23, fail: 1, propagate: 61941, depth: 22, nogoods: 0, restarts: 0 ***
+
+    *** Solution number: 1, after 128 ms, search nodes: 196, fail: 90, propagate: 3923513, depth: 11, nogoods: 0, restarts: 1 ***
     ----------------------------------------
-    Proc: {0, 1, 2, 3}
-    proc mode: {0, 0, 0, 0}
+    Proc: {0, 0, 0, 0, 1, 1, 1, 1, 1}
+    proc mode: {0, 0, 0, 0, 0, 0}
     ic mode: 0
-    Period: {720}
-    Sys utilization: 1
-    ProcsUsed utilization: 1
-    sys power: 1134
-    sys power (only used parts): 1134
-    sys area: 188
-    sys area (only used parts): 188
-    sys cost: 200
-    sys cost (only used parts): 200
-    Next: 4 5 6 7 || 1 2 3 0 
+    Period: {597, 2072}
+    Sys utilization: 33
+    ProcsUsed utilization: 100
+    sys power: 2322
+    sys power (only used parts): 2062
+    sys area: 294
+    sys area (only used parts): 50
+    sys cost: 306
+    sys cost (only used parts): 50
+    Next: 1 2 3 9 5 6 7 8 10 || 4 11 12 13 14 0 
 
 
-    Chosen routes: {4, 0, 0, 0, 0, 4, 0, 0, 2, 2, 4, 2, 2, 2, 2, 4}
+    Chosen routes: {6, 6, 6, 6, 6, 6, 6, 6}
 
     TDN table: 
-    NI -> SW0: 0 _ _ _ 
-    NI -> SW1: 1 _ _ _ 
-    NI -> SW2: _ _ 2 _ 
-    NI -> SW3: _ _ 3 _ 
+    NI -> SW0: _ _ _ _ _ _ 
+    NI -> SW1: _ _ _ _ _ _ 
+    NI -> SW2: _ _ _ _ _ _ 
+    NI -> SW3: _ _ _ _ _ _ 
+    NI -> SW4: _ _ _ _ _ _ 
+    NI -> SW5: _ _ _ _ _ _ 
     -------------------------------------------
 
-    Sending-order: {1, 2, 3, 16, 6, 4, 7, 17, 9, 11, 8, 18, 13, 14, 19, 12, 5, 10, 15, 0}
-    Receiving-order: {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 1, 2, 3, 0}
+    Sending-order: {1, 2, 3, 8, 5, 6, 7, 9, 4, 10, 11, 12, 13, 0}
+    Receiving-order: {1, 2, 3, 8, 5, 6, 7, 9, 4, 10, 11, 12, 13, 0}
     ----------------------------------------
 
-where there are 3 variables sets of major interest: `Proc` and `proc mode`, `Next` and `TDN table`. First, `Proc` describes 
+where there are 3 variables sets of major interest: `Proc` and `proc mode`, `Next` and `TDN table`. 
+First, `Proc` describes in which processor the actors from the provided SDFs were mapped into,
+as counted in a name-description major order. For our example, since sobel.sdf.xml comes first than susan.sdf.xml,
+the first four actors are those from Sobel, as seen in their order of declaration
+in that file, while the same applies to susan in the remaining five actors. `proc mode` describes the chosen mode of
+operation for that given processor, also in the described order as seen in `platform.xml`.
+Second, `Next` describes the firing order for the actors
