@@ -2,15 +2,14 @@
 
 What we need is a description of the platform that the system is going to be mapped into, the execution
 and communication times of the SDF actors on each mapped processor so the DSE solver can reason about it and
-optionally some constraints that the solution must obey. In terms of input, we then need four different files:
+optionally some constraints that the solution must obey. In terms of input, we then need at least three different files:
 
   1. `platform.xml` which describes the platform being mapped.
   2. `application1.xml`, `application2.xml`, etc that describes the applications being mapped.
   The applications needs to be separated in different files, as DeSyDe read all SDF3 xmls given and build ups
   a model via the union of the provided applications.
-  3. `WCETs.xml` which describes the worst case scenario execution time for any actor in any
-  4. `desConst.xml` which describes the extra functional constraints of the final design.
-  processor.
+  3. `WCETs.xml` which describes the worst case scenario execution time for any actor in any processor.
+  4. `desConst.xml` which describes the extra functional constraints of the final design. (Optional)
 
 We will write these files in the order provided, starting with the platform.
 
@@ -21,7 +20,7 @@ following `xml` platform description file and let us build upon it:
 
     <?xml version="1.0" encoding="UTF-8"?>
     <platform name="demo_platform">
-        <processor model="simple" number="3">	
+        <processor model="simple" number="5">	
             <mode name="default" cycle="1" mem="8000" dynPower="10" staticPower="10" area="4" monetary="4"/>
         </processor>
         <processor model="powerful" number="1">	
@@ -29,7 +28,7 @@ following `xml` platform description file and let us build upon it:
             <mode name="default" cycle="1" mem="30000" dynPower="15" staticPower="15" area="8" monetary="20"/>
         </processor>
         <interconnect>
-            <TDN_NoC name="2x2TDN" topology="mesh" x-dimension="2" y-dimension="2" routing="Y-X" 
+            <TDN_NoC name="2x2TDN" topology="mesh" x-dimension="3" y-dimension="2" routing="Y-X" 
                     flitSize="128" cycles="6" maxCyclesPerProc="1">
               <mode name="default" cycleLength="10" 
                     dynPower_link="7" dynPower_NI="7" dynPower_switch="7" 
@@ -45,9 +44,9 @@ following `xml` platform description file and let us build upon it:
         </interconnect>
     </platform>
 
-Aside from the header, we starting reading the description from the processor listings. The
+Aside from the header, we start reading the description from the processor listings. The
 first processor declaration has a name of `simple` to symbolize that it is a simple and cheap processor,
-with a number of `3` to indicate that there are 3 processors of this kind in the platform. 
+with a number of `5` to indicate that there are 5 processors of this kind in the platform. 
 The second has a name of `powerful` to symbolize the opposite. A glance at their children declaration reveals
 that we also must specify at least one mode, while the name `default` was used simply by convention. The
 mode that the processor can operate will give its memory, speed, power, area and monetary characteristics so
@@ -60,12 +59,12 @@ so that DeSyDe can choose which mode, if the choice exists, should be used for t
 is that some additional tags exists for the interconnection, such as the dimensions of the mesh (the only available topology for now),
 the routing algorithm to be used, the flit size, TDN slots as `cycles` and the maximum number of TDN Slots per Processor.
 the `link` terminology in the mode specification represents how much of that number is applied to each real
-interconnect link, e.g. a 2 x 2 grid has 4 links.
+interconnect link, e.g. a 3 x 2 grid has 6 links.
 
 ## Applications
 
 We shall model two applications that must be run on the platform of our choice. Let's start with
-the Sobel and SUSAN applications. Their SDF descriptions of Sobel and of Susan as follows:
+the Sobel and SUSAN applications. Their SDF descriptions as follows:
 
 * Dot File:
 
@@ -198,7 +197,7 @@ everything with channels. This is the content of the file:
       </applicationGraph>
     </sdf3>
         
-The same would be made for a file name `susan.xml`: 
+The same would applies for a file named `susan.xml`: 
 
     <?xml version="1.0"?>
     <sdf3 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.0" type="sdf" xsi:noNamespaceSchemaLocation="http://www.es.ele.tue.nl/sdf3/xsd/sdf3-sdf.xsd">
@@ -259,7 +258,7 @@ the execution time for the application set in the described platform, otherwise 
 the static order of execution that happens in the model.
 
 Unlike application specification, the execution times must be given in the same file. For instance, this is how
-the file `WCET.xml` would look like for our ongoing example:
+the file `WCETs.xml` would look like for our ongoing example:
 
     <WCET_table>
     <!-- SOBEL -->
@@ -335,20 +334,22 @@ The simplest structure of a folder to contain both the inputs and outputs of the
 
     exp-root
     | - config.cfg       
-    | - platform.xml     
-    | - desConst.xml     
-    | - application1.xml 
-    | - application2.xml 
-    | - ...
-    | - applicationN.xml 
-    | - WCETs.xml         
+    | - sdfs
+        | - application1.xml 
+        | - application2.xml 
+        | - ...
+        | - applicationN.xml 
+    | - xmls
+        | - platform.xml     
+        | - desConst.xml     
+        | - WCETs.xml        
     | - out
 
 Note that the creation of the out folder is necessary as DeSyDe needs the output folder to have in itself a `out` folder
 to dump all results inside. Running the binary in this folder will produce a .txt file in the `out` folder after finishing
 the exploration. The command would be similar to:
 
-    exp-root$ /bin/path/adse 
+    exp-root $ /bin/path/adse 
 
 And the produced result file will have at least one solution like this (unless you configured it to output `NONE`):
 
