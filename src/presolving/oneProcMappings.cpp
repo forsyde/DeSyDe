@@ -6,7 +6,8 @@ OneProcModel::OneProcModel(Mapping* p_mapping, Config& cfg):
     mapping(p_mapping),
     settings(cfg),
     proc(*this, apps->n_SDFApps(), 0, platform->nodes()-1),
-    proc_mode(*this, platform->nodes(), 0, platform->getMaxModes()) {
+    proc_mode(*this, platform->nodes(), 0, platform->getMaxModes()),
+    noc_mode(*this, 0, platform->getInterconnectModes()-1) {
     
   cout << "Creating Model..." << endl;
   cout << "  Platform with " << platform->nodes() << " nodes is ";
@@ -74,6 +75,7 @@ OneProcModel::OneProcModel(Mapping* p_mapping, Config& cfg):
 //  cout << endl << "  Branching:" << endl;
   branch(*this, proc, INT_VAR_NONE(), INT_VAL_MIN());
   branch(*this, proc_mode, INT_VAR_NONE(), INT_VAL_MIN());
+  branch(*this, noc_mode, INT_VAL_MIN());
 }
   
 OneProcModel::OneProcModel(bool share, OneProcModel& s):
@@ -84,6 +86,7 @@ OneProcModel::OneProcModel(bool share, OneProcModel& s):
   settings(s.settings){
   proc.update(*this, share, s.proc);
   proc_mode.update(*this, share, s.proc_mode);
+  noc_mode.update(*this, share, s.noc_mode);
 }
   
 // Copies the space
@@ -95,18 +98,19 @@ Space* OneProcModel::copy(bool share){
 void OneProcModel::print(std::ostream& out) const{
   out << "Proc: " << proc << endl;
   out << "proc mode: " << proc_mode << endl;
+  out << "noc mode: " << noc_mode << endl;
 }
 
-vector<tuple<int,int>> OneProcModel::getResult() const{
-  vector<tuple<int,int>> result;
+tuple<int, vector<tuple<int,int>>> OneProcModel::getResult() const{
+  vector<tuple<int,int>> result_v;
   for(int i=0; i<proc.size(); i++){
     if(proc[i].assigned() && proc_mode[proc[i].val()].assigned()){
-      result.push_back(tuple<int,int>(proc[i].val(), proc_mode[proc[i].val()].val()));
+      result_v.push_back(tuple<int,int>(proc[i].val(), proc_mode[proc[i].val()].val()));
     }else{
       //throw some exception
     }
   }
-  
+  tuple<int, vector<tuple<int,int>>> result = tuple<int, vector<tuple<int,int>>>(noc_mode.val(), result_v);
   return result;
 }
 

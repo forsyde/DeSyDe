@@ -57,6 +57,7 @@ protected:
 public:
   Applications();
   ~Applications();
+  Applications(vector<SDFGraph*> _sdfApps, TaskSet* _iptApps);
   Applications(vector<SDFGraph*> _sdfApps, TaskSet* _iptApps, XMLdoc& xml);
   Applications(vector<SDFGraph*> _sdfApps, vector<DesignConstraints*> _desContr, TaskSet* _iptApps);
   Applications(vector<SDFGraph*> _sdfApps, vector<DesignConstraints*> _desContr);
@@ -83,6 +84,8 @@ public:
   size_t n_SDFParentActors();
   //get number of SDF firings
   size_t n_SDFActors();
+  //get number of SDF actors of specified graph
+  size_t n_SDFActorsOfApp(size_t app);
   //get number of SDF channels
   size_t n_SDFchannels();
   //get number of IPT tasks
@@ -91,6 +94,10 @@ public:
   size_t n_programEntities();
   //get total number of program channels
   size_t n_programChannels();
+  //get the id of the last channel of application app
+  size_t getMaxChannelId(size_t app) const;
+  //get id of the application that channel ch belongs to
+  size_t getAppIdForChannel(size_t ch) const;
   //Maximum code size of all program entities (firings + tasks)
   size_t getMaxCodeSize();
 
@@ -127,7 +134,7 @@ public:
   //get worst case execution cost of ipt tasks(-time depends on mapping)
   int getMaxWCET_IPT();
   //get bound on period for graph g_id from design constraints
-  int getPeriodBound(size_t g_id);
+//  int getPeriodBound(size_t g_id);
   //get constraint type on period, sat or opt
   SolutionMode getConstrType(size_t g_id);
 

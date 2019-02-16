@@ -38,6 +38,15 @@
 
 using namespace std;
 
+// 0 means "no constraint set"
+struct SystemConstraints{
+  int power;
+  int util;
+  int area;
+  int money;
+  int procsUsed;
+};
+
 
 /**
  * This class specifies a mapping.
@@ -48,6 +57,7 @@ protected:
 
   Applications* program;            /*!< Reference to the applications. */
   Platform* target;                 /*!< Reference to the target platform. */
+  SystemConstraints sysConstr;      /*!< Constraints on the system. */
   int n_apps;                       /*!< Number of applications in the mapping (=SDF apps + no. of tasks). */
   vector<vector<int>> mappingSched; /*!< The mapping, in form of a schedule of actors, for each processing element. */
   vector<vector<int>> commSched;    /*!< The order-based schedules for communication channels from each processor. */
@@ -84,6 +94,10 @@ protected:
       div_t.quot: index of the first proc for the application.
       div_t.rem: index of the last proc for the application. */
   vector<div_t> firstMapping;
+  
+  
+  vector<int> mappingRules_do; /*!< Designer-constrained mapping assignment for processors (if -1 -> none specified). */
+  vector<vector<int>> mappingRules_doNot; /*!< Designer-disallowed mapping for processors (if empty -> none specified). */
  
   //for maximum schedule length (transient + periodic phase)
   int maxScheduleLength;
@@ -110,17 +124,28 @@ protected:
 
   vector<int>  current_mapping; /*!< Used by validation class. */  
   vector<int>  current_modes;   /*!< Used by validation class. */  
+  
+  
+  void load_wcets(XMLdoc& xml);
+  bool isMappingRules(XMLdoc& xml);
+  void load_mappingRules(XMLdoc& xml);
+  bool isDesignConstraints(XMLdoc& xml);
+  void load_designConstraints(XMLdoc& xml);
+  void setMappingRules(string task, int _mapOn, vector<int> _notMapOn);
+  void setSystemConstraints(int, int, int, int, int);
 
 public:
 
-  int const max_utilization = 1000;
+  int const max_utilization = 100; //TODO: add to configuration
 
   Mapping() {};
+  Mapping(Applications*, Platform*);
   Mapping(Applications*, Platform*, XMLdoc&);
+  Mapping(Applications*, Platform*, XMLdoc&, XMLdoc&);
+  Mapping(Applications*, Platform*, XMLdoc&, XMLdoc&, XMLdoc&);
   //Mapping(Applications*, Platform*, vector<vector<int>>&, vector<int>&, vector<int>&, vector<vector<SDFChannel*>>&);
 
   ~Mapping();
-  void load_wcets(XMLdoc& xml);
   Applications* getApplications() const;
 
   Platform* getPlatform() const;
@@ -208,7 +233,7 @@ public:
     @param type of task.
     @param model of the proccessor
     @param wcets of tasktype on procType. */ 
-  void setWCETs(string taskType, string procModel, int _wcet);
+  void setWCETs(string taskType, string procModel, string procMode, int _wcet);
   /** The function parses the vectors read from the xml file and
     calls setWCETs(string taskType, string procModel, int _wcet); */ 
   void setWCETs(vector<char*> elements, vector<char*> values);
@@ -250,6 +275,15 @@ public:
   /** 
       Returns the actor ids in decending order of max WCETs (heaviest first). */
   vector<int> sortedByWCETs();
+  
+  /** Gets the designer-specified rules for mapping. */
+  vector<int> getMappingRules_do() const;
+  
+  /** Gets the designer-specified rules for mapping. */
+  vector<vector<int>> getMappingRules_doNot() const;
+  
+  /** Gets the designer-specified system constraints. */
+  SystemConstraints getSystemConstraints() const;
   
   void setFixedWCET(int id, int p_wcet);              /*!< Sets the WCET of the actor/task. */
   

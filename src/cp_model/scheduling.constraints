@@ -38,7 +38,7 @@
           //cout << apps->getName(ii) << " has initial tokens for " << apps->getName(ij) << endl;
           //then, ij must be scheduled before ii
           rel(*this, next[ii] != ij);
-          rel(*this, rank[ij] < rank[ii]);
+          //rel(*this, rank[ij] < rank[ii]);
         }
       }
       if(ii != ij){
@@ -63,8 +63,8 @@
         //this keeps the right order and reduces complexity
         if(apps->getSDFGraph(ii) == apps->getSDFGraph(ij)){
           if(apps->getParentActor(ii)==apps->getParentActor(ij) && ii<ij){
-            cout << "     same parent actor: " << apps->getName(ii) << " & " << apps->getName(ij);
-            cout << " (" << apps->getParentActor(ii) << ": "<< apps->getParentActorName(ii) << ")"<< endl;
+            LOG_DEBUG("     same parent actor: " + apps->getName(ii) + " & " + apps->getName(ij)
+                      + " (" + tools::toString(apps->getParentActor(ii)) + ": "+ apps->getParentActorName(ii) + ")");
             rel(*this, next[ij]!=ii);
             rel(*this, (proc[ii]==proc[ij]) >> (rank[ii]<rank[ij]));
           }
@@ -114,13 +114,13 @@
   //there must be at least one actor with rank=0
   count(*this, rank, 0, IRT_GQ, 1);
   
-  circuit(*this, next, ICL_DOM);
+  circuit(*this, next, IPL_DOM);
   
   //ordering of dummy nodes |A|...|A|+|P| 
   if(platform->nodes()>1){
     //...with emtpy processors
     for(size_t j=0; j<platform->nodes(); j++){
-      rel(*this, next[apps->n_SDFActors()+j]<=apps->n_SDFActors() || next[apps->n_SDFActors()+j]>apps->n_SDFActors()+j, ICL_DOM);
+      rel(*this, next[apps->n_SDFActors()+j]<apps->n_SDFActors() || next[apps->n_SDFActors()+j]>apps->n_SDFActors()+j, IPL_DOM);
 //      cout << "next["<<apps->n_SDFActors()+j<<"]<="<<apps->n_SDFActors() <<"||"<<" next["<<apps->n_SDFActors()+j<<"]>"<<apps->n_SDFActors()+j<<endl;
       //...with emtpy processors
       rel(*this, (nSDFAsOnProc[(j+1)%platform->nodes()]==0) == (next[apps->n_SDFActors()+j]==apps->n_SDFActors()+((j+1)%platform->nodes())));
@@ -134,20 +134,3 @@
 
 // *** CONSTRAINTS FORCING THE DESIGN DECISIONS ***
 
-//testing a solution
-//rel(*this, procsUsed>1);
-//rel(*this, (procsUsed==2) >> (next[10]>next[11]));
-/*rel(*this, proc[0]==0);
-rel(*this, proc[1]==0);
-rel(*this, proc[2]==1);
-rel(*this, proc[3]==2);
-rel(*this, proc[4]==3);
-rel(*this, proc[5]==4);
-rel(*this, proc[6]==4);
-rel(*this, proc[7]==1);
-rel(*this, proc[8]==0);
-rel(*this, proc[9]==1);
-rel(*this, proc[10]==1);*/
-/*rel(*this, next[0]==7);
-rel(*this, next[1]==4);
-rel(*this, next[13]==20);*/

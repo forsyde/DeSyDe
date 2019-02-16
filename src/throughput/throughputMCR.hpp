@@ -81,8 +81,8 @@ private:
 protected:
   ViewArray<IntView> latency; //resulting initial latency
   ViewArray<IntView> period; //resulting period
-  ViewArray<IntView> iterations; //resulting min/max iterations for actors
-  ViewArray<IntView> iterationsCh; //resulting min/max iterations for channels
+  //ViewArray<IntView> iterations; //resulting min/max iterations for actors
+  //ViewArray<IntView> iterationsCh; //resulting min/max iterations for channels
   ViewArray<IntView> sendbufferSz; //resulting min/max buffer sizes in items (send)
   ViewArray<IntView> recbufferSz; //resulting min/max buffer sizes in items (receive) 
   ViewArray<IntView> next; //current schedule
@@ -112,6 +112,7 @@ protected:
   boost_msag b_msag;
   //MSAG representation for boost
   vector<boost_msag*> b_msags;
+  vector<boost_msag*> b_msags_upperBound;
   //for mapping from msag send/rec actors to appG-channels
   vector<int> channelMapping;
   //receivingActors: for storing/finding the first receiving actor for each dst
@@ -126,8 +127,8 @@ protected:
   vector<vector<int>> min_end; //minimal schedule with same latency & period
   vector<int> start_pp; //start times for periodic phase
   vector<int> end_pp; //end times for periodic phase
-  vector<int> min_iterations; //min iterations of actors for wc latency and period
-  vector<int> max_iterations; //max iterations of actors for wc latency and period
+  //vector<int> min_iterations; //min iterations of actors for wc latency and period
+  //vector<int> max_iterations; //max iterations of actors for wc latency and period
   vector<int> min_send_buffer; //min buffer size of all appG-channels
   vector<int> max_send_buffer; //max buffer size of all appG-channels
   vector<int> min_rec_buffer; //min buffer size of all appG-channels
@@ -140,7 +141,7 @@ protected:
   void constructMSAG();
   //builds the msaGraph based on the current state of the solution
   //the coMapped vector specifies for each application, which MSAG it is part of
-  void constructMSAG(vector<int> &msagMap);
+  vector<bool> constructMSAG(vector<int> &msagMap, bool upperBound);
   int getBlockActor(int ch_id) const;
   int getSendActor(int ch_id) const;
   int getRecActor(int ch_id) const;
@@ -152,8 +153,8 @@ protected:
 public:
 ThroughputMCR(Space& home, ViewArray<IntView> p_latency,
                          ViewArray<IntView> p_period,  
-                         ViewArray<IntView> p_iterations, 
-                         ViewArray<IntView> p_iterationsCh,  
+                         //ViewArray<IntView> p_iterations, 
+                         //ViewArray<IntView> p_iterationsCh,  
                          ViewArray<IntView> p_sendbufferSz, 
                          ViewArray<IntView> p_recbufferSz,  
                          ViewArray<IntView> p_next,  
@@ -172,8 +173,8 @@ ThroughputMCR(Space& home, ViewArray<IntView> p_latency,
 
 static ExecStatus post(Space& home, ViewArray<IntView> p_latency,
                        ViewArray<IntView> p_period,  
-                       ViewArray<IntView> p_iterations, 
-                       ViewArray<IntView> p_iterationsCh,  
+                       //ViewArray<IntView> p_iterations, 
+                       //ViewArray<IntView> p_iterationsCh,  
                        ViewArray<IntView> p_sendbufferSz, 
                        ViewArray<IntView> p_recbufferSz,  
                        ViewArray<IntView> p_next,  
@@ -189,7 +190,7 @@ static ExecStatus post(Space& home, ViewArray<IntView> p_latency,
                        IntArgs p_apps, 
                        IntArgs p_minIndices, 
                        IntArgs p_maxIndices){
-  (void) new (home) ThroughputMCR(home, p_latency, p_period, p_iterations, p_iterationsCh, 
+  (void) new (home) ThroughputMCR(home, p_latency, p_period,// p_iterations, p_iterationsCh, 
                                   p_sendbufferSz, p_recbufferSz, p_next,
                                   p_wcet, p_sendingTime, p_sendingLatency, p_sendingNext,
                                   p_receivingTime, p_receivingNext,p_ch_src, p_ch_dst,
@@ -206,6 +207,8 @@ virtual Propagator* copy(Space& home, bool share);
 //TODO: do this right
 virtual PropCost cost(const Space& home, const ModEventDelta& med) const;
 
+virtual void reschedule(Space& home);
+
 virtual ExecStatus propagate(Space& home, const ModEventDelta&);
 
 };
@@ -214,8 +217,8 @@ virtual ExecStatus propagate(Space& home, const ModEventDelta&);
 //throughput constraint for one app without propagation on time-based schedule
 extern void throughputMCR(Space& home, const IntVar latency,
                              const IntVar period,
-                             const IntVarArgs& iterations, //min/max
-                             const IntVarArgs& iterationsCh, //min/max
+                             //const IntVarArgs& iterations, //min/max
+                             //const IntVarArgs& iterationsCh, //min/max
                              const IntVarArgs& sendbufferSz,
                              const IntVarArgs& recbufferSz, 
                              const IntVarArgs& next,   
@@ -232,8 +235,8 @@ extern void throughputMCR(Space& home, const IntVar latency,
 //throughput constraint for multiple apps without propagation on time-based schedule
 extern void throughputMCR(Space& home, const IntVarArgs& latency,
                              const IntVarArgs& period,
-                             const IntVarArgs& iterations, //min/max
-                             const IntVarArgs& iterationsCh, //min/max
+                             //const IntVarArgs& iterations, //min/max
+                             //const IntVarArgs& iterationsCh, //min/max
                              const IntVarArgs& sendbufferSz,
                              const IntVarArgs& recbufferSz, 
                              const IntVarArgs& next,   

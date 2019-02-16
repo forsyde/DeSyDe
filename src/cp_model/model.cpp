@@ -10,6 +10,7 @@ ADSEModel::ADSEModel(Mapping* p_mapping, Config* _cfg)
     proc                  (*this, apps->n_programEntities(), 0, platform->nodes()-1),
     proc_mode             (*this, platform->nodes(), 0, 2),
     tdmaAlloc             (*this, platform->nodes(), 0, platform->tdmaSlots()),
+    tdnTable(*this, platform->getTDNGraph().size(), 0, platform->nodes()),
     sendNext              (*this, apps->n_programChannels()+platform->nodes(), 
                            0, apps->n_programChannels()+platform->nodes()),
     recNext               (*this, apps->n_programChannels()+platform->nodes(), 

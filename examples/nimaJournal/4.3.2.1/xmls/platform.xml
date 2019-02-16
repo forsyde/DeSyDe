@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<platform name="demo_platform">
+	<processor model="small" number="8">	
+        <mode name="eco" cycle="1.2" mem="16000" dynPower="6" staticPower="6" area="8" monetary="8"></mode>
+        <mode name="default" cycle="1" mem="16000" dynPower="10" staticPower="10" area="16" monetary="16"></mode>
+    </processor>
+    <processor model="large" number="8">	
+        <mode name="eco" cycle="0.9" mem="16000" dynPower="12" staticPower="12" area="8" monetary="8"></mode>
+        <mode name="default" cycle="0.6" mem="16000" dynPower="20" staticPower="20" area="16" monetary="16"></mode>
+    </processor>
+    <interconnect>
+        <TDMA_bus name="TDMA-bus" x-dimension="16" flitSize="32" tdma_slots="16" maxSlotsPerProc="16">
+          <mode name="default" cycleLength="1"/>
+        </TDMA_bus>
+    </interconnect>
+</platform>

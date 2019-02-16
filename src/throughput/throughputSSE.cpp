@@ -47,10 +47,10 @@ Propagator(home), latency(p_latency), period(p_period),
   maxIndices(p_maxIndices) {
   
   sendingTime.subscribe(home, *this, Int::PC_INT_BND);
-  sendingLatency.subscribe(home, *this, Int::PC_INT_BND);
+  //sendingLatency.subscribe(home, *this, Int::PC_INT_BND);
   sendingNext.subscribe(home, *this, Int::PC_INT_VAL);
   next.subscribe(home, *this, Int::PC_INT_VAL);
-  wcet.subscribe(home, *this, Int::PC_INT_VAL);
+  wcet.subscribe(home, *this, Int::PC_INT_BND);
   /*latency.subscribe(home, *this, Int::PC_INT_BND);
     period.subscribe(home, *this, Int::PC_INT_BND);
     sendbufferSz.subscribe(home, *this, Int::PC_INT_BND);
@@ -77,10 +77,10 @@ Propagator(home), latency(p_latency), period(p_period),
 
 size_t ThroughputSSE::dispose(Space& home){
   sendingTime.cancel(home, *this, Int::PC_INT_BND);
-  sendingLatency.cancel(home, *this, Int::PC_INT_BND);
+  //sendingLatency.cancel(home, *this, Int::PC_INT_BND);
   sendingNext.cancel(home, *this, Int::PC_INT_VAL);
   next.cancel(home, *this, Int::PC_INT_VAL);
-  wcet.cancel(home, *this, Int::PC_INT_VAL);
+  wcet.cancel(home, *this, Int::PC_INT_BND);
   /*latency.cancel(home, *this, Int::PC_INT_BND);
     period.cancel(home, *this, Int::PC_INT_BND);
     sendbufferSz.cancel(home, *this, Int::PC_INT_BND);
@@ -170,6 +170,13 @@ Propagator* ThroughputSSE::copy(Space& home, bool share){
 //TODO: do this right
 PropCost ThroughputSSE::cost(const Space& home, const ModEventDelta& med) const{
   return PropCost::linear(PropCost::HI,next.size());
+}
+
+void ThroughputSSE::reschedule(Space& home){
+  sendingTime.subscribe(home, *this, Int::PC_INT_BND);
+  sendingNext.subscribe(home, *this, Int::PC_INT_VAL);
+  next.subscribe(home, *this, Int::PC_INT_VAL);
+  wcet.subscribe(home, *this, Int::PC_INT_BND);
 }
 
 void ThroughputSSE::debug_constructMSAG(){

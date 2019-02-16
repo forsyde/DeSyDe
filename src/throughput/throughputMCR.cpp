@@ -5,19 +5,22 @@ using namespace Gecode;
 using namespace Int;
 using namespace std;
 
-ThroughputMCR::ThroughputMCR(Space& home, ViewArray<IntView> p_latency, ViewArray<IntView> p_period, ViewArray<IntView> p_iterations,
-    ViewArray<IntView> p_iterationsCh, ViewArray<IntView> p_sendbufferSz, ViewArray<IntView> p_recbufferSz, ViewArray<IntView> p_next,
+ThroughputMCR::ThroughputMCR(Space& home, ViewArray<IntView> p_latency, ViewArray<IntView> p_period, //ViewArray<IntView> p_iterations,
+    //ViewArray<IntView> p_iterationsCh, 
+    ViewArray<IntView> p_sendbufferSz, ViewArray<IntView> p_recbufferSz, ViewArray<IntView> p_next,
     ViewArray<IntView> p_wcet, ViewArray<IntView> p_sendingTime, ViewArray<IntView> p_sendingLatency, ViewArray<IntView> p_sendingNext,
     ViewArray<IntView> p_receivingTime, ViewArray<IntView> p_receivingNext, IntArgs p_ch_src, IntArgs p_ch_dst, IntArgs p_tok, IntArgs p_apps,
     IntArgs p_minIndices, IntArgs p_maxIndices) :
-    Propagator(home), latency(p_latency), period(p_period), iterations(p_iterations), iterationsCh(p_iterationsCh), sendbufferSz(p_sendbufferSz), recbufferSz(
-        p_recbufferSz), next(p_next), wcet(p_wcet), sendingTime(p_sendingTime), sendingLatency(p_sendingLatency), sendingNext(p_sendingNext), receivingTime(
-        p_receivingTime), receivingNext(p_receivingNext), ch_src(p_ch_src), ch_dst(p_ch_dst), tok(p_tok), apps(p_apps), minIndices(p_minIndices), maxIndices(
-        p_maxIndices) {
+    Propagator(home), latency(p_latency), period(p_period), //iterations(p_iterations), iterationsCh(p_iterationsCh), 
+        sendbufferSz(p_sendbufferSz), recbufferSz(p_recbufferSz), next(p_next), wcet(p_wcet), sendingTime(p_sendingTime), 
+        sendingLatency(p_sendingLatency), sendingNext(p_sendingNext), receivingTime(p_receivingTime), receivingNext(p_receivingNext), 
+        ch_src(p_ch_src), ch_dst(p_ch_dst), tok(p_tok), apps(p_apps), minIndices(p_minIndices), maxIndices(p_maxIndices) {
 
   sendingTime.subscribe(home, *this, Int::PC_INT_BND);
+  sendingLatency.subscribe(home, *this, Int::PC_INT_BND);
   sendingNext.subscribe(home, *this, Int::PC_INT_VAL);
   next.subscribe(home, *this, Int::PC_INT_VAL);
+  wcet.subscribe(home, *this, Int::PC_INT_BND);
   /*latency.subscribe(home, *this, Int::PC_INT_BND);
    period.subscribe(home, *this, Int::PC_INT_BND);
    sendbufferSz.subscribe(home, *this, Int::PC_INT_BND);
@@ -41,8 +44,10 @@ ThroughputMCR::ThroughputMCR(Space& home, ViewArray<IntView> p_latency, ViewArra
 
 size_t ThroughputMCR::dispose(Space& home) {
   sendingTime.cancel(home, *this, Int::PC_INT_BND);
+  sendingLatency.cancel(home, *this, Int::PC_INT_BND);
   sendingNext.cancel(home, *this, Int::PC_INT_VAL);
   next.cancel(home, *this, Int::PC_INT_VAL);
+  wcet.cancel(home, *this, Int::PC_INT_BND);
   /*latency.cancel(home, *this, Int::PC_INT_BND);
    period.cancel(home, *this, Int::PC_INT_BND);
    sendbufferSz.cancel(home, *this, Int::PC_INT_BND);
@@ -54,7 +59,17 @@ size_t ThroughputMCR::dispose(Space& home) {
    receivingNext.cancel(home, *this, Int::PC_INT_VAL);*/
 
   //b_msag.~adj_list_impl();
+  for(size_t t = 0; t < b_msags.size(); t++){
+    //b_msags[t]->clear();
+    delete b_msags[t];
+  }
+  
+  for(size_t t = 0; t < b_msags_upperBound.size(); t++){
+    //b_msags[t]->clear();
+    delete b_msags_upperBound[t];
+  }
   b_msags.~vector<boost_msag*>();
+  b_msags_upperBound.~vector<boost_msag*>();
   msaGraph.~unordered_map<int, vector<SuccessorNode>>();
   channelMapping.~vector<int>();
   receivingActors.~vector<int>();
@@ -67,8 +82,8 @@ size_t ThroughputMCR::dispose(Space& home) {
   min_end.~vector<vector<int>>();
   start_pp.~vector<int>();
   end_pp.~vector<int>();
-  min_iterations.~vector<int>();
-  max_iterations.~vector<int>();
+  //min_iterations.~vector<int>();
+  //max_iterations.~vector<int>();
   min_send_buffer.~vector<int>();
   max_send_buffer.~vector<int>();
   min_rec_buffer.~vector<int>();
@@ -80,13 +95,14 @@ size_t ThroughputMCR::dispose(Space& home) {
 }
 
 ThroughputMCR::ThroughputMCR(Space& home, bool share, ThroughputMCR& p) :
-    Propagator(home, share, p), ch_src(p.ch_src), ch_dst(p.ch_dst), tok(p.tok), apps(p.apps), minIndices(p.minIndices), maxIndices(p.maxIndices), n_actors(
-        p.n_actors), n_channels(p.n_channels), n_procs(p.n_procs), n_msagActors(p.n_msagActors), msaGraph(p.msaGraph), b_msag(p.b_msag), b_msags(p.b_msags), channelMapping(
-        p.channelMapping), receivingActors(p.receivingActors), wc_latency(p.wc_latency), wc_period(p.wc_period), printDebug(p.printDebug) {
+    Propagator(home, share, p), ch_src(p.ch_src), ch_dst(p.ch_dst), tok(p.tok), apps(p.apps), minIndices(p.minIndices), maxIndices(p.maxIndices), 
+    n_actors(p.n_actors), n_channels(p.n_channels), n_procs(p.n_procs), n_msagActors(p.n_msagActors), n_msagChannels(p.n_msagChannels), 
+    channel_count(p.channel_count), msaGraph(p.msaGraph), b_msag(p.b_msag), b_msags(p.b_msags), b_msags_upperBound(p.b_msags_upperBound), channelMapping(p.channelMapping), 
+    receivingActors(p.receivingActors), wc_latency(p.wc_latency), wc_period(p.wc_period), printDebug(p.printDebug) {
   latency.update(home, share, p.latency);
   period.update(home, share, p.period);
-  iterations.update(home, share, p.iterations);
-  iterationsCh.update(home, share, p.iterationsCh);
+  //iterations.update(home, share, p.iterations);
+  //iterationsCh.update(home, share, p.iterationsCh);
   sendbufferSz.update(home, share, p.sendbufferSz);
   recbufferSz.update(home, share, p.recbufferSz);
   next.update(home, share, p.next);
@@ -105,6 +121,14 @@ Propagator* ThroughputMCR::copy(Space& home, bool share) {
 //TODO: do this right
 PropCost ThroughputMCR::cost(const Space& home, const ModEventDelta& med) const {
   return PropCost::linear(PropCost::HI, next.size());
+}
+
+void ThroughputMCR::reschedule(Space& home){
+  sendingTime.reschedule(home, *this, Int::PC_INT_BND);
+  sendingLatency.reschedule(home, *this, Int::PC_INT_BND);
+  sendingNext.reschedule(home, *this, Int::PC_INT_VAL);
+  next.reschedule(home, *this, Int::PC_INT_VAL);
+  wcet.reschedule(home, *this, Int::PC_INT_BND);
 }
 
 void ThroughputMCR::constructMSAG() {
@@ -665,7 +689,9 @@ struct G {
   }
 };
 
-void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
+vector<bool> ThroughputMCR::constructMSAG(vector<int> &msagMap, bool upperBound) {
+  
+  vector<bool> allFixed(b_msags.size(), true);
 
   if(printDebug)
     cout << "\tThroughputMCR::constructMSAG(vector<int> &msagMap)" << endl;
@@ -692,6 +718,13 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
   for(int i = 0; i < n_msagActors; i++){
     msagId.push_back(msagMap[getApp(i)]);
   }
+  
+  for(int i = 0; i < sendingTime.size(); i++){
+    if(!sendingTime[i].assigned()) allFixed[msagId[ch_src[i]]] = false;
+    if(!sendingLatency[i].assigned()) allFixed[msagId[ch_src[i]]] = false;
+    if(!receivingTime[i].assigned()) allFixed[msagId[ch_src[i]]] = false;
+    if(!sendingNext[i].assigned()) allFixed[msagId[ch_src[i]]] = false;
+  }
 
   b::graph_traits<boost_msag>::vertex_descriptor src, dst;
   b::graph_traits<boost_msag>::edge_descriptor _e;
@@ -709,8 +742,23 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
     tie(_e, found) = add_edge(src, src, curr_graph);
     if(n < n_actors){
       b::put(b::edge_weight, curr_graph, _e, wcet[n].min());
+      if(!wcet[n].assigned()) allFixed[msagId[n]] = false;
     } //else{}: delay for communication actors are added further down
     b::put(b::edge_weight2, curr_graph, _e, 1);
+    
+    if(upperBound){
+      boost_msag& curr_graph = *b_msags_upperBound[msagId[n]];
+
+      src = add_vertex(curr_graph);
+      b::put(vertex_actorid, curr_graph, src, n);
+      g.addVertex(n, src);
+      //add self-edges
+      tie(_e, found) = add_edge(src, src, curr_graph);
+      if(n < n_actors){
+        b::put(b::edge_weight, curr_graph, _e, wcet[n].max());
+      } //else{}: delay for communication actors are added further down
+      b::put(b::edge_weight2, curr_graph, _e, 1);  
+    }
   }
   //next: add edges to boost-msag
 
@@ -743,11 +791,25 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
       dst = g.getVertex(block_actor);  //b::vertex(block_actor, *b_msags[msagId[ch_src[i]]]);
       b::tie(_e, found) = b::add_edge(src, dst, curr_graph);
       b::put(b::edge_weight, curr_graph, _e, sendingLatency[i].min());
+      if(!sendingLatency[i].assigned()) allFixed[msagId[ch_src[i]]] = false;
       b::put(b::edge_weight2, curr_graph, _e, 0);
       //delay-weight for self-loop on block-actor:
       curr_graph = *b_msags[msagId[block_actor]];
       tie(_e, found) = edge(dst, dst, curr_graph);
       b::put(b::edge_weight, curr_graph, _e, sendingLatency[i].min());
+      
+      if(upperBound){
+        boost_msag& curr_graph = *b_msags_upperBound[msagId[ch_src[i]]];
+        src = g.getVertex(ch_src[i]);    //b::vertex(ch_src[i], *b_msags[msagId[ch_src[i]]]);
+        dst = g.getVertex(block_actor);  //b::vertex(block_actor, *b_msags[msagId[ch_src[i]]]);
+        b::tie(_e, found) = b::add_edge(src, dst, curr_graph);
+        b::put(b::edge_weight, curr_graph, _e, sendingLatency[i].max());
+        b::put(b::edge_weight2, curr_graph, _e, 0);
+        //delay-weight for self-loop on block-actor:
+        curr_graph = *b_msags_upperBound[msagId[block_actor]];
+        tie(_e, found) = edge(dst, dst, curr_graph);
+        b::put(b::edge_weight, curr_graph, _e, sendingLatency[i].max());
+      }
 
       n_msagChannels++;
       if(printDebug){
@@ -774,7 +836,17 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
       dst = g.getVertex(ch_src[i]);    //b::vertex(ch_src[i], *b_msags[msagId[block_actor]]);
       b::tie(_e, found) = b::add_edge(src, dst, *b_msags[msagId[block_actor]]);
       b::put(b::edge_weight, curr_graph1, _e, wcet[ch_src[i]].min());
+      if(!wcet[ch_src[i]].assigned()) allFixed[msagId[ch_src[i]]] = false;
       b::put(b::edge_weight2, curr_graph1, _e, sendbufferSz[i].max());
+      
+      if(upperBound){
+        boost_msag& curr_graph1 = *b_msags_upperBound[msagId[block_actor]];
+        src = g.getVertex(block_actor);  //b::vertex(block_actor, *b_msags[msagId[block_actor]]);
+        dst = g.getVertex(ch_src[i]);    //b::vertex(ch_src[i], *b_msags[msagId[block_actor]]);
+        b::tie(_e, found) = b::add_edge(src, dst, *b_msags[msagId[block_actor]]);
+        b::put(b::edge_weight, curr_graph1, _e, wcet[ch_src[i]].max());
+        b::put(b::edge_weight2, curr_graph1, _e, sendbufferSz[i].max());
+      }
 
       n_msagChannels++;
       if(printDebug){
@@ -802,10 +874,23 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
       dst = g.getVertex(send_actor);   //b::vertex(send_actor, *b_msags[msagId[block_actor]]);
       b::tie(_e, found) = b::add_edge(src, dst, curr_graph2);
       b::put(b::edge_weight, curr_graph2, _e, sendingTime[i].min());
+      if(!sendingTime[i].assigned()) allFixed[msagId[ch_src[i]]] = false;
       b::put(b::edge_weight2, curr_graph2, _e, 0);
       //delay-weight for self-loop on send-actor:
       tie(_e, found) = edge(dst, dst, curr_graph2);
       b::put(b::edge_weight, curr_graph2, _e, sendingTime[i].min());
+      
+      if(upperBound){
+        boost_msag& curr_graph2 = *b_msags_upperBound[msagId[block_actor]];
+        src = g.getVertex(block_actor);  //b::vertex(block_actor, *b_msags[msagId[block_actor]]);
+        dst = g.getVertex(send_actor);   //b::vertex(send_actor, *b_msags[msagId[block_actor]]);
+        b::tie(_e, found) = b::add_edge(src, dst, curr_graph2);
+        b::put(b::edge_weight, curr_graph2, _e, sendingTime[i].max());
+        b::put(b::edge_weight2, curr_graph2, _e, 0);
+        //delay-weight for self-loop on send-actor:
+        tie(_e, found) = edge(dst, dst, curr_graph2);
+        b::put(b::edge_weight, curr_graph2, _e, sendingTime[i].max());  
+      }
 
       n_msagChannels++;
       if(printDebug){
@@ -820,22 +905,22 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
       }
 
       //add the block actor as successor of the send actor, with one token (serialization)
-      SuccessorNode succBS;
+      /*SuccessorNode succBS;
       succBS.successor_key = block_actor;
       succBS.delay = sendingLatency[i].min();
       succBS.min_tok = 1;
       succBS.max_tok = 1;
-      succBS.channel = i;
+      succBS.channel = i;*/
 
       //add to boost-msag
-      boost_msag& curr_graph3 = *b_msags[msagId[send_actor]];
+      /*boost_msag& curr_graph3 = *b_msags[msagId[send_actor]];
       src = g.getVertex(send_actor);   //b::vertex(send_actor, *b_msags[msagId[send_actor]]);
       dst = g.getVertex(block_actor);  //b::vertex(block_actor, *b_msags[msagId[send_actor]]);
       b::tie(_e, found) = b::add_edge(src, dst, *b_msags[msagId[send_actor]]);
       b::put(b::edge_weight, curr_graph3, _e, sendingLatency[i].min());
-      b::put(b::edge_weight2, curr_graph3, _e, 1);
+      b::put(b::edge_weight2, curr_graph3, _e, 1);*/
 
-      n_msagChannels++;
+      /*n_msagChannels++;
       if(printDebug){
         unordered_map<int, vector<SuccessorNode>>::const_iterator it = msaGraph.find(send_actor);
         if(it != msaGraph.end()){ //send actor already has an entry in the map
@@ -845,7 +930,7 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
           succBSv.push_back(succBS);
           msaGraph.insert(pair<int, vector<SuccessorNode>>(send_actor, succBSv));
         }
-      }
+      }*/
 
       //add receiving actor as successor of the send actor, with potential initial tokens
       SuccessorNode dstCh;
@@ -866,6 +951,18 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
       //delay-weight for self-loop on rec-actor:
       tie(_e, found) = edge(dst, dst, curr_graph4);
       b::put(b::edge_weight, curr_graph4, _e, receivingTime[i].min());
+      
+      if(upperBound){
+        boost_msag& curr_graph4 = *b_msags_upperBound[msagId[send_actor]];
+        src = g.getVertex(send_actor);   //b::vertex(send_actor, *b_msags[msagId[send_actor]]);
+        dst = g.getVertex(rec_actor);    //b::vertex(rec_actor, *b_msags[msagId[send_actor]]);
+        b::tie(_e, found) = b::add_edge(src, dst, curr_graph4);
+        b::put(b::edge_weight, curr_graph4, _e, receivingTime[i].max());
+        b::put(b::edge_weight2, curr_graph4, _e, tok[i]);
+        //delay-weight for self-loop on rec-actor:
+        tie(_e, found) = edge(dst, dst, curr_graph4);
+        b::put(b::edge_weight, curr_graph4, _e, receivingTime[i].max());
+      }
 
       n_msagChannels++;
       if(printDebug){
@@ -914,7 +1011,17 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
       dst = g.getVertex(send_actor);   //b::vertex(send_actor, *b_msags[msagId[rec_actor]]);
       b::tie(_e, found) = b::add_edge(src, dst, curr_graph5);
       b::put(b::edge_weight, curr_graph5, _e, sendingTime[i].min());
+      if(!sendingTime[i].assigned()) allFixed[msagId[ch_dst[i]]] = false;
       b::put(b::edge_weight2, curr_graph5, _e, recbufferSz[i].max() - tok[i]);
+      
+      if(upperBound){
+        boost_msag& curr_graph5 = *b_msags_upperBound[msagId[rec_actor]];
+        src = g.getVertex(rec_actor);   //b::vertex(rec_actor, *b_msags[msagId[rec_actor]]);
+        dst = g.getVertex(send_actor);   //b::vertex(send_actor, *b_msags[msagId[rec_actor]]);
+        b::tie(_e, found) = b::add_edge(src, dst, curr_graph5);
+        b::put(b::edge_weight, curr_graph5, _e, sendingTime[i].max());
+        b::put(b::edge_weight2, curr_graph5, _e, recbufferSz[i].max() - tok[i]);
+      }
 
       n_msagChannels++;
       if(printDebug){
@@ -945,7 +1052,17 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
         dst = g.getVertex(ch_dst[i]);   //b::vertex(ch_dst[i], *b_msags[msagId[ch_src[i]]]);
         b::tie(_e, found) = b::add_edge(src, dst, curr_graph5);
         b::put(b::edge_weight, curr_graph5, _e, wcet[ch_dst[i]].min());
+        if(!wcet[ch_dst[i]].assigned()) allFixed[msagId[ch_dst[i]]] = false;
         b::put(b::edge_weight2, curr_graph5, _e, tok[i]);
+        
+        if(upperBound){
+          boost_msag& curr_graph5 = *b_msags_upperBound[msagId[ch_src[i]]];
+          src = g.getVertex(ch_src[i]);   //b::vertex(ch_src[i], *b_msags[msagId[ch_src[i]]]);
+          dst = g.getVertex(ch_dst[i]);   //b::vertex(ch_dst[i], *b_msags[msagId[ch_src[i]]]);
+          b::tie(_e, found) = b::add_edge(src, dst, curr_graph5);
+          b::put(b::edge_weight, curr_graph5, _e, wcet[ch_dst[i]].max());
+          b::put(b::edge_weight2, curr_graph5, _e, tok[i]);
+        }
 
         n_msagChannels++;
         if(printDebug){
@@ -975,76 +1092,108 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
    cout << endl;*/
 
   //put sendNext relations into the MSAG
-  for(unsigned int i = 1; i < channelMapping.size(); i += 3){ //for all sending actors
-    bool continues = true;
-    bool nextFound = false;
-    int nextCh;
-    int x = channelMapping[i];
-    int tokens = 0; //is channel to add a cycle-closing back-edge?
-    while(!nextFound && continues){
-      if(sendingNext[x].assigned()){
-        nextCh = sendingNext[x].val();
-        if(nextCh >= n_channels){ //end of chain found
-          if(nextCh > n_channels){
-            nextCh = n_channels + ((nextCh - n_channels - 1) % n_procs);
-          }else{
-            nextCh = n_channels + n_procs - 1;
-          }
-          tokens = 1;
-          if(sendingNext[nextCh].assigned()){
-            nextCh = sendingNext[nextCh].val();
+  if(channelMapping.size()){
+    for(unsigned int i = 1; i < channelMapping.size(); i += 3){ //for all sending actors
+      bool continues = true;
+      bool nextFound = false;
+      int nextCh = -1;
+      int x = channelMapping[i];
+      int tokens = 0; //is channel to add a cycle-closing back-edge?
+      while(!nextFound && continues){
+        if(sendingNext[x].assigned()){
+          nextCh = sendingNext[x].val();
+          if(nextCh >= n_channels){ //end of chain found
+            if(nextCh > n_channels){
+              nextCh = n_channels + ((nextCh - n_channels - 1) % n_procs);
+            }else{
+              nextCh = n_channels + n_procs - 1;
+            }
+            tokens = 1;
+            if(sendingNext[nextCh].assigned()){
+              nextCh = sendingNext[nextCh].val();
+              if(sendingTime[nextCh].min() > 0){
+                nextFound = true;
+              }else{
+                x = nextCh;
+              }
+            }else{
+              continues = false;
+            }
+          }else{ //not end of chain (nextCh < n_channels)
             if(sendingTime[nextCh].min() > 0){
               nextFound = true;
+              if(tokens != 1)
+                tokens = 0;
             }else{
-              x = nextCh;
+              x = nextCh; //nextCh is not on interconnect. Continue with nextSend[nextCh].
             }
-          }else{
-            continues = false;
           }
-        }else{ //not end of chain (nextCh < n_channels)
-          if(sendingTime[nextCh].min() > 0){
-            nextFound = true;
-            if(tokens != 1)
-              tokens = 0;
-          }else{
-            x = nextCh; //nextCh is not on interconnect. Continue with nextSend[nextCh].
-          }
+        }else{
+          continues = false;
         }
-      }else{
-        continues = false;
       }
-    }
-    if(nextFound){
-      //add send_actor of channel i -> block_actor of nextCh
-      if(channelMapping[i] != nextCh){ //if found successor is not the channel's own block_actor (then it is already in the graph)
-        int block_actor = getBlockActor(nextCh);
+      if(nextFound){
+        //add block_actor of channel i -> block_actor of nextCh and
+        //add send_actor of channel i -> send_actor of nextCh and
+        if(channelMapping[i] != nextCh){ //if found successor is not the channel's own block/send_actor (then it is already in the graph)
+          int block_actor = i-1 + n_actors; //i is index of send actor
+          int send_actor = i + n_actors;
+          int next_block_actor = getBlockActor(nextCh);
+          int next_send_actor = getSendActor(nextCh);
 
-        //cout << "Next channel (send_actor of channel " << i << "): " << nextCh << endl;
+          //cout << "Next channel (send_actor of channel " << i << "): " << nextCh << endl;
 
-        SuccessorNode succBS;
-        succBS.successor_key = block_actor;
-        succBS.delay = sendingLatency[nextCh].min();
-        succBS.min_tok = tokens;
-        succBS.max_tok = tokens;
-        succBS.channel = nextCh;
+          SuccessorNode succBS;
+          succBS.successor_key = next_block_actor;
+          succBS.delay = sendingLatency[nextCh].min();
+          succBS.min_tok = tokens;
+          succBS.max_tok = tokens;
+          succBS.channel = nextCh;
 
-        //add to boost-msag
-        boost_msag& curr_graph6 = *b_msags[msagId[block_actor]];
-        src = g.getVertex(i + n_actors);   //b::vertex(i + n_actors, *b_msags[msagId[block_actor]]);
-        dst = g.getVertex(block_actor);    //b::vertex(block_actor, *b_msags[msagId[block_actor]]);
-        b::tie(_e, found) = b::add_edge(src, dst, curr_graph6);
-        b::put(b::edge_weight, curr_graph6, _e, sendingLatency[nextCh].min());
-        b::put(b::edge_weight2, curr_graph6, _e, tokens);
+          //add to boost-msag
+          boost_msag& curr_graph6 = *b_msags[msagId[next_block_actor]];
+          //block -> next_block
+          src = g.getVertex(block_actor);   //b::vertex(i + n_actors, *b_msags[msagId[next_block_actor]]);
+          dst = g.getVertex(next_block_actor);    //b::vertex(next_block_actor, *b_msags[msagId[next_block_actor]]);
+          b::tie(_e, found) = b::add_edge(src, dst, curr_graph6);
+          b::put(b::edge_weight, curr_graph6, _e, sendingLatency[nextCh].min());
+          if(!sendingLatency[nextCh].assigned()) allFixed[msagId[ch_dst[nextCh]]] = false;
+          b::put(b::edge_weight2, curr_graph6, _e, tokens);
+          //send -> next_send
+          src = g.getVertex(send_actor);   //b::vertex(i + n_actors, *b_msags[msagId[next_block_actor]]);
+          dst = g.getVertex(next_send_actor);    //b::vertex(next_block_actor, *b_msags[msagId[next_block_actor]]);
+          b::tie(_e, found) = b::add_edge(src, dst, curr_graph6);
+          b::put(b::edge_weight, curr_graph6, _e, sendingTime[nextCh].min());
+          if(!sendingTime[nextCh].assigned()) allFixed[msagId[ch_dst[nextCh]]] = false;
+          b::put(b::edge_weight2, curr_graph6, _e, tokens);
+          
+          if(upperBound){
+            boost_msag& curr_graph6 = *b_msags_upperBound[msagId[next_block_actor]];
+            src = g.getVertex(block_actor);   //b::vertex(i + n_actors, *b_msags[msagId[next_block_actor]]);
+            dst = g.getVertex(next_block_actor);    //b::vertex(next_block_actor, *b_msags[msagId[next_block_actor]]);
+            b::tie(_e, found) = b::add_edge(src, dst, curr_graph6);
+            b::put(b::edge_weight, curr_graph6, _e, sendingLatency[nextCh].max());
+            if(!sendingLatency[nextCh].assigned()) allFixed[msagId[ch_dst[nextCh]]] = false;
+            b::put(b::edge_weight2, curr_graph6, _e, tokens);
+            //send -> next_send
+            src = g.getVertex(send_actor);   //b::vertex(i + n_actors, *b_msags[msagId[next_block_actor]]);
+            dst = g.getVertex(next_send_actor);    //b::vertex(next_block_actor, *b_msags[msagId[next_block_actor]]);
+            b::tie(_e, found) = b::add_edge(src, dst, curr_graph6);
+            b::put(b::edge_weight, curr_graph6, _e, sendingTime[nextCh].max());
+            if(!sendingTime[nextCh].assigned()) allFixed[msagId[ch_dst[nextCh]]] = false;
+            b::put(b::edge_weight2, curr_graph6, _e, tokens);
+          }
 
-        n_msagChannels++;
-        if(printDebug){
-          unordered_map<int, vector<SuccessorNode>>::const_iterator it = msaGraph.find(i + n_actors);
-          if(it != msaGraph.end()){ //send actor already has an entry in the map
-            msaGraph.at(i + n_actors).push_back(succBS);
-          }else{ //no entry for send_actor i yet
-            vector<SuccessorNode> succBSv;
-            succBSv.push_back(succBS);
-            msaGraph.insert(pair<int, vector<SuccessorNode>>(i + n_actors, succBSv));
+          n_msagChannels++;
+          if(printDebug){
+            unordered_map<int, vector<SuccessorNode>>::const_iterator it = msaGraph.find(i + n_actors);
+            if(it != msaGraph.end()){ //send actor already has an entry in the map
+              msaGraph.at(i + n_actors).push_back(succBS);
+            }else{ //no entry for send_actor i yet
+              vector<SuccessorNode> succBSv;
+              succBSv.push_back(succBS);
+              msaGraph.insert(pair<int, vector<SuccessorNode>>(i + n_actors, succBSv));
+            }
           }
         }
       }
@@ -1102,7 +1251,21 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
     dst = g.getVertex(nextCh == -1 ? ch_dst[channelMapping[i]] : getRecActor(nextCh)); //b::vertex(nextCh == -1 ? ch_dst[channelMapping[i]] : getRecActor(nextCh),*b_msags[msagId[tmp]]);
     b::tie(_e, found) = b::add_edge(src, dst, curr_graph7);
     b::put(b::edge_weight, curr_graph7, _e, nextCh == -1 ? wcet[ch_dst[channelMapping[i]]].min() : receivingTime[nextCh].min());
+    if(nextCh == -1){
+      if(!wcet[ch_dst[channelMapping[i]]].assigned()) allFixed[msagId[ch_dst[channelMapping[i]]]] = false;
+    }else{
+      if(!receivingTime[nextCh].assigned()) allFixed[msagId[ch_dst[nextCh]]] = false;
+    }
     b::put(b::edge_weight2, curr_graph7, _e, 0);
+    
+    if(upperBound){
+      boost_msag& curr_graph7 = *b_msags_upperBound[msagId[tmp]];
+      src = g.getVertex(tmp);            //b::vertex(tmp, *b_msags[msagId[tmp]]);
+      dst = g.getVertex(nextCh == -1 ? ch_dst[channelMapping[i]] : getRecActor(nextCh)); //b::vertex(nextCh == -1 ? ch_dst[channelMapping[i]] : getRecActor(nextCh),*b_msags[msagId[tmp]]);
+      b::tie(_e, found) = b::add_edge(src, dst, curr_graph7);
+      b::put(b::edge_weight, curr_graph7, _e, nextCh == -1 ? wcet[ch_dst[channelMapping[i]]].max() : receivingTime[nextCh].max());
+      b::put(b::edge_weight2, curr_graph7, _e, 0);
+    }
 
     n_msagChannels++;
     if(printDebug){
@@ -1118,6 +1281,7 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
   }
 
   for(int i = 0; i < n_actors; i++){
+    if(!next[i].assigned()) allFixed[msagId[i]] = false;
     //Step 2
     if(next[i].assigned() && next[i].val() < n_actors){ //if next[i] is decided, the forward edge goes from i to next[i]
       int nextActor = next[i].val();
@@ -1137,7 +1301,18 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
         dst = g.getVertex(nextActor); //b::vertex(nextActor, *b_msags[msagId[i]]);
         b::tie(_e, found) = b::add_edge(src, dst, curr_graph8);
         b::put(b::edge_weight, curr_graph8, _e, wcet[nextActor].min());
+        if(!wcet[nextActor].assigned()) allFixed[msagId[nextActor]] = false;
         b::put(b::edge_weight2, curr_graph8, _e, 0);
+        
+        if(upperBound){
+          boost_msag& curr_graph8 = *b_msags_upperBound[msagId[i]];
+          src = g.getVertex(i);         //b::vertex(i, *b_msags[msagId[i]]);
+          dst = g.getVertex(nextActor); //b::vertex(nextActor, *b_msags[msagId[i]]);
+          b::tie(_e, found) = b::add_edge(src, dst, curr_graph8);
+          b::put(b::edge_weight, curr_graph8, _e, wcet[nextActor].max());
+          b::put(b::edge_weight2, curr_graph8, _e, 0);
+        }
+        
       }else{
         //add edge i -> receivingActor[nextActor]
         nextA.successor_key = receivingActors[nextActor];
@@ -1152,7 +1327,17 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
         dst = g.getVertex(receivingActors[nextActor]); //b::vertex(receivingActors[nextActor], *b_msags[msagId[i]]);
         b::tie(_e, found) = b::add_edge(src, dst, curr_graph9);
         b::put(b::edge_weight, curr_graph9, _e, receivingTime[channelMapping[receivingActors[nextActor] - n_actors]].min());
+        if(!receivingTime[channelMapping[receivingActors[nextActor] - n_actors]].assigned()) allFixed[msagId[ch_src[channelMapping[receivingActors[nextActor] - n_actors]]]] = false;
         b::put(b::edge_weight2, curr_graph9, _e, 0);
+        
+        if(upperBound){
+          boost_msag& curr_graph9 = *b_msags_upperBound[msagId[i]];
+          src = g.getVertex(i);                          //b::vertex(i, *b_msags[msagId[i]]);
+          dst = g.getVertex(receivingActors[nextActor]); //b::vertex(receivingActors[nextActor], *b_msags[msagId[i]]);
+          b::tie(_e, found) = b::add_edge(src, dst, curr_graph9);
+          b::put(b::edge_weight, curr_graph9, _e, receivingTime[channelMapping[receivingActors[nextActor] - n_actors]].max());
+          b::put(b::edge_weight2, curr_graph9, _e, 0);
+        }
       }
 
       n_msagChannels++;
@@ -1193,7 +1378,17 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
           dst = g.getVertex(firstActor); //b::vertex(firstActor, *b_msags[msagId[i]]);
           b::tie(_e, found) = b::add_edge(src, dst, curr_graph10);
           b::put(b::edge_weight, curr_graph10, _e, wcet[firstActor].min());
+          if(!wcet[firstActor].assigned()) allFixed[msagId[firstActor]] = false;
           b::put(b::edge_weight2, curr_graph10, _e, 1);
+          
+          if(upperBound){
+            boost_msag& curr_graph10 = *b_msags_upperBound[msagId[i]];
+            src = g.getVertex(i);          //b::vertex(i, *b_msags[msagId[i]]);
+            dst = g.getVertex(firstActor); //b::vertex(firstActor, *b_msags[msagId[i]]);
+            b::tie(_e, found) = b::add_edge(src, dst, curr_graph10);
+            b::put(b::edge_weight, curr_graph10, _e, wcet[firstActor].max());
+            b::put(b::edge_weight2, curr_graph10, _e, 1);
+          }
         }else{
           //add edge i -> receivingActor[firstActor]
           first.successor_key = receivingActors[firstActor];
@@ -1208,7 +1403,17 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
           dst = g.getVertex(receivingActors[firstActor]); //b::vertex(receivingActors[firstActor], *b_msags[msagId[i]]);
           b::tie(_e, found) = b::add_edge(src, dst, curr_graph11);
           b::put(b::edge_weight, curr_graph11, _e, receivingTime[channelMapping[receivingActors[firstActor] - n_actors]].min());
+          if(!receivingTime[channelMapping[receivingActors[firstActor] - n_actors]].assigned()) allFixed[msagId[ch_src[channelMapping[receivingActors[firstActor] - n_actors]]]] = false;
           b::put(b::edge_weight2, curr_graph11, _e, 1);
+          
+          if(upperBound){
+            boost_msag& curr_graph11 = *b_msags_upperBound[msagId[i]];
+            src = g.getVertex(i);                           //b::vertex(i, *b_msags[msagId[i]]);
+            dst = g.getVertex(receivingActors[firstActor]); //b::vertex(receivingActors[firstActor], *b_msags[msagId[i]]);
+            b::tie(_e, found) = b::add_edge(src, dst, curr_graph11);
+            b::put(b::edge_weight, curr_graph11, _e, receivingTime[channelMapping[receivingActors[firstActor] - n_actors]].max());
+            b::put(b::edge_weight2, curr_graph11, _e, 1);
+          }
         }
 
         n_msagChannels++;
@@ -1225,10 +1430,26 @@ void ThroughputMCR::constructMSAG(vector<int> &msagMap) {
       }
     }
   }
+  
+  
+  for(int i=n_actors; i<next.size(); i++){
+    for(int j=0; j<n_actors; j++){
+      if(!next[i].assigned() && next[i].in(j)) allFixed[msagId[j]] = false;
+    }
+  }
+  
+  for(int i=n_channels; i<sendingNext.size(); i++){
+    for(int j=0; j<n_channels; j++){
+      if(!sendingNext[i].assigned() && sendingNext[i].in(j)) allFixed[msagId[ch_src[j]]] = false;
+    }
+  }
+  
 
   if(printDebug){
     //printThroughputGraphAsDot(".");
   }
+  
+  return allFixed;
 }
 
 void checkApp(int app, unordered_map<int, set<int>>& coMappedApps, vector<int>& uncheckedApps, set<int>& res) {
@@ -1245,10 +1466,14 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
 
   //auto _start = std::chrono::high_resolution_clock::now(); //timer
   //int time; //runtime of period calculation
-
+  
+  vector<int> appFixed(apps.size(), true);
   vector<int> msagMap(apps.size(), 0);
+  bool findUpperBound = sendingNext.assigned() && next.assigned() && receivingNext.assigned() &&
+                     (!sendingTime.assigned() || !sendingLatency.assigned() || !wcet.assigned());
+  vector<int> period_upperBound(apps.size(), 0);
 
-  if(apps.size() > 1){
+  //if(apps.size() > 1){
     //check which application graphs are mapped to same processor (= combined into the same MSAG)
     vector<set<int>> result;
     unordered_map<int, set<int>> coMappedApps;
@@ -1318,8 +1543,9 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
       for(auto it = result[i].begin(); it != result[i].end(); ++it){
         msagMap[*it] = i;
       }
+      if(findUpperBound) b_msags_upperBound.push_back(new boost_msag());
     }
-    constructMSAG(msagMap);
+    vector<bool> msagFixed = constructMSAG(msagMap, findUpperBound);
 
     if(printDebug){
       if(next.assigned() && wcet.assigned()){
@@ -1354,23 +1580,42 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
       //do MCR analysis
       max_cr = maximum_cycle_ratio(*m, vim, ew1, ew2, &cc);
       msag_mcrs.push_back(max_cr);
+
       if(printDebug){
         cout << "Period of app(s) " << tools::toString(result[msag_mcrs.size()-1]) << ": ";
         cout <<  max_cr << endl;
         cout << "Critical cycle:\n";
         for(t_critCycl::iterator itr = cc.begin(); itr != cc.end(); ++itr){
-          cout << "(" << vim[source(*itr, b_msag)] << "," << vim[target(*itr, b_msag)] << ") ";
+          cout << "(" << vim[source(*itr, *m)] << "," << vim[target(*itr, *m)] << ") ";
         }
         cout << endl;
+      }
+    }
+    vector<int> msag_mcrs_upperBound;
+    if(findUpperBound){
+      for(auto m : b_msags_upperBound){
+        using namespace boost;
+        int max_cr; /// maximum cycle ratio
+        typedef std::vector<graph_traits<boost_msag>::edge_descriptor> t_critCycl;
+        t_critCycl cc; ///critical cycle
+        property_map<boost_msag, vertex_index_t>::type vim = get(vertex_index, *m);
+        property_map<boost_msag, edge_weight_t>::type ew1 = get(edge_weight, *m);
+        property_map<boost_msag, edge_weight2_t>::type ew2 = get(edge_weight2, *m);
+
+        //do MCR analysis
+        max_cr = maximum_cycle_ratio(*m, vim, ew1, ew2, &cc);
+        msag_mcrs_upperBound.push_back(max_cr);
       }
     }
     for(size_t i = 0; i < msag_mcrs.size(); i++){
       for(auto r: result[i]){
         wc_period[r] = msag_mcrs[i];
+        if(findUpperBound) period_upperBound[r] = msag_mcrs_upperBound[i];
+        appFixed[r] = msagFixed[i];
       }
     }
 
-  }else{ //only a single application
+  /*}else{ //only a single application
     constructMSAG();
     using namespace boost;
     int max_cr; /// maximum cycle ratio
@@ -1383,6 +1628,9 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
     //do MCR analysis
     max_cr = maximum_cycle_ratio(b_msag, vim, ew1, ew2, &cc);
     wc_period[0] = max_cr;
+    appFixed[0] = next.assigned() && wcet.assigned() && sendingTime.assigned() 
+                  && sendingLatency.assigned() && sendingNext.assigned()
+                  && receivingTime.assigned(); 
 
     if(printDebug){
       if(next.assigned() && wcet.assigned()){
@@ -1403,7 +1651,7 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
       }
       cout << endl;
     }
-  }
+  }*/
 
   //constructMSAG();
 
@@ -1412,8 +1660,8 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
 //        getchar();
 //    }
 
-  bool all_assigned = next.assigned() && wcet.assigned() && sendingTime.assigned() && sendingLatency.assigned() && sendingNext.assigned()
-      && receivingTime.assigned(); //&&
+  //bool all_assigned = next.assigned() && wcet.assigned() && sendingTime.assigned() && sendingLatency.assigned() && sendingNext.assigned()
+   //   && receivingTime.assigned(); //&&
       //receivingNext.assigned() &&
       //sendbufferSz.assigned() &&
       //recbufferSz.assigned();
@@ -1425,7 +1673,7 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
 //cout << "receivingTime.assigned(): " << receivingTime.assigned() << endl;
 //cout << "receivingNext.assigned(): " << receivingNext.assigned() << endl;
 
-//cout << "all_assigned: " << all_assigned << " with period = " << wc_period << endl;
+//cout << "all_assigned: " << all_assigned  << endl;
 
   bool all_ch_local = true;
   for(int i = 0; i < n_channels; i++){
@@ -1435,18 +1683,23 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
   }
 
   //propagate latency and period (bounds)
-  for(int i = 0; i < apps.size(); i++){
-    /*if(!all_assigned && all_ch_local && wcet.assigned() && next.assigned()){
-     //GECODE_ME_CHECK(latency[i].eq(home,wc_latency[i][0]));
-     GECODE_ME_CHECK(period[i].eq(home,wc_period[i]));
-     }else*/
-    if(!all_assigned && !all_ch_local){
-//          GECODE_ME_CHECK(latency[i].gq(home, wc_latency[i][0]));
-      GECODE_ME_CHECK(period[i].gq(home, wc_period[i]));
-    }else if(all_assigned){
-//          GECODE_ME_CHECK(latency[i].eq(home, wc_latency[i][0]));
+  for(int i = 0; i < period.size(); i++){
+    if(appFixed[i]){
       GECODE_ME_CHECK(period[i].eq(home, wc_period[i]));
+    }else{
+      GECODE_ME_CHECK(period[i].gq(home, wc_period[i]));
+      if(findUpperBound){
+        GECODE_ME_CHECK(period[i].lq(home, period_upperBound[i]));
+      }
     }
+
+    //if(!all_assigned && !all_ch_local){
+//          GECODE_ME_CHECK(latency[i].gq(home, wc_latency[i][0]));
+      //GECODE_ME_CHECK(period[i].gq(home, wc_period[i]));
+    //}else if(all_assigned){
+//          GECODE_ME_CHECK(latency[i].eq(home, wc_latency[i][0]));
+      //GECODE_ME_CHECK(period[i].eq(home, wc_period[i]));
+    //}
   }
   /*
    //propagate bounds on iterations of entities and channels in time-based schedule
@@ -1470,6 +1723,11 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
     delete b_msags[t];
   }
   b_msags.clear();
+  for(size_t t = 0; t < b_msags_upperBound.size(); t++){
+    //b_msags[t]->clear();
+    delete b_msags_upperBound[t];
+  }
+  b_msags_upperBound.clear();
   msaGraph.clear();
   channelMapping.clear();
   receivingActors.clear();
@@ -1480,16 +1738,22 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
   min_end.clear();
   start_pp.clear();
   end_pp.clear();
-  min_iterations.clear();
-  max_iterations.clear();
+  //min_iterations.clear();
+  //max_iterations.clear();
   min_send_buffer.clear();
   max_send_buffer.clear();
   min_rec_buffer.clear();
   max_rec_buffer.clear();
+  
+  bool allFixed = true;
+  for(int i = 0; i < period.size(); i++){
+    allFixed &= appFixed[i];
+  }
 
-  if(next.assigned() && wcet.assigned() && sendingTime.assigned() && sendingLatency.assigned() && receivingTime.assigned() && receivingNext.assigned()
-      && sendbufferSz.assigned() && recbufferSz.assigned())
+  //if(next.assigned() && wcet.assigned() && sendingTime.assigned() && sendingLatency.assigned() && receivingTime.assigned() && receivingNext.assigned()){
+  if(allFixed){
     return home.ES_SUBSUMED(*this);
+  }
 
   if(all_ch_local && wcet.assigned() && next.assigned()){
     return home.ES_SUBSUMED(*this);
@@ -1498,23 +1762,20 @@ ExecStatus ThroughputMCR::propagate(Space& home, const ModEventDelta&) {
   return ES_FIX;
 }
 
-/* next: |#actors|
+/* next: |#actors+#procs|
  * execCycles: |#actors*#actors|
  * wcet: |#actors|
  * sendingTime: |#channels|
  * tok: |#channels|
  */
 void throughputMCR(Space& home, const IntVar latency, const IntVar period,
-    const IntVarArgs& iterations, //min/max
-    const IntVarArgs& iterationsCh, //min/max
+    //const IntVarArgs& iterations, //min/max
+    //const IntVarArgs& iterationsCh, //min/max
     const IntVarArgs& sendbufferSz, const IntVarArgs& recbufferSz, const IntVarArgs& next, const IntVarArgs& wcet, const IntVarArgs& sendingTime,
     const IntVarArgs& sendingLatency, const IntVarArgs& sendingNext, const IntVarArgs& receivingTime, const IntVarArgs& receivingNext, const IntArgs& ch_src,
     const IntArgs& ch_dst, const IntArgs& tok, const IntArgs& minIndices, const IntArgs& maxIndices) {
-  if(iterations.size() != wcet.size()){
-    throw Gecode::Int::ArgumentSizeMismatch("Throughput constraint, iterations & next");
-  }
-  if(iterationsCh.size() != sendingTime.size()){
-    throw Gecode::Int::ArgumentSizeMismatch("Throughput constraint, iterationsCh & sendingTime");
+  if(next.size() < wcet.size()){
+    throw Gecode::Int::ArgumentSizeMismatch("Throughput constraint, next & wcet");
   }
   if(sendingTime.size() != sendingLatency.size()){
     throw Gecode::Int::ArgumentSizeMismatch("Throughput constraint, sendingTime & sendingLatency");
@@ -1554,8 +1815,8 @@ void throughputMCR(Space& home, const IntVar latency, const IntVar period,
   _latency[0] = latency;
   ViewArray<Int::IntView> _period(home, 1);
   _period[0] = period;
-  ViewArray<Int::IntView> _iterations(home, iterations);
-  ViewArray<Int::IntView> _iterationsCh(home, iterationsCh);
+  //ViewArray<Int::IntView> _iterations(home, iterations);
+  //ViewArray<Int::IntView> _iterationsCh(home, iterationsCh);
   ViewArray<Int::IntView> _sendbufferSz(home, sendbufferSz);
   ViewArray<Int::IntView> _recbufferSz(home, recbufferSz);
   ViewArray<Int::IntView> _next(home, next);
@@ -1566,7 +1827,7 @@ void throughputMCR(Space& home, const IntVar latency, const IntVar period,
   ViewArray<Int::IntView> _receivingTime(home, receivingTime);
   ViewArray<Int::IntView> _receivingNext(home, receivingNext);
   IntArgs apps(1, wcet.size() - 1);
-  if(ThroughputMCR::post(home, _latency, _period, _iterations, _iterationsCh, _sendbufferSz, _recbufferSz, _next, _wcet, _sendingTime, _sendingLatency,
+  if(ThroughputMCR::post(home, _latency, _period, _sendbufferSz, _recbufferSz, _next, _wcet, _sendingTime, _sendingLatency,
       _sendingNext, _receivingTime, _receivingNext, ch_src, ch_dst, tok, apps, minIndices, maxIndices) != ES_OK){
     home.fail();
   }
@@ -1578,16 +1839,13 @@ void throughputMCR(Space& home, const IntVar latency, const IntVar period,
  * tok: |#channels|
  */
 void throughputMCR(Space& home, const IntVar latency, const IntVar period,
-    const IntVarArgs& iterations, //min/max
-    const IntVarArgs& iterationsCh, //min/max
+    //const IntVarArgs& iterations, //min/max
+    //const IntVarArgs& iterationsCh, //min/max
     const IntVarArgs& sendbufferSz, const IntVarArgs& recbufferSz, const IntVarArgs& next, const IntVarArgs& wcet, const IntVarArgs& sendingTime,
     const IntVarArgs& sendingLatency, const IntVarArgs& sendingNext, const IntVarArgs& receivingTime, const IntVarArgs& receivingNext, const IntArgs& ch_src,
     const IntArgs& ch_dst, const IntArgs& tok) {
-  if(iterations.size() != wcet.size()){
-    throw Gecode::Int::ArgumentSizeMismatch("Throughput constraint, iterations & next");
-  }
-  if(iterationsCh.size() != sendingTime.size()){
-    throw Gecode::Int::ArgumentSizeMismatch("Throughput constraint, iterationsCh & sendingTime");
+  if(next.size() < wcet.size()){
+    throw Gecode::Int::ArgumentSizeMismatch("Throughput constraint, next & wcet");
   }
   if(sendingTime.size() != sendingLatency.size()){
     throw Gecode::Int::ArgumentSizeMismatch("Throughput constraint, sendingTime & sendingLatency");
@@ -1624,8 +1882,8 @@ void throughputMCR(Space& home, const IntVar latency, const IntVar period,
   _latency[0] = latency;
   ViewArray<Int::IntView> _period(home, 1);
   _period[0] = period;
-  ViewArray<Int::IntView> _iterations(home, iterations);
-  ViewArray<Int::IntView> _iterationsCh(home, iterationsCh);
+  //ViewArray<Int::IntView> _iterations(home, iterations);
+  //ViewArray<Int::IntView> _iterationsCh(home, iterationsCh);
   ViewArray<Int::IntView> _sendbufferSz(home, sendbufferSz);
   ViewArray<Int::IntView> _recbufferSz(home, recbufferSz);
   ViewArray<Int::IntView> _next(home, next);
@@ -1637,7 +1895,7 @@ void throughputMCR(Space& home, const IntVar latency, const IntVar period,
   ViewArray<Int::IntView> _receivingNext(home, receivingNext);
   IntArgs minIndices, maxIndices;
   IntArgs apps(1, wcet.size() - 1);
-  if(ThroughputMCR::post(home, _latency, _period, _iterations, _iterationsCh, _sendbufferSz, _recbufferSz, _next, _wcet, _sendingTime, _sendingLatency,
+  if(ThroughputMCR::post(home, _latency, _period, _sendbufferSz, _recbufferSz, _next, _wcet, _sendingTime, _sendingLatency,
       _sendingNext, _receivingTime, _receivingNext, ch_src, ch_dst, tok, apps, minIndices, maxIndices) != ES_OK){
     home.fail();
   }
@@ -1649,8 +1907,8 @@ void throughputMCR(Space& home, const IntVar latency, const IntVar period,
  * tok: |#channels|
  */
 void throughputMCR(Space& home, const IntVarArgs& latency, const IntVarArgs& period,
-    const IntVarArgs& iterations, //min/max
-    const IntVarArgs& iterationsCh, //min/max
+    //const IntVarArgs& iterations, //min/max
+    //const IntVarArgs& iterationsCh, //min/max
     const IntVarArgs& sendbufferSz, const IntVarArgs& recbufferSz, const IntVarArgs& next, const IntVarArgs& wcet, const IntVarArgs& sendingTime,
     const IntVarArgs& sendingLatency, const IntVarArgs& sendingNext, const IntVarArgs& receivingTime, const IntVarArgs& receivingNext, const IntArgs& ch_src,
     const IntArgs& ch_dst, const IntArgs& tok, const IntArgs& apps) {
@@ -1659,12 +1917,6 @@ void throughputMCR(Space& home, const IntVarArgs& latency, const IntVarArgs& per
   }
   if(latency.size() != apps.size()){
     throw Gecode::Int::ArgumentSizeMismatch("Throughput constraint, latency & apps");
-  }
-  if(iterations.size() != wcet.size()){
-    throw Gecode::Int::ArgumentSizeMismatch("Throughput constraint, iterations & next");
-  }
-  if(iterationsCh.size() != sendingTime.size()){
-    throw Gecode::Int::ArgumentSizeMismatch("Throughput constraint, iterationsCh & sendingTime");
   }
   if(sendingTime.size() != sendingLatency.size()){
     throw Gecode::Int::ArgumentSizeMismatch("Throughput constraint, sendingTime & sendingLatency");
@@ -1697,8 +1949,8 @@ void throughputMCR(Space& home, const IntVarArgs& latency, const IntVarArgs& per
 //create variable views
   ViewArray<Int::IntView> _latency(home, latency);
   ViewArray<Int::IntView> _period(home, period);
-  ViewArray<Int::IntView> _iterations(home, iterations);
-  ViewArray<Int::IntView> _iterationsCh(home, iterationsCh);
+  //ViewArray<Int::IntView> _iterations(home, iterations);
+  //ViewArray<Int::IntView> _iterationsCh(home, iterationsCh);
   ViewArray<Int::IntView> _sendbufferSz(home, sendbufferSz);
   ViewArray<Int::IntView> _recbufferSz(home, recbufferSz);
   ViewArray<Int::IntView> _next(home, next);
@@ -1709,7 +1961,7 @@ void throughputMCR(Space& home, const IntVarArgs& latency, const IntVarArgs& per
   ViewArray<Int::IntView> _receivingTime(home, receivingTime);
   ViewArray<Int::IntView> _receivingNext(home, receivingNext);
   IntArgs minIndices, maxIndices;
-  if(ThroughputMCR::post(home, _latency, _period, _iterations, _iterationsCh, _sendbufferSz, _recbufferSz, _next, _wcet, _sendingTime, _sendingLatency,
+  if(ThroughputMCR::post(home, _latency, _period, _sendbufferSz, _recbufferSz, _next, _wcet, _sendingTime, _sendingLatency,
       _sendingNext, _receivingTime, _receivingNext, ch_src, ch_dst, tok, apps, minIndices, maxIndices) != ES_OK){
     home.fail();
   }

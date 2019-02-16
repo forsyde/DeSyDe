@@ -144,7 +144,7 @@ void InputReader::parsConstXMLNode(vector<char*> elements, vector<char*> values,
 char* InputReader::getValueOfElement(xmlNodePtr node, char* inElement)
 {
   if (!node) 
-    return '\0';
+    return "\0";
   /// go to the begining of the node
   while( node->prev )
     node = node->prev;
@@ -159,7 +159,7 @@ char* InputReader::getValueOfElement(xmlNodePtr node, char* inElement)
             }                               
         }
     }
-  return '\0';
+  return "\0";
 }
         
         
@@ -173,7 +173,7 @@ char* InputReader::getValueOfElement(vector<char*> elements, vector<char*> value
         }
     }
                 
-  return '\0';
+  return "\0";
 }
         
 vector<PeriodicTask*> InputReader::ReadTaskset(const string fileName)

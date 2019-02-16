@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<designConstraints>
+	<constraint app_name="a_sobel" period="690" latency="8000"></constraint> 
+    <constraint app_name="b_susan" period="1350" latency="8000"></constraint> 
+    <constraint app_name="c_rasta" period="800" latency="8000"></constraint> 
+    <constraint app_name="d_jpegEnc1" period="3000" latency="8000"></constraint>
+    <constraint app_name="e_vad" period="9500000" latency="8000"></constraint> 	
+    <constraint app_name="g10_3_cycl" period="-1" latency="8000"></constraint>
+</designConstraints>

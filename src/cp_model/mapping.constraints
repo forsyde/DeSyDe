@@ -1,3 +1,11 @@
+//enforcing the design constraints:
+if(mapping->getSystemConstraints().util >0){
+  rel(*this, sys_utilization >= mapping->getSystemConstraints().util);
+}
+if(mapping->getSystemConstraints().procsUsed >0){
+  rel(*this, procsUsed == mapping->getSystemConstraints().procsUsed);
+}
+
 // *** GENERAL CONSTRAINTS ***
 
 //choosing a mode for each proc
@@ -78,72 +86,57 @@ for(size_t ii=0; ii<apps->n_programEntities(); ii++){
 for(size_t j=0; j<platform->nodes(); j++){
   rel(*this, (proc_period[j]>0 && nSDFAsOnProc[j]>0) >> (utilization[j] == ((proc_SDF_wcet_sum[j]*mapping->max_utilization)/proc_period[j])));
   rel(*this, (nEntitiesOnProc[j]==0) >> (utilization[j]==0));
-  IntArgs proc_pows(platform->getPowerCons(j));
-  cout << "proc_pows of proc " << j << ": ";
-  for(size_t m=0; m<platform->getModes(j); m++){
-    cout << proc_pows[m] << " ";
-    rel(*this, ((proc_mode[j]==m) && (nSDFAsOnProc[j]>0) && ((proc_SDF_wcet_sum[j]*mapping->max_utilization)%proc_period[j]==0))
-        >> (proc_power[j] == proc_pows[m]*utilization[j]));
-    rel(*this, ((proc_mode[j]==m) && (nSDFAsOnProc[j]>0) && ((proc_SDF_wcet_sum[j]*mapping->max_utilization)%proc_period[j]>0))
-        >> (proc_power[j] == proc_pows[m]*(utilization[j]+1)));
-  }
-  cout << endl;
-  rel(*this, (nEntitiesOnProc[j]==0) >> (proc_power[j]==0));
-  IntArgs areas(platform->getAreaCost(j));
-  element(*this, areas, proc_mode[j], proc_area[j]);
-  IntArgs costs(platform->getMonetaryCost(j));
-  element(*this, costs, proc_mode[j], proc_cost[j]);
 }
 rel(*this, sys_utilization == (sum(utilization)/platform->nodes()));
 rel(*this, procsUsed_utilization == (sum(utilization)/procsUsed));
-rel(*this, sys_power == sum(proc_power));
-rel(*this, sys_area == sum(proc_area));
-rel(*this, sys_cost == sum(proc_cost));
 
 //symmetry breaking:
 //if the platform (or a pair of nodes) is homogeneous, then first-scheduled actors on each proc
 //shall be ordered according to their index
-cout << "Symmetry breaking: " << endl;
-if(mapping->homogeneousPlatform()){
-  for(size_t ji=0; ji<platform->nodes(); ji++){
-    for(size_t jj=ji+1; jj<platform->nodes()-1; jj++){
-      if(ji!=platform->nodes()-2){
-        //cout << apps->n_programEntities()+jj << " > " << apps->n_programEntities()+ji << endl;
-        rel(*this, next[apps->n_SDFActors()+jj] > next[apps->n_SDFActors()+ji]);
+//cout << "Symmetry breaking: " << endl;
+if(platform->getInterconnectType() == TDMA_BUS){
+  if(mapping->homogeneousPlatform()){
+    for(size_t ji=0; ji<platform->nodes(); ji++){
+      for(size_t jj=ji+1; jj<platform->nodes()-1; jj++){
+        if(ji!=platform->nodes()-2){
+          //cout << apps->n_programEntities()+jj << " > " << apps->n_programEntities()+ji << endl;
+          rel(*this, next[apps->n_SDFActors()+jj] > next[apps->n_SDFActors()+ji]);
+        }
       }
     }
-  }
-  for(size_t ji=0; ji<platform->nodes()-1; ji++){
-    //cout <<apps->n_programEntities()+ji<< " > " << apps->n_programEntities()+platform->nodes()-1 << endl;
-    rel(*this, next[apps->n_SDFActors()+ji] > next[apps->n_SDFActors()+platform->nodes()-1]);
-  }
-} else{
-  for(size_t ji=0; ji<platform->nodes(); ji++){
-    for(size_t jj=ji+1; jj<platform->nodes(); jj++){
-      if((mapping->homogeneousModeNodes(ji, jj)) &&
-          (ji!=platform->nodes()-1)){
-        int first = (ji==0) ? apps->n_SDFActors()+platform->nodes()-1 : apps->n_SDFActors()+ji-1;
-        int second = apps->n_SDFActors()+jj-1;
-//        rel(*this, (proc_mode[ji] == proc_mode[jj]) >> (next[second] > next[first]));
+    for(size_t ji=0; ji<platform->nodes()-1; ji++){
+      //cout <<apps->n_programEntities()+ji<< " > " << apps->n_programEntities()+platform->nodes()-1 << endl;
+      rel(*this, next[apps->n_SDFActors()+ji] > next[apps->n_SDFActors()+platform->nodes()-1]);
+    }
+  } else{
+    for(size_t ji=0; ji<platform->nodes(); ji++){
+      for(size_t jj=ji+1; jj<platform->nodes(); jj++){
+        if((mapping->homogeneousModeNodes(ji, jj)) &&
+            (ji!=platform->nodes()-1)){
+          int first = (ji==0) ? apps->n_SDFActors()+platform->nodes()-1 : apps->n_SDFActors()+ji-1;
+          int second = apps->n_SDFActors()+jj-1;
+  //        rel(*this, (proc_mode[ji] == proc_mode[jj]) >> (next[second] > next[first]));
 
-        //the first actor scheduled on ji (first is dummy node of ji), must have a lower index than
-        //the first actor scheduled on jj (second is dummy node of jj)
-        rel(*this, next[second] > next[first]);
+          //the first actor scheduled on ji (first is dummy node of ji), must have a lower index than
+          //the first actor scheduled on jj (second is dummy node of jj)
+          rel(*this, next[second] > next[first]);
+        }
+      }
+      for(size_t jj=ji+1; jj<platform->nodes(); jj++){
+        if(mapping->homogeneousModeNodes(ji, jj)){
+          rel(*this, !(nEntitiesOnProc[ji]==0 && nEntitiesOnProc[jj]>0));
+        }
       }
     }
-    for(size_t jj=ji+1; jj<platform->nodes(); jj++){
-      if(mapping->homogeneousModeNodes(ji, jj)){
-        rel(*this, !(nEntitiesOnProc[ji]==0 && nEntitiesOnProc[jj]>0));
-      }
-    }
+    /*for(size_t ji=0; ji<platform->nodes()-1; ji++){
+     int jj = platform->nodes()-1;
+     if(mapping->homogeneousModeNodes(ji, jj))
+     rel(*this, (proc_mode[ji] == proc_mode[jj]) >>
+     (next[apps->n_SDFActors()+ji] > next[apps->n_SDFActors()+jj]));
+     } */
   }
-  /*for(size_t ji=0; ji<platform->nodes()-1; ji++){
-   int jj = platform->nodes()-1;
-   if(mapping->homogeneousModeNodes(ji, jj))
-   rel(*this, (proc_mode[ji] == proc_mode[jj]) >>
-   (next[apps->n_SDFActors()+ji] > next[apps->n_SDFActors()+jj]));
-   } */
 }
+
 //SDFGs and IPTs are not allowed to share processors
 for(size_t i=0; i<apps->n_SDFActors(); i++){ //i iterates of SDF actors
   for(size_t j=apps->n_SDFActors(); j<apps->n_IPTTasks()+apps->n_SDFActors(); j++){ //j iterates over IPTs
@@ -166,18 +159,17 @@ for(size_t i=0; i<apps->n_SDFActors(); i++){ //i iterates of SDF actors
  */
 
 //TODO: further design decisions
-vector<div_t> firstMapping = mapping->getFirstMapping();
-for(unsigned int x=0; x<firstMapping.size(); x++){
-  for(size_t i=0; i<apps->n_programEntities(); i++){
-    if(x == apps->getSDFGraph(i)){
-      cout << "proc[" << i << "] >= " << firstMapping[x].quot << " & <= " << firstMapping[x].rem << endl;
-      rel(*this, proc[i]>=firstMapping[x].quot && proc[i]<=firstMapping[x].rem);
-    }
+
+vector<int> mappingRules_do = mapping->getMappingRules_do();
+vector<vector<int>> mappingRules_doNot = mapping->getMappingRules_doNot();
+LOG_DEBUG("Mapping rules:");
+for(size_t i=0; i<mappingRules_do.size(); i++){
+  if(mappingRules_do[i] > -1){
+    rel(*this, proc[i] == mappingRules_do[i]);
+    LOG_DEBUG("  "+tools::toString(i) + ": do " + tools::toString(mappingRules_do[i]));
+  }
+  for(auto j : mappingRules_doNot[i]){
+    rel(*this, proc[i] != j);
+    LOG_DEBUG("  "+tools::toString(i) + ": do NOT " + tools::toString(j));
   }
 }
-
-if(firstMapping.size()>0){
-  //cout << "procsUsed >= " << (firstMapping.back().quot+1) << endl;
-  rel(*this, procsUsed >= (firstMapping.back().quot+1));
-}
-

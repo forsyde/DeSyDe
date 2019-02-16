@@ -16,6 +16,23 @@ Applications::~Applications() {
     delete desContr[i];
 }
 
+Applications::Applications(vector<SDFGraph*> _sdfApps, TaskSet* _iptApps)
+  : sdfApps(_sdfApps), iptApps(_iptApps) {
+
+  n_sdfActors       = 0;
+  n_sdfParentActors = 0;
+  n_sdfChannels	    = 0;
+  for (size_t i=0; i<sdfApps.size(); i++){
+    offsets.push_back(n_sdfActors);
+    n_sdfActors += sdfApps[i]->n_actors();
+    n_sdfParentActors += sdfApps[i]->n_parentActors();
+    n_sdfChannels += sdfApps[i]->n_channels();
+  }
+  
+  n_iptTasks = iptApps->getNumberOfTasks();
+
+}
+
 Applications::Applications(vector<SDFGraph*> _sdfApps, TaskSet* _iptApps, XMLdoc& xml)
   : sdfApps(_sdfApps), iptApps(_iptApps) {
 
@@ -33,21 +50,41 @@ Applications::Applications(vector<SDFGraph*> _sdfApps, TaskSet* _iptApps, XMLdoc
   
   load_const(xml);
 }
+
 void Applications::load_const(XMLdoc& xml)
 {
-    const char* my_xpathString = "///designConstraints/constraint";
+  const char* my_xpathString = "///designConstraints/constraint";
 	LOG_DEBUG("running xpathString  " + tools::toString(my_xpathString) + " on desConst file ...");
 	auto xml_constraints = xml.xpathNodes(my_xpathString);
     LOG_DEBUG("xml_constraints size="+tools::toString(xml_constraints.size()));
 	for (const auto& cons : xml_constraints)
 	{
-		string app_name = xml.getProp(cons, "app_name");
-		string period_cons = xml.getProp(cons, "period");
-		string latency_cons = xml.getProp(cons, "latency");
-        
-        set_const(app_name, atoi(period_cons.c_str()), atoi(latency_cons.c_str()));
-        
-		LOG_DEBUG("Reading constraints for app: " + app_name + "...");		
+    
+    if(xml.hasProp(cons, "app_name")){
+      string app_name = xml.getProp(cons, "app_name");
+      string period_cons_s;
+      int period_cons;
+      if(xml.hasProp(cons, "period")){
+        period_cons_s = xml.getProp(cons, "period");
+        period_cons = atoi(period_cons_s.c_str());
+      }else{
+        period_cons = 0;
+      }
+      string latency_cons_s;
+      int latency_cons;
+      if(xml.hasProp(cons, "latency")){
+        latency_cons_s = xml.getProp(cons, "latency");
+        latency_cons = atoi(latency_cons_s.c_str());
+      }else{
+        latency_cons = 0;
+      }
+          
+      set_const(app_name, period_cons, latency_cons);
+          
+      LOG_DEBUG("Reading constraints for app: " + app_name + ":");
+      LOG_DEBUG("  Period <= " + tools::toString(period_cons));		
+      LOG_DEBUG("  Latency <= " + tools::toString(latency_cons));		
+    }
 		
 	}	
 }
@@ -196,6 +233,15 @@ size_t Applications::n_SDFActors(){
   return n_sdfActors;
 }
 
+//get number of SDF actors of specified graph
+size_t Applications::n_SDFActorsOfApp(size_t app){
+  if(app >= sdfApps.size()){
+    return 0;
+  }else{
+    return sdfApps[app]->n_actors();
+  }
+}
+
 //get number of SDF channels
 size_t Applications::n_SDFchannels(){
   return n_sdfChannels;
@@ -214,6 +260,26 @@ size_t Applications::n_programEntities(){
 //get total number of program channels
 size_t Applications::n_programChannels(){
   return n_sdfChannels;
+}
+
+size_t Applications::getMaxChannelId(size_t app) const{
+  if(app==0 && sdfApps.size()>0) return sdfApps[0]->n_channels()-1;
+  
+  int id = 0;
+  for(size_t i=0; i<=app; i++){
+    id += sdfApps[i]->n_channels();
+  }
+  return id-1;
+  
+}
+
+size_t Applications::getAppIdForChannel(size_t ch) const{
+  size_t id = 0;
+  for(size_t i=0; i<sdfApps.size(); i++){
+    id += sdfApps[i]->n_channels();
+    if(ch < id) return i;
+  }
+  return -1;
 }
 
 //Maximum code size of all program entities (actors + tasks)
@@ -350,12 +416,12 @@ int Applications::getMaxNumberOfIPTInstances(){
   return 0;
 }
 
-int Applications::getPeriodBound(size_t g_id){
-  if(g_id<sdfApps.size()){
-    return desContr[g_id]->getPeriodBound();
-  }
-  return -1;
-}
+//int Applications::getPeriodBound(size_t g_id){
+  //if(g_id<sdfApps.size()){
+    //return desContr[g_id]->getPeriodBound();
+  //}
+  //return -1;
+//}
 
 SolutionMode Applications::getConstrType(size_t g_id){
   if(g_id>=sdfApps.size())
@@ -573,8 +639,8 @@ void Applications::swapPrTasks(int i, int j) {
 
 std::ostream& operator<< (std::ostream &out, const Applications &apps) {
   out                  << apps.n_sdfParentActors << " sdf parents, " <<
-    apps.n_sdfActors   << " actors "             <<
-    apps.n_sdfChannels << " channels "           <<
+    apps.n_sdfActors   << " actors, "             <<
+    apps.n_sdfChannels << " channels, and "           <<
     apps.n_iptTasks    << " pr tasks "           << 
     endl;
   return out;

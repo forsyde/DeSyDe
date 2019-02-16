@@ -40,6 +40,7 @@
 #include <list>
 #include <boost/program_options.hpp>
 #include <vector>
+#include <chrono>
 
 
 namespace po = boost::program_options;
@@ -55,6 +56,11 @@ using namespace std;
  */
 class Config {
 public:
+
+  struct SolutionValues{
+    std::chrono::high_resolution_clock::duration time;
+    vector<int> values;
+  };
   enum CPModels {
     NONECP,
     SDF,
@@ -74,11 +80,16 @@ public:
   enum OutputPrintFrequency {
       ALL_SOL,
       LAST,
-      EVERY_n
+      EVERY_n,
+      FIRSTandLAST
   };
   enum PresolverModels {
     NO_PRE,
     ONE_PROC_MAPPINGS
+  };
+  enum MultiStepHeuristics {
+    NO_HEURISTIC,
+    TODAES
   };
   enum SearchTypes {
     NONESEARCH,
@@ -101,22 +112,33 @@ public:
 
     CPModels                  model;
     std::vector<PresolverModels> pre_models;
+    std::vector<MultiStepHeuristics> pre_heuristics;
     SearchTypes               search;
     SearchTypes               pre_search;
+    SearchTypes               pre_multi_step_search;
+    size_t                    optimizationStep=0;
     std::vector<OptCriterion> criteria;
     unsigned long int         timeout_first;
     unsigned long int         timeout_all;
+    unsigned long int         pre_timeout_first;
+    unsigned long int         pre_timeout_all;
 
-    unsigned long int luby_scale;
+    unsigned long int         luby_scale;
+    unsigned int              threads;
+    unsigned long int         noGoodDepth;
     ThroughputPropagator      th_prop;
     OutputFileType            out_file_type;
     OutputPrintFrequency      out_print_freq;
+    std::vector<OptCriterion> printMetrics;
+    
+    bool                      configTDN=false;
   };
   struct PresolverResults{
     size_t it_mapping; /**< Informs the CP model how to use oneProcMappings: <.size(): Enforce mapping, >=.size() Forbid all. */
-    vector<vector<tuple<int,int>>> oneProcMappings;
-    vector<vector<int>> periods;
-    vector<int> sys_energys;
+    vector<tuple<int, vector<tuple<int,int>>>> oneProcMappings;
+    vector<SolutionValues> optResults;
+    vector<SolutionValues> printResults;
+    std::chrono::high_resolution_clock::duration presolver_delay;
   };
 
 public:
@@ -146,16 +168,24 @@ public:
   const Settings& settings() const throw();
 
   std::string printSettings();
+  
+  void incOptimizationStep();
 
   void setPresolverResults(shared_ptr<PresolverResults> _p);
-    shared_ptr<PresolverResults> getPresolverResults();
-    /**
-     * Determines whether optimization is used.
-     */
-    bool doOptimize() const;
-    bool is_presolved();
-    string get_out_freq() const;
-    string get_search_type() const;
+  shared_ptr<PresolverResults> getPresolverResults();
+  /**
+   * Determines whether optimization is used.
+   */
+  bool doOptimize() const;
+  bool doOptimizeThput() const;
+  bool doOptimizePower() const;
+  bool doOptimizeThput(size_t step) const;
+  bool doOptimizePower(size_t step) const;
+  bool doMultiStep() const;
+  bool doPresolve() const;
+  bool is_presolved();
+  string get_out_freq() const;
+  string get_search_type() const;
 private:
   Settings settings_;
   shared_ptr<PresolverResults> pre_results;
@@ -164,17 +194,24 @@ private:
   void dumpConfigFile(std::string path, po::options_description opts) throw (IOException);
 
   void setInputPaths(const std::vector<std::string> &) throw (IOException);
+  void setTDNconfig(const string &p);
   void setOutputPaths(const std::string &) throw (IOException);
   void setLogPaths(const std::string &) throw (IOException);
   void setLogLevel(const std::vector<std::string> &) throw (IllegalStateException, InvalidFormatException);
   void setModel(const std::string &) throw (InvalidFormatException);
   void setSearch(const std::string &) throw (InvalidFormatException);
+  void setPrintMetrics(const std::vector<std::string> &) throw (InvalidFormatException);
   void setCriteria(const std::vector<std::string> &) throw (InvalidFormatException);
   void setThPropagator(const std::string &) throw (InvalidFormatException);
   void setTimeout(const std::vector<unsigned long int> &) throw (IllegalStateException);
+  void setTimeout_presolver(const std::vector<unsigned long int> &) throw (IllegalStateException);
+  void setThreads(unsigned int) throw ();
+  void setNoGoodDepth(unsigned long int) throw ();
   void setLubyScale(unsigned long int) throw ();
   void setPresolverModel(const std::vector<std::string> &) throw (InvalidFormatException);
+  void setHeuristic(const std::vector<std::string> &) throw (InvalidFormatException);
   void setPresolverSearch(const std::string &) throw (InvalidFormatException);
+  void setMultiStepSearch(const std::string &) throw (InvalidFormatException);
   void setOutputFileType(const std::string &) throw (InvalidFormatException);
   void setOutputPrintFrequency(const std::string &) throw (InvalidFormatException);
 

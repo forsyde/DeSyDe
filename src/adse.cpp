@@ -70,34 +70,40 @@ int main(int argc, const char* argv[]) {
   }
 
   try {
+    
 	  
 	  TaskSet* taskset;
 	  Platform* platform;
+    string platform_path;
 	  string WCET_path;
 	  string desConst_path;
+	  string mappingRules_path;
 	  for (const auto& path : cfg.settings().inputs_paths) {
        /// Reading taskset
-       size_t found_taskset=path.find("taskset");
-       if(found_taskset != string::npos){
-			XMLdoc xml(path);
-			LOG_INFO("Parsing taskset XML files...");
-			xml.read(false);
-			taskset =  new TaskSet(xml);
-			if (taskset->getNumberOfTasks() > 0) {
-			  taskset->SetRMPriorities();
-			  cout << *taskset;
-			} else {
-			  cout << "did not import any periodic tasks!" << endl;
-			}
-	   }
+      size_t found_taskset=path.find("taskset");
+      if(found_taskset != string::npos){
+        XMLdoc xml(path);
+        LOG_INFO("Parsing taskset XML files...");
+        xml.read(false);
+        taskset =  new TaskSet(xml);
+        if (taskset->getNumberOfTasks() > 0) {
+          taskset->SetRMPriorities();
+          LOG_INFO(tools::toString(*taskset));
+        } else {
+          LOG_INFO("did not import any periodic tasks!");
+        }
+      }else{
+        taskset =  new TaskSet();
+      }
 	   /// Reading platform
        size_t found_platform=path.find("platform");
        if(found_platform != string::npos){
 			XMLdoc xml(path);
-			LOG_INFO("Parsing platform XML files...");
+      platform_path = path;
+			LOG_INFO("Parsing platform XML file...");
 			xml.read(false);
 			platform =  new Platform(xml);
-			cout << *platform << endl;
+			LOG_INFO(tools::toString(*platform));
 	   }
 	   /// Storing WCET xml path
        size_t found_wcet=path.find("WCETs");
@@ -111,64 +117,111 @@ int main(int argc, const char* argv[]) {
 		   desConst_path = path;
 			LOG_INFO("Storing desConst XML file...");
 	   }
+	   /// Storing mapping rules xml path
+       size_t found_mappingRules=path.find("mappingRules");
+       if(found_mappingRules != string::npos){
+		   mappingRules_path = path;
+			 LOG_INFO("Storing mappingRules XML file...");
+	   }
      }
 	
     
     vector<SDFGraph*> sdfs;
-    for (const auto& path : cfg.settings().inputs_paths) {
-		 
-       if(path.find("/sdfs/") != string::npos){		
-           XMLdoc xml(path);
-           LOG_INFO("Parsing SDF3 graphs...");
-           xml.readXSD("sdf3", "noNamespaceSchemaLocation");
-           sdfs.push_back(new SDFGraph(xml));
+    if(!cfg.settings().configTDN){
+      LOG_INFO("Parsing SDF3 graphs...");
+      for (const auto& path : cfg.settings().inputs_paths) {
+       
+         if(path.find("/sdfs/") != string::npos){		
+             XMLdoc xml(path);
+             xml.readXSD("sdf3", "noNamespaceSchemaLocation");
+             sdfs.push_back(new SDFGraph(xml));
+         }
        }
+     }else{ //create an SDF based on platform
+        XMLdoc xml(platform_path); //because the SDFGraph class has an XMLdoc as a reference member
+        sdfs.push_back(new SDFGraph(platform, xml));
      }
-    /*for(auto &i : sdfXMLs)
-     sdfs.push_back(new SDFGraph(i));*/
 
-    
-	XMLdoc xml_const(desConst_path);
-	xml_const.read(false);
     LOG_INFO("Creating an application object ... ");
-    Applications* appset = new Applications(sdfs, taskset, xml_const);
-    cout << *appset;
+    Applications* appset;
+    if(desConst_path != ""){
+      XMLdoc xml_const(desConst_path);
+      xml_const.read(false);
+      appset = new Applications(sdfs, taskset, xml_const);
+    }else{
+      appset = new Applications(sdfs, taskset);
+    }
+    LOG_INFO(tools::toString(*appset));
 
-	LOG_INFO("Creating a mapping object ... " );
-    XMLdoc xml_wcet(WCET_path);
-    xml_wcet.read(false);
-    Mapping* map = new Mapping(appset, platform, xml_wcet);
+	LOG_INFO("Creating a mapping object ... \n" );
+    Mapping* map;
     
-    LOG_INFO("Sorting pr tasks based on utilization ... ");
-    map->PrintWCETs();
-    map->SortTasksUtilization();
-    cout << *taskset;
+    if(!cfg.settings().configTDN){
+      XMLdoc xml_wcet(WCET_path);
+      xml_wcet.read(false);
+      if(mappingRules_path != ""){
+        XMLdoc xml_mapRules(mappingRules_path);
+        xml_mapRules.read(false);
+        if(desConst_path != ""){
+          XMLdoc xml_const(desConst_path);
+          xml_const.read(false);
+          map = new Mapping(appset, platform, xml_wcet, xml_const, xml_mapRules);
+        }else{
+          map = new Mapping(appset, platform, xml_wcet, xml_mapRules);
+        }
+      }else{
+        if(desConst_path != ""){
+          XMLdoc xml_const(desConst_path);
+          xml_const.read(false);
+          map = new Mapping(appset, platform, xml_wcet, xml_const);
+        }else{
+          map = new Mapping(appset, platform, xml_wcet);
+        }
+      }
+    }else{
+      map = new Mapping(appset, platform);
+    }
+    
+    if(appset->n_IPTTasks()>0){
+      LOG_INFO("Sorting pr tasks based on utilization ... ");
+      map->SortTasksUtilization();
+      LOG_INFO(tools::toString(*taskset));
+    }
 
-    SDFPROnlineModel* model;
     //PRESOLVING +++
+    
+    SDFPROnlineModel* model;
+    
+    if(cfg.doPresolve() || cfg.doMultiStep()){
 
-    if(sdfs.size() > 0){
-    LOG_INFO("Creating PRESOLVING constraint model object ... ");
-    //OneProcModel* pre_model = new OneProcModel(map, cfg);
+      LOG_INFO("Creating PRESOLVING and MULTI-STEP execution object ... ");
+      Presolver<OneProcModel, SDFPROnlineModel> presolver(cfg);
 
-        LOG_INFO("Creating PRESOLVING execution object ... ");
-        Presolver presolver(cfg);
+      LOG_INFO("Running PRESOLVING and MULTI-STEP object ... ");
+      model = (SDFPROnlineModel*)presolver.presolve(map);
 
-        LOG_INFO("Running PRESOLVING model object ... ");
-        model = (SDFPROnlineModel*)presolver.presolve(map);
-
-        vector<vector<tuple<int,int>>> mappings = presolver.getMappingResults();
-        cout << "Presolver found " << mappings.size() << " isolated mappings." << endl;
-    }
-    else{
-        LOG_INFO("Creating a constraint model object ... ");
+      if(cfg.doPresolve()){
+        LOG_INFO("Presolver found " + tools::toString(presolver.getMappingResults().size()) + " isolated mappings.");
+      }
+      
+    }else{
+      LOG_INFO("No PRESOLVER specified.");
+      
+      if(!cfg.settings().configTDN){
         model = new SDFPROnlineModel(map, &cfg);
+      }
     }
+
+//    cout << messageStart + "Creating a constraint model object ... " << endl;
+//    SDFPROnlineModel* model = new SDFPROnlineModel(map, dseSettings);
+    //LOG_INFO("Creating a constraint model object ... ");
+    //SDFPROnlineModel* model = new SDFPROnlineModel(map, &cfg);
+//
     LOG_INFO("Creating an execution object ... ");
     Execution<SDFPROnlineModel> execObj(model, cfg);
-
+    
     LOG_INFO("Running the model object ... ");
-    execObj.Execute();
+    execObj.Execute(map);
 
 //    Validation* val = new Validation(map, cfg);
 //    val->Validate();

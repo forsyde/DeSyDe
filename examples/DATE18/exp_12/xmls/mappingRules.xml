@@ -1,0 +1,66 @@
+<mappingRules>
+<!-- usage: 
+    <mapping task_type="name" mapOn="1" notMapOn="1,5,6" /> 
+-->
+<!-- SOBEL -->
+    <mapping task_type="get_pixel" mapOn="27" notMapOn="0,10,6" />
+    <mapping task_type="gx" mapOn="4" notMapOn="" />
+    <mapping task_type="gy" mapOn="11" notMapOn="" />
+    <mapping task_type="abs" mapOn="5" notMapOn="" />
+<!--SUSAN -->
+    <mapping task_type="getImage" mapOn="29" notMapOn="" />
+    <mapping task_type="usan" mapOn="29" notMapOn="" />
+    <mapping task_type="direction" mapOn="22" notMapOn="" />
+    <mapping task_type="thin" mapOn="1" notMapOn="" />
+    <mapping task_type="putImage" mapOn="1" notMapOn="" />
+<!--RASTA -->
+    <mapping task_type="frontEnd" mapOn="24" notMapOn="" />
+    <mapping task_type="rasta" mapOn="18" notMapOn="" />
+    <mapping task_type="powspec" mapOn="19" notMapOn="" />
+    <mapping task_type="audspec" mapOn="20" notMapOn="" />
+    <mapping task_type="compJah" mapOn="21" notMapOn="" />
+    <mapping task_type="rastaFilter" mapOn="3" notMapOn="" />
+    <mapping task_type="backEnd" mapOn="10" notMapOn="" />
+<!-- JPEG encoder -->
+    <mapping task_type="getImage_0" mapOn="28" notMapOn="" />
+    <mapping task_type="CC_0" mapOn="28" notMapOn="" />
+    <mapping task_type="DCT_0" mapOn="12" notMapOn="" />
+    <mapping task_type="Huffman_0" mapOn="12" notMapOn="" />
+    <mapping task_type="DCT_1" mapOn="13" notMapOn="" />
+    <mapping task_type="Huffman_1" mapOn="13" notMapOn="" />
+    <mapping task_type="DCT_2" mapOn="14" notMapOn="" />
+    <mapping task_type="Huffman_2" mapOn="14" notMapOn="" />
+    <mapping task_type="DCT_3" mapOn="15" notMapOn="" />
+    <mapping task_type="Huffman_3" mapOn="15" notMapOn="" />
+    <mapping task_type="DCT_4" mapOn="16" notMapOn="" />
+    <mapping task_type="Huffman_4" mapOn="16" notMapOn="" />
+    <mapping task_type="DCT_5" mapOn="17" notMapOn="" />
+    <mapping task_type="Huffman_5" mapOn="17" notMapOn="" />
+    <mapping task_type="CS_0" mapOn="7" notMapOn="" />
+    <mapping task_type="writeImage_0" mapOn="7" notMapOn="" />
+<!-- Synthetic Cyclic Graph -->
+    <mapping task_type="a0" mapOn="0" notMapOn="" />
+    <mapping task_type="a1" mapOn="0" notMapOn="" />
+    <mapping task_type="a2" mapOn="9" notMapOn="" />
+    <mapping task_type="a3" mapOn="8" notMapOn="" />
+    <mapping task_type="a4" mapOn="2" notMapOn="" />
+    <mapping task_type="a5" mapOn="9" notMapOn="" />
+    <mapping task_type="a6" mapOn="23" notMapOn="" />
+    <mapping task_type="a7" mapOn="9" notMapOn="" />
+    <mapping task_type="a8" mapOn="2" notMapOn="" />
+    <mapping task_type="a9" mapOn="0" notMapOn="" />
+
+<!--
+    <mapping task_type="" mapOn="" notMapOn="" />
+        <wcet processor="small" mode="default" wcet=""/>
+        <wcet processor="small" mode="eco" wcet=""/>
+        <wcet processor="large" mode="default" wcet=""/>
+        <wcet processor="large" mode="eco" wcet=""/>
+    </mapping>
+-->
+<!-- cycle values from platform.xml:
+     small, default: 1
+     small, eco: 1.2
+     large, default: 0.7
+     large, eco: 0.9 -->
+</mappingRules>

@@ -46,16 +46,17 @@
 using namespace std;
 using namespace Gecode;
 
+
 template<class CPModelTemplate>
 class Execution {
 public:
   Execution(CPModelTemplate* _model, Config& _cfg) :
       model(_model), cfg(_cfg) {
-    geSearchOptions.threads = 0.0;
-    if(cfg.settings().timeout_first > 0){
-      Search::TimeStop* stop = new Search::TimeStop(cfg.settings().timeout_first);
-      geSearchOptions.stop = stop;
-    }
+      geSearchOptions.threads = cfg.settings().threads;
+      if(cfg.settings().timeout_first > 0){
+        Search::TimeStop* stop = new Search::TimeStop(cfg.settings().timeout_first);
+        geSearchOptions.stop = stop;
+      }
   }
   ;
   ~Execution() {
@@ -67,49 +68,56 @@ public:
    * (i) 	print()
    * (ii) printCSV()
    */
-  int Execute() {
-    switch (cfg.settings().search) {
-    case (Config::GIST_ALL): {
-      Gist::Print<CPModelTemplate> p("Print solution");
-      Gist::Options options;
-      options.inspect.click(&p);
-      Gist::dfs(model, options);
-      break;
+  int Execute(Mapping* map) {
+    if(!cfg.settings().configTDN){
+      switch (cfg.settings().search) {
+      case (Config::GIST_ALL): {
+        Gist::Print<CPModelTemplate> p("Print solution");
+        Gist::Options options;
+        options.inspect.click(&p);
+        Gist::dfs(model, options);
+        break;
+      }
+      case (Config::GIST_OPT): {
+        Gist::Print<CPModelTemplate> p("Print solution");
+        Gist::Options options;
+        options.inspect.click(&p);
+        Gist::bab(model, options);
+        break;
+      }
+      case (Config::FIRST):
+      case (Config::ALL): {
+        LOG_INFO("DFS engine ...");
+        DFS<CPModelTemplate> e(model, geSearchOptions);
+        loopSolutions<DFS<CPModelTemplate>>(&e);
+        break;
+      }
+      case (Config::OPTIMIZE): {
+        LOG_INFO("BAB engine, optimizing ... ");
+        BAB<CPModelTemplate> e(model, geSearchOptions);
+        loopSolutions<BAB<CPModelTemplate>>(&e);
+        break;
+      }
+      case (Config::OPTIMIZE_IT): {
+        LOG_INFO("BAB engine, optimizing iteratively ... ");
+        Search::Cutoff* cut = Search::Cutoff::luby(cfg.settings().luby_scale);
+        geSearchOptions.cutoff = cut;
+        geSearchOptions.nogoods_limit = cfg.settings().noGoodDepth;
+        //geSearchOptions.share_afc = true;
+        RBS<CPModelTemplate, BAB> e(model, geSearchOptions);
+        loopSolutions<RBS<CPModelTemplate, BAB>>(&e);
+
+        break;
+      }
+      default:
+        THROW_EXCEPTION(RuntimeException, "unknown search type for main solver.");
+        break;
+      }
+    }else{
+      loopForMinimalTDNConfig(map);
     }
-    case (Config::GIST_OPT): {
-      Gist::Print<CPModelTemplate> p("Print solution");
-      Gist::Options options;
-      options.inspect.click(&p);
-      Gist::bab(model, options);
-      break;
-    }
-    case (Config::FIRST):
-    case (Config::ALL): {
-      cout << "DFS engine ...\n";
-      DFS<CPModelTemplate> e(model, geSearchOptions);
-      loopSolutions<DFS<CPModelTemplate>>(&e);
-      break;
-    }
-    case (Config::OPTIMIZE): {
-      cout << "BAB engine, optimizing ... \n";
-      BAB<CPModelTemplate> e(model, geSearchOptions);
-      loopSolutions<BAB<CPModelTemplate>>(&e);
-      break;
-    }
-    case (Config::OPTIMIZE_IT): {
-      cout << "BAB engine, optimizing iteratively ... \n";
-      Search::Cutoff* cut = Search::Cutoff::luby(cfg.settings().luby_scale);
-      geSearchOptions.cutoff = cut;
-      RBS<BAB, CPModelTemplate> e(model, geSearchOptions);
-      loopSolutions<RBS<BAB, CPModelTemplate>>(&e);
-      break;
-    }
-    default:
-      cout << "unknown search type !!!" << endl;
-      throw 42;
-      break;
-    }
-    cout << "Output file name: " << cfg.settings().output_path + ".txt" << " end of exploration." << endl;
+      
+    LOG_INFO("End of exploration. Result files written to " +cfg.settings().output_path+"out/");
     return 1;
   }
   ;
@@ -117,11 +125,15 @@ public:
 private:
   CPModelTemplate* model; /**< Pointer to the constraint model class. */
   Config& cfg; /**< pointer to the config class. */
-  int nodes; /**< Number of nodes. */
+  unsigned long nodes; /**< Number of nodes. */
+  int timerResets; /**< Number of incremental timer resets. */
   Search::Options geSearchOptions; /**< Gecode search option object. */
-  ofstream out, outCSV, outMOSTCSV, outMappingCSV; /**< Output file streams: .txt and .csv. */
+  ofstream out, outCSV, outCSV_opt, outMOSTCSV, outMappingCSV; /**< Output file streams: .txt and .csv. */
   typedef std::chrono::high_resolution_clock runTimer; /**< Timer type. */
   runTimer::time_point t_start, t_endAll; /**< Timer objects for start and end of experiment. */
+  vector<Config::SolutionValues> optData, solutionData;
+  unsigned long infoFreq; /**< Adapt the printing frequency of how many solutions have been found to the number of solutions. */
+  
 
   void printMOSTCSV(Mapping* solution, int n, int split) {
     //N_TASKS;N_EDGES;N_PES;N_SLOTS;N_SCHEDS;MAP_PE1;MAP_PE2;FREQ_PE1;FREQ_PE2;MEM_PE1;MEM_PE2;SLOTS_PE1;SLOTS_PE2;MAP_T1;MAP_T2;MAP_T3;TASK_SCHED;COMM_SCHED;cluster;
@@ -288,32 +300,35 @@ private:
   }
 
   /**
-   * Prints the solutions in the ofstreams (out and outCSV)
+   * Prints the solutions in the ofstreams (out and outCSV_opt)
    */
   template<class SearchEngine> void printSolution(SearchEngine *e, CPModelTemplate* s) {
-    cout << nodes << " designs found out of " << e->statistics().node << " nodes so far" << endl;
-    auto durAll = t_endAll - t_start;
-    auto durAll_ms = std::chrono::duration_cast<std::chrono::milliseconds>(durAll).count();
-    out << "*** Solution number: " << nodes << ", after " << durAll_ms << " ms" << ", search nodes: " << e->statistics().node << ", fail: "
-        << e->statistics().fail << ", propagate: " << e->statistics().propagate << ", depth: " << e->statistics().depth << ", nogoods: "
-        << e->statistics().nogood << " ***\n";
-    s->print(out);
-    /// Printing CSV format output
+    
+    
     if(cfg.settings().out_file_type == Config::ALL_OUT ||
-       cfg.settings().out_file_type == Config::CSV){    
-        outCSV << nodes << "," << durAll_ms << ",";
-        s->printCSV(outCSV);
-        s->printMappingCSV(outMappingCSV);
+       cfg.settings().out_file_type == Config::TXT){
+      auto durAll = t_endAll - t_start;
+      auto durAll_ms = std::chrono::duration_cast<std::chrono::milliseconds>(durAll).count();
+      out << "*** Solution number: " << nodes << ", after " << durAll_ms << " ms" << ", search nodes: " << e->statistics().node << ", fail: " << e->statistics().fail << ", propagate: "
+          << e->statistics().propagate << ", depth: " << e->statistics().depth << ", nogoods: " << e->statistics().nogood << ", restarts: " << e->statistics().restart << " ***\n";
+      s->print(out);
     }
+    /// Printing CSV format output
+    /*if(cfg.settings().out_file_type == Config::ALL_OUT ||
+       cfg.settings().out_file_type == Config::CSV){    
+        outCSV_opt << nodes << "," << durAll_ms << ",";
+        s->printCSV(outCSV_opt);
+        s->printMappingCSV(outMappingCSV);
+    }*/
     /**
      * Calling printcsv for the MOST tool
      */
-    if(cfg.settings().out_file_type == Config::ALL_OUT ||
+    /*if(cfg.settings().out_file_type == Config::ALL_OUT ||
        cfg.settings().out_file_type == Config::CSV_MOST){
         Mapping* mapping = s->extractResult();
         const int split = -1;
         printMOSTCSV(mapping, nodes, split);
-    }
+    }*/
   }
   ;
 
@@ -322,13 +337,33 @@ private:
    */
   template<class SearchEngine> void loopSolutions(SearchEngine *e) {
     nodes = 0;
+    timerResets = 0;
+    infoFreq = 1;
+    
     out.open(cfg.settings().output_path+"out/out.txt");
-    outCSV.open(cfg.settings().output_path+"out/out.csv");
-    outMOSTCSV.open(cfg.settings().output_path+"out/out-MOST.csv");    
-    outMappingCSV.open(cfg.settings().output_path+"out/out_mapping.csv");
+    LOG_INFO("Opened file for printing results: " +cfg.settings().output_path+"out/out.txt");
+    if(cfg.doOptimize()){
+      outCSV_opt.open(cfg.settings().output_path+"out/out_opt.csv");
+    }
+    if(!cfg.settings().printMetrics.empty()){
+      outCSV.open(cfg.settings().output_path+"out/out.csv");
+    }
+    //outMOSTCSV.open(cfg.settings().output_path+"out/out-MOST.csv");    
+    //outMappingCSV.open(cfg.settings().output_path+"out/out_mapping.csv");
     LOG_INFO("started searching for " + cfg.get_search_type() + " solutions ");
     LOG_INFO("Printing frequency: " + cfg.get_out_freq());
     out << "\n \n*** \n";    
+    
+    std::chrono::high_resolution_clock::duration presolver_delay(0);
+    if((cfg.doPresolve() && cfg.is_presolved()) || cfg.doMultiStep()){
+      if(cfg.doOptimize()){
+        optData = cfg.getPresolverResults()->optResults;
+      }
+      if(!cfg.settings().printMetrics.empty()){
+        solutionData = cfg.getPresolverResults()->printResults;
+      }
+      presolver_delay = cfg.getPresolverResults()->presolver_delay;
+    }
     
     CPModelTemplate * prev_sol = nullptr;
     t_start = runTimer::now();
@@ -338,53 +373,220 @@ private:
         if(cfg.settings().search == Config::FIRST){
           t_endAll = runTimer::now();
           printSolution(e, s);
-          cout << "returning" << endl;
           return;
+        }
+        if(cfg.settings().out_print_freq == Config::FIRSTandLAST){
+          t_endAll = runTimer::now();
+          printSolution(e, s);
         }
       }
       t_endAll = runTimer::now();
+      
+      //cout << nodes << " solutions found." << endl;
+      if(cfg.doOptimize()){
+        optData.push_back(Config::SolutionValues{t_endAll-t_start+presolver_delay, s->getOptimizationValues()});
+      }
+      if(!cfg.settings().printMetrics.empty()){
+        solutionData.push_back(Config::SolutionValues{t_endAll-t_start+presolver_delay, ((CPModelTemplate*)s)->getPrintMetrics()});
+      }
+      //cout << nodes << " solutions found." << endl;
 
       if(cfg.settings().out_print_freq == Config::ALL_SOL){
-          cout << nodes << " solutions found so far." << endl;
           printSolution(e, s);          
-     }
+      }
      /// We want to keep the last solution in case we only print the last one
       if(prev_sol != nullptr)
         delete prev_sol;
       prev_sol = s;
-
-      if(nodes % 1000 == 0){
-        cout << ".";
-        if(nodes % 20000 == 0)
-          cout.flush();
-        if(nodes % 100000 == 0)
-          cout << endl;
+      
+      if(cfg.settings().out_print_freq == Config::FIRSTandLAST ||
+         cfg.settings().out_print_freq == Config::LAST ||
+         cfg.settings().out_print_freq == Config::ALL_SOL){
+        //if(nodes%infoFreq == 0){
+          LOG_INFO(tools::toString(nodes) +" solution found so far.");
+          //if(nodes == 10){ 
+          //  infoFreq = 5;
+          //}else if(nodes > 10 && nodes%(20*infoFreq) == 0){ 
+          //  infoFreq = 10*infoFreq;
+          //}
+        //}
+      }
+      
+      if(cfg.settings().timeout_all){
+        ((Search::TimeStop*)geSearchOptions.stop)->reset();
+        ((Search::TimeStop*)geSearchOptions.stop)->limit(cfg.settings().timeout_all);
+        timerResets++;
       }
 
     }
 
-    cout << endl;
     auto durAll = runTimer::now() - t_start;
     auto durAll_s = std::chrono::duration_cast<std::chrono::seconds>(durAll).count();
     auto durAll_ms = std::chrono::duration_cast<std::chrono::milliseconds>(durAll).count();
+    
+    if(cfg.settings().out_print_freq == Config::LAST && nodes > 0){
+      printSolution(e, prev_sol);
+    }else if(cfg.settings().out_print_freq == Config::LAST && nodes == 0){
+      out << "No (better) solution found." << endl;
+    }
+    
+    if(cfg.settings().out_print_freq == Config::FIRSTandLAST && nodes > 1){
+      printSolution(e, prev_sol);
+    }else if(cfg.settings().out_print_freq == Config::FIRSTandLAST && nodes == 1){
+      out << "No better solution found." << endl;
+    }
+    delete prev_sol;
+    
     out << "===== search ended after: " << durAll_s << " s (" << durAll_ms << " ms)";
     if(e->stopped()){
       out << " due to time-out!";
     }
+    if(cfg.settings().timeout_all){
+      out << " (with " << timerResets << " incremental timer reset(s).)";
+    }
     out << " =====\n" << nodes << " solutions found\n" << "search nodes: " << e->statistics().node << ", fail: " << e->statistics().fail << ", propagate: "
-        << e->statistics().propagate << ", depth: " << e->statistics().depth << ", nogoods: " << e->statistics().nogood << " ***\n";
+        << e->statistics().propagate << ", depth: " << e->statistics().depth << ", nogoods: " << e->statistics().nogood << ", restarts: " << e->statistics().restart << " ***\n";
 
-    if(cfg.settings().out_print_freq == Config::LAST && nodes > 0){
-           printSolution(e, prev_sol);
-       }else if(nodes == 0){
-
-       }
-       delete prev_sol;
+    if(cfg.doOptimize()){
+      for(auto i: optData){
+        outCSV_opt << std::chrono::duration_cast<std::chrono::milliseconds>(i.time).count() << " ";
+        for(auto j: i.values){
+          outCSV_opt << j << " ";
+        }
+        outCSV_opt << endl;
+      }
+    }
+    if(!cfg.settings().printMetrics.empty()){
+      for(auto i: solutionData){
+        outCSV << std::chrono::duration_cast<std::chrono::milliseconds>(i.time).count() << " ";
+        for(auto j: i.values){
+          outCSV << j << " ";
+        }
+        outCSV << endl;
+      }
+    }
 
     out.close();
-    outCSV.close();
-    outMOSTCSV.close();
-    outMappingCSV.close();
+    if(cfg.doOptimize()){
+      outCSV_opt.close();
+    }
+    if(!cfg.settings().printMetrics.empty()){
+      outCSV.close();
+    }
+    //outMOSTCSV.close();
+    //outMappingCSV.close();
+  }
+  
+  template<class SearchEngine> bool findMinimalTDNConfig(SearchEngine *e) {
+    bool solFound = false;
+    if(CPModelTemplate * s = e->next()){ //"if" because one solution is sufficient
+      t_endAll = runTimer::now();
+      printSolution(e, s);
+      solFound = true;
+      delete s;
+    }
+    auto durAll = runTimer::now() - t_start;
+    auto durAll_s = std::chrono::duration_cast<std::chrono::seconds>(durAll).count();
+    auto durAll_ms = std::chrono::duration_cast<std::chrono::milliseconds>(durAll).count();
+    
+    out << "===== search ended after: " << durAll_s << " s (" << durAll_ms << " ms)";
+    if(e->stopped()){
+      out << " due to time-out!";
+    }
+    nodes = solFound ? 1 : 0;
+    out << " =====\n" << nodes << " solutions found\n" << "search nodes: " << e->statistics().node << ", fail: " << e->statistics().fail << ", propagate: "
+        << e->statistics().propagate << ", depth: " << e->statistics().depth << ", nogoods: " << e->statistics().nogood << ", restarts: " << e->statistics().restart << " ***\n\n";
+    //delete e;
+    return solFound;
+  }
+  
+  /**
+   * Loops through the solutions and prints them using the input search engine
+   */
+  void loopForMinimalTDNConfig(Mapping* map) {
+    
+    out.open(cfg.settings().output_path+"out/TDNconfig_out.txt");
+    LOG_INFO("Opened file for printing results: " +cfg.settings().output_path+"out/TDNconfig_out.txt");
+    
+    LOG_INFO("started searching for " + cfg.get_search_type() + " solutions ");
+    
+    std::chrono::high_resolution_clock::duration presolver_delay(0);
+    if((cfg.doPresolve() && cfg.is_presolved()) || cfg.doMultiStep()){
+      if(cfg.doOptimize()){
+        optData = cfg.getPresolverResults()->optResults;
+      }
+      if(!cfg.settings().printMetrics.empty()){
+        solutionData = cfg.getPresolverResults()->printResults;
+      }
+      presolver_delay = cfg.getPresolverResults()->presolver_delay;
+    }
+    
+    t_start = runTimer::now();
+    bool solutionFound = false;
+    size_t tdn_slots = map->getPlatform()->nodes();
+      LOG_INFO("Searching for minimal TDN config. Starting with "+tools::toString(tdn_slots)+" slots.\n");
+    while(!solutionFound){
+      LOG_INFO("### Trying "+tools::toString(tdn_slots)+" slots. #########################################");
+      out << "Trying " << tdn_slots << " slots..." << endl;
+      map->getPlatform()->setTDNconfig(tdn_slots);
+      model = new CPModelTemplate(map, &cfg);
+      
+      switch (cfg.settings().search) {
+        case (Config::GIST_ALL): {
+          Gist::Print<CPModelTemplate> p("Print solution");
+          Gist::Options options;
+          options.inspect.click(&p);
+          Gist::dfs(model, options);
+          solutionFound = true; //only for testing/debugging
+          break;
+        }
+        case (Config::GIST_OPT): {
+          Gist::Print<CPModelTemplate> p("Print solution");
+          Gist::Options options;
+          options.inspect.click(&p);
+          Gist::bab(model, options);
+          solutionFound = true; //only for testing/debugging
+          break;
+        }
+        case (Config::FIRST):
+        case (Config::ALL): {
+          LOG_INFO("DFS engine ...");
+          DFS<CPModelTemplate> e(model, geSearchOptions);
+          solutionFound = findMinimalTDNConfig<DFS<CPModelTemplate>>(&e);
+          break;
+        }
+        case (Config::OPTIMIZE): {
+          LOG_INFO("BAB engine, optimizing ... ");
+          BAB<CPModelTemplate> e(model, geSearchOptions);
+          solutionFound = findMinimalTDNConfig<BAB<CPModelTemplate>>(&e);
+          break;
+        }
+        case (Config::OPTIMIZE_IT): {
+          LOG_INFO("BAB engine, optimizing iteratively ... ");
+          Search::Cutoff* cut = Search::Cutoff::luby(cfg.settings().luby_scale);
+          geSearchOptions.cutoff = cut;
+          geSearchOptions.nogoods_limit = cfg.settings().noGoodDepth;
+          RBS<CPModelTemplate, BAB> e(model, geSearchOptions);
+          solutionFound = findMinimalTDNConfig<RBS<CPModelTemplate, BAB>>(&e);
+
+          break;
+        }
+        default:
+          THROW_EXCEPTION(RuntimeException, "unknown search type for main solver.");
+          break;
+      }
+      if(!solutionFound) tdn_slots++;
+    }
+    
+    auto durAll = runTimer::now() - t_start;
+    auto durAll_s = std::chrono::duration_cast<std::chrono::seconds>(durAll).count();
+    auto durAll_ms = std::chrono::duration_cast<std::chrono::milliseconds>(durAll).count();
+    
+    out << "\n#####\n";
+    out << "===== search ended after: " << durAll_s << " s (" << durAll_ms << " ms)";
+    
+
+    out.close();
   }
 
 };

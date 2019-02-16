@@ -1,8 +1,8 @@
 #include "mapping.hpp"
 
 using namespace std;
-
-Mapping::Mapping(Applications* p_program, Platform* p_target, XMLdoc& xml) {
+/** Constructor for TDN configuration. Generates WCETs and mapping rules */
+Mapping::Mapping(Applications* p_program, Platform* p_target) {
   program = p_program;
   target = p_target;
   n_apps = program->n_SDFApps() + program->n_IPTTasks();
@@ -24,6 +24,61 @@ Mapping::Mapping(Applications* p_program, Platform* p_target, XMLdoc& xml) {
   wcets.insert(wcets.end(), program->n_programEntities(), //[Nima] n_SDFActors-->n_programEntities
                vector<vector<int>>(p_target->nodes(),
                                    vector<int>(p_target->getMaxModes(), std::numeric_limits<int>::max() - 1)));
+                                   
+  mappingRules_do.insert(mappingRules_do.end(), program->n_programEntities(), -1);
+  mappingRules_doNot.insert(mappingRules_doNot.end(), program->n_programEntities(), vector<int>());
+  
+  /// generate WCETs for TDN configuration
+  for (size_t i=0; i<program->n_programEntities(); i++){ //all entities
+    for (size_t j=0; j<target->nodes(); j++){  //all processors
+      wcets[i][j].resize(target->getModes(j));
+      for(size_t k=0; k<wcets[i][j].size(); k++){
+        wcets[i][j][k] = 10;
+      }
+    }
+  }
+
+  /// generate mapping rules for TDN configuration (force actor i on proc i)
+  for(size_t i=0; i<mappingRules_do.size(); i++){
+    mappingRules_do[i] = i;
+  }
+
+  commSched.insert(commSched.end(), p_target->nodes(), vector<int>());
+  //initialize buffers
+  send_buff.assign(program->n_programChannels(), 0);
+  rec_buff.assign(program->n_programChannels(), 0);
+  comm_delay.assign(program->n_programChannels(), div_t());
+  maxIterationsTransPhEntity.assign(p_program->n_programEntities(), 1);
+  maxIterationsTransPhChannel.assign(p_program->n_programChannels(), 1);
+  
+  sysConstr = SystemConstraints{0, 0, 0, 0, 0};
+}
+
+Mapping::Mapping(Applications* p_program, Platform* p_target, XMLdoc& p_xml_wcet) {
+  program = p_program;
+  target = p_target;
+  n_apps = program->n_SDFApps() + program->n_IPTTasks();
+  period.assign(n_apps, 0);
+  initLatency.assign(n_apps, 0);
+  proc_modes.assign(p_target->nodes(), 0);
+  proc_period.assign(p_target->nodes(), 0);
+  proc_utilization.assign(p_target->nodes(), 0);
+  proc_energy.assign(p_target->nodes(), 0);
+  proc_area.assign(p_target->nodes(), 0);
+  proc_cost.assign(p_target->nodes(), 0);
+  memLoad.assign(p_target->nodes(), 0);
+  procsUsed_utilization = 0;
+  sys_utilization = 0;
+  sys_energy = 0;
+  sys_cost = 0;
+
+  //initialize vector of vectors of vectors for WCETs (combination of entity, proc & mode)
+  wcets.insert(wcets.end(), program->n_programEntities(), //[Nima] n_SDFActors-->n_programEntities
+               vector<vector<int>>(p_target->nodes(),
+                                   vector<int>(p_target->getMaxModes(), std::numeric_limits<int>::max() - 1)));
+                                   
+  mappingRules_do.insert(mappingRules_do.end(), program->n_programEntities(), -1);
+  mappingRules_doNot.insert(mappingRules_doNot.end(), program->n_programEntities(), vector<int>());
   
   //prepare WCETs
   for (size_t i=0; i<program->n_programEntities(); i++){ //all entities
@@ -44,7 +99,112 @@ Mapping::Mapping(Applications* p_program, Platform* p_target, XMLdoc& xml) {
   maxIterationsTransPhChannel.assign(p_program->n_programChannels(), 1);
   
   ///Load WCETs
-  load_wcets(xml);
+  load_wcets(p_xml_wcet);
+  sysConstr = SystemConstraints{0, 0, 0, 0, 0};
+}
+
+Mapping::Mapping(Applications* p_program, Platform* p_target, XMLdoc& p_xml_wcet, XMLdoc& p_xml2) {
+  program = p_program;
+  target = p_target;
+  n_apps = program->n_SDFApps() + program->n_IPTTasks();
+  period.assign(n_apps, 0);
+  initLatency.assign(n_apps, 0);
+  proc_modes.assign(p_target->nodes(), 0);
+  proc_period.assign(p_target->nodes(), 0);
+  proc_utilization.assign(p_target->nodes(), 0);
+  proc_energy.assign(p_target->nodes(), 0);
+  proc_area.assign(p_target->nodes(), 0);
+  proc_cost.assign(p_target->nodes(), 0);
+  memLoad.assign(p_target->nodes(), 0);
+  procsUsed_utilization = 0;
+  sys_utilization = 0;
+  sys_energy = 0;
+  sys_cost = 0;
+
+  //initialize vector of vectors of vectors for WCETs (combination of entity, proc & mode)
+  wcets.insert(wcets.end(), program->n_programEntities(), //[Nima] n_SDFActors-->n_programEntities
+               vector<vector<int>>(p_target->nodes(),
+                                   vector<int>(p_target->getMaxModes(), std::numeric_limits<int>::max() - 1)));
+                                   
+  mappingRules_do.insert(mappingRules_do.end(), program->n_programEntities(), -1);
+  mappingRules_doNot.insert(mappingRules_doNot.end(), program->n_programEntities(), vector<int>());
+  
+  //prepare WCETs
+  for (size_t i=0; i<program->n_programEntities(); i++){ //all entities
+    for (size_t j=0; j<target->nodes(); j++){  //all processors
+      wcets[i][j].resize(target->getModes(j));
+    }
+  }
+
+  commSched.insert(commSched.end(), p_target->nodes(), vector<int>());
+  //initialize buffers
+  send_buff.assign(program->n_programChannels(), 0);
+  rec_buff.assign(program->n_programChannels(), 0);
+  comm_delay.assign(program->n_programChannels(), div_t());
+
+
+
+  maxIterationsTransPhEntity.assign(p_program->n_programEntities(), 1);
+  maxIterationsTransPhChannel.assign(p_program->n_programChannels(), 1);
+  
+  ///Load WCETs
+  load_wcets(p_xml_wcet);
+  if(isDesignConstraints(p_xml2)){
+    load_designConstraints(p_xml2);
+  }else if(isMappingRules(p_xml2)){
+    load_mappingRules(p_xml2);
+    sysConstr = SystemConstraints{0, 0, 0, 0, 0};
+  }
+}
+
+Mapping::Mapping(Applications* p_program, Platform* p_target, XMLdoc& p_xml_wcet, XMLdoc& p_des_constr, XMLdoc& p_xml_mapRules) {
+  program = p_program;
+  target = p_target;
+  n_apps = program->n_SDFApps() + program->n_IPTTasks();
+  period.assign(n_apps, 0);
+  initLatency.assign(n_apps, 0);
+  proc_modes.assign(p_target->nodes(), 0);
+  proc_period.assign(p_target->nodes(), 0);
+  proc_utilization.assign(p_target->nodes(), 0);
+  proc_energy.assign(p_target->nodes(), 0);
+  proc_area.assign(p_target->nodes(), 0);
+  proc_cost.assign(p_target->nodes(), 0);
+  memLoad.assign(p_target->nodes(), 0);
+  procsUsed_utilization = 0;
+  sys_utilization = 0;
+  sys_energy = 0;
+  sys_cost = 0;
+
+  //initialize vector of vectors of vectors for WCETs (combination of entity, proc & mode)
+  wcets.insert(wcets.end(), program->n_programEntities(), //[Nima] n_SDFActors-->n_programEntities
+               vector<vector<int>>(p_target->nodes(),
+                                   vector<int>(p_target->getMaxModes(), std::numeric_limits<int>::max() - 1)));
+                                   
+  mappingRules_do.insert(mappingRules_do.end(), program->n_programEntities(), -1);
+  mappingRules_doNot.insert(mappingRules_doNot.end(), program->n_programEntities(), vector<int>());
+  
+  //prepare WCETs
+  for (size_t i=0; i<program->n_programEntities(); i++){ //all entities
+    for (size_t j=0; j<target->nodes(); j++){  //all processors
+      wcets[i][j].resize(target->getModes(j));
+    }
+  }
+
+  commSched.insert(commSched.end(), p_target->nodes(), vector<int>());
+  //initialize buffers
+  send_buff.assign(program->n_programChannels(), 0);
+  rec_buff.assign(program->n_programChannels(), 0);
+  comm_delay.assign(program->n_programChannels(), div_t());
+
+
+
+  maxIterationsTransPhEntity.assign(p_program->n_programEntities(), 1);
+  maxIterationsTransPhChannel.assign(p_program->n_programChannels(), 1);
+  
+  ///Load WCETs
+  load_wcets(p_xml_wcet);
+  load_designConstraints(p_des_constr);
+  load_mappingRules(p_xml_mapRules);
 }
 
 /*Mapping::Mapping(Applications* p_program, Platform* p_target, 
@@ -68,33 +228,190 @@ Mapping::~Mapping() {
   delete program;
   delete target;
 }
-void Mapping::load_wcets(XMLdoc& xml)
-{
-    const char* my_xpathString = "///WCETs/mapping";
+
+void Mapping::load_wcets(XMLdoc& xml){
+  //ofstream out; 
+  //out.open("./WCETsTODAES_tradeoff.xml");
+  //double scale[] = {1.6, 1.2, 1.0, 0.8, 0.4};
+  //string scalename[] = {"mode1", "mode2", "mode3", "mode4", "mode5"}; 
+  
+  //out << "<WCET_table>" << endl;
+  const char* my_xpathString = "///WCET_table/mapping";
 	LOG_DEBUG("running xpathString  " + tools::toString(my_xpathString) + " on WCET file ...");
 	auto xml_mappings = xml.xpathNodes(my_xpathString);
 	for (const auto& map : xml_mappings)
 	{
 		string task_type = xml.getProp(map, "task_type");
-		string proc_type = xml.getProp(map, "processor");
-		string task_wcet = xml.getProp(map, "wcet");
-        setWCETs(task_type, proc_type, atoi(task_wcet.c_str()));
+    LOG_DEBUG("Reading mapping for task type: " + task_type + "...");
+    
+    //out << "\t<mapping task_type=\"" + task_type << "\">" << endl;
+    
+    /// Parsing the modes
+    string query = "///WCET_table/mapping[@task_type=\'" + task_type + "\']/wcet";
+    auto   proc_mappings = xml.xpathNodes(query.c_str());
+    for (auto p : proc_mappings) {
+      
+      string proc_type = xml.getProp(p, "processor");
+      string proc_mode = xml.getProp(p, "mode");
+      string task_wcet = xml.getProp(p, "wcet");
+      
+      setWCETs(task_type, proc_type, proc_mode, atoi(task_wcet.c_str()));
         
-		LOG_DEBUG("Reading mapping for task type: " + task_type + "...");		
-		
+      //if(proc_type == "small" && proc_mode == "default"){
+        //for(size_t i=0; i<(sizeof(scale)/sizeof(double)); i++){
+          //out << "\t\t<wcet processor=\"" << "default";
+          //out << "\" mode=\"" << scalename[i];
+          //out << "\" wcet=\"" << ceil(scale[i]*atoi(task_wcet.c_str()));
+          //out << "\"/>" << endl;
+        //}
+      //}
+        
+      LOG_DEBUG("Proc: " + proc_type + ", proc_mode: " + proc_mode 
+                 + ", WCET: " + tools::toString(atoi(task_wcet.c_str())));		
+    }
+    
+    //out << "\t</mapping>" << endl;
+    
 	}	
     for (size_t i=0; i < wcets.size(); i++)
     {
-        for (const auto& task_proc_wcets: wcets[i])
+      bool wcetSet = false;
+        for (size_t j=0; j<wcets[i].size(); j++)
         {
-            for (const auto& task_proc_mode_wcet: task_proc_wcets)
+            for (size_t k=0; k<wcets[i][j].size(); k++)
             {
-                if(task_proc_mode_wcet >= std::numeric_limits<int>::max() - 1)
-                THROW_EXCEPTION(InvalidArgumentException,"wcet is not specified for task "+program->getName(i)+"\n");
+                if(wcets[i][j][k] >= std::numeric_limits<int>::max() - 1){ 
+                  LOG_DEBUG("Note: no WCET is specified for task "+program->getName(i)
+                           + " on proc type " + target->getProcModel(j)
+                           + " in mode " + target->getProcModelMode(j,k));
+                }else{
+                  wcetSet = true;
+                }
             }
         }
+        if(!wcetSet){
+          THROW_EXCEPTION(InvalidArgumentException,"wcet is not specified for task "+program->getName(i)+"\n");
+        }
     }
+  
+  //out << "</WCET_table>";
+  //out.close();
 }
+
+bool Mapping::isMappingRules(XMLdoc& xml){
+  const char* my_xpathString = "///mappingRules/mapping";
+	auto xml_mappings = xml.xpathNodes(my_xpathString);
+  if(xml_mappings.size()>0) return true; else return false;
+  
+}
+
+void Mapping::load_mappingRules(XMLdoc& xml){
+  const char* my_xpathString = "///mappingRules/mapping";
+	LOG_DEBUG("running xpathString  " + tools::toString(my_xpathString) + " on mapping rules file ...");
+	auto xml_mappings = xml.xpathNodes(my_xpathString);
+	for (const auto& map : xml_mappings)
+	{
+		string task_type = xml.getProp(map, "task_type");
+    string mapOn;
+    if(xml.hasProp(map, "mapOn"))
+      mapOn = xml.getProp(map, "mapOn");
+    vector<string> notMapOn_s;
+    vector<int> notMapOn;
+    if(xml.hasProp(map, "notMapOn")){
+      notMapOn_s = tools::split(xml.getProp(map, "notMapOn"), ',');
+      for(auto i : notMapOn_s){
+        notMapOn.push_back(atoi(i.c_str()));
+      }
+    }
+    
+    LOG_DEBUG("Reading mapping rules for task type: " + task_type 
+               + " - map on: " + mapOn 
+               + ", do not map on: " + tools::toString(notMapOn));
+    
+    int _mapOn = -1;
+    if(mapOn != "") _mapOn = atoi(mapOn.c_str());
+    setMappingRules(task_type, _mapOn , notMapOn);
+        
+	}	
+    
+}
+
+bool Mapping::isDesignConstraints(XMLdoc& xml){
+  const char* my_xpathString = "///designConstraints/designConstraints";
+	auto xml_constraints = xml.xpathNodes(my_xpathString);
+  if(xml_constraints.size()>0) return true; else return false;
+  
+}
+
+void Mapping::load_designConstraints(XMLdoc& xml)
+{
+  const char* my_xpathString = "///designConstraints/constraint";
+	LOG_DEBUG("running xpathString  " + tools::toString(my_xpathString) + " on desConst file ...");
+	auto xml_constraints = xml.xpathNodes(my_xpathString);
+	for (const auto& cons : xml_constraints)
+	{
+    string power_constr;
+		string util_constr;
+		string area_constr;
+		string money_constr;
+		string procsUsed_constr;
+    
+    if(xml.hasProp(cons, "power"))
+      power_constr = xml.getProp(cons, "power");
+    if(xml.hasProp(cons, "utilization"))
+      util_constr = xml.getProp(cons, "utilization");
+    if(xml.hasProp(cons, "area"))
+      area_constr = xml.getProp(cons, "area");
+    if(xml.hasProp(cons, "money"))
+      money_constr = xml.getProp(cons, "money");
+    if(xml.hasProp(cons, "procsUsed"))
+      procsUsed_constr = xml.getProp(cons, "procsUsed");
+      
+    int power;
+    int util;
+    int area;
+    int money;
+    int procsUsed;
+      
+    if(power_constr.empty()) power = -1; else power = atoi(power_constr.c_str());
+    if(util_constr.empty()) util = -1; else util = atoi(util_constr.c_str())*(max_utilization/100);
+    if(area_constr.empty()) area = -1; else area = atoi(area_constr.c_str());
+    if(money_constr.empty()) money = -1; else money = atoi(money_constr.c_str());
+    if(procsUsed_constr.empty()) procsUsed = -1; else procsUsed = atoi(procsUsed_constr.c_str());
+        
+		LOG_DEBUG("Reading system constraints: " + tools::toString(power) + ", "
+              + tools::toString(util) + ", "
+              + tools::toString(area) + ", "
+              + tools::toString(money) + ", "
+              + tools::toString(procsUsed) );		
+    
+    setSystemConstraints(power, util, area, money, procsUsed);
+		
+	}	
+}
+
+void Mapping::setMappingRules(string taskType, int _mapOn, vector<int> _notMapOn){
+  for (size_t i = 0; i < program->n_programEntities(); i++) {      
+    if (taskType.compare(program->getType(i)) == 0) {
+      if (_mapOn != -1 && (wcets[i].size() <= (size_t)_mapOn)) {
+        THROW_EXCEPTION(InvalidArgumentException,"proc id for doMap of "+ taskType +" out of bound\n");
+      }
+      mappingRules_do[i] = _mapOn;
+      for(int j: _notMapOn){
+        if (wcets[i].size() <= (size_t)j) {
+          THROW_EXCEPTION(InvalidArgumentException,"proc id for doNotMap of "+ taskType +" out of bound\n");
+        }
+        mappingRules_doNot[i].push_back(j);
+      }
+      
+    }
+  }
+}
+
+void Mapping::setSystemConstraints(int _pow, int _util, int _area, int _money, int _pu){
+  sysConstr = SystemConstraints{_pow, _util, _area, _money, _pu};
+}
+
 Applications* Mapping::getApplications() const {
   return program;
 }
@@ -191,16 +508,21 @@ bool Mapping::homogeneousModeNodes(int nodeI, int nodeJ) {
 //}
 
 //fixed
-void Mapping::setWCETs(string taskType, string procModel, int _wcet) {
+void Mapping::setWCETs(string taskType, string procModel, string procMode, int _wcet) {
   for (size_t i = 0; i < program->n_programEntities(); i++) {      
     if (taskType.compare(program->getType(i)) == 0) {
       for (size_t j = 0; j < target->nodes(); j++) {
+        if (wcets[i].size() <= j) {
+          THROW_EXCEPTION(InvalidArgumentException,"wcet out of bound\n");
+        }
         if (procModel.compare(target->getProcModel(j)) == 0) {
-          if (wcets[i].size() <= j) {
-            THROW_EXCEPTION(InvalidArgumentException,"wcet out of bound\n");
-          }
-          for (size_t k=0; k<target->getModes(j); k++){
-            wcets[i][j][k] = ceil(target->speedUp(j,k) *_wcet);
+          for (size_t k=0; k<target->getModes(j); k++){           
+            if (wcets[i][j].size() <= k) {
+              THROW_EXCEPTION(InvalidArgumentException,"wcet out of bound\n");
+            } 
+            if (procMode.compare(target->getProcModelMode(j,k)) == 0) {
+              wcets[i][j][k] = _wcet;
+            }
           }
         }
       }
@@ -209,7 +531,7 @@ void Mapping::setWCETs(string taskType, string procModel, int _wcet) {
 }
 
 void Mapping::setWCETs(vector<char*> elements, vector<char*> values) {
-  string taskType, procModel;
+  string taskType, procModel, procMode;
   int _wcet;
   for (unsigned int i = 0; i < elements.size(); i++) {
     try {
@@ -221,11 +543,14 @@ void Mapping::setWCETs(vector<char*> elements, vector<char*> values) {
 
       if (strcmp(elements[i], "procModel") == 0)
         procModel = string(values[i]);
+        
+      if (strcmp(elements[i], "mode") == 0)
+        procMode = string(values[i]);
     } catch (std::exception const & e) {
       cout << "parsing WCETs xml file error : " << e.what() << endl;
     }
   }
-  setWCETs(taskType, procModel, _wcet);
+  setWCETs(taskType, procModel, procMode, _wcet);
 }
 
 //fixed
@@ -255,20 +580,6 @@ vector<vector<int>> Mapping::getWCETs(unsigned actorId) const {
 
 //fixed
 vector<int> Mapping::getWCETs(unsigned actorId, unsigned proc) const {
-  /*vector<int> _wcets;
-    for (size_t i = 0; i < target->getModes(proc); i++) {
-    if (wcets[actorId][proc] != -1)
-    _wcets.push_back(
-    ceil(target->speedUp(proc, i) * wcets[actorId][proc]));
-    else
-    _wcets.push_back(-1);
-    }
-    //if there are less than three modes for proc, fill-up with -1
-    for (unsigned int i = _wcets.size(); i < 3; i++) {
-    _wcets.push_back(-1);
-    }
-
-    return _wcets*/;
   return wcets[actorId][proc];
 }
 
@@ -366,6 +677,21 @@ vector<int> Mapping::sortedByWCETs() {
     result.push_back(tmp[i].rem);
   }
   return result;
+}
+
+/** Gets the designer-specified rules for mapping. */
+vector<int> Mapping::getMappingRules_do() const{
+  return mappingRules_do;
+}
+
+/** Gets the designer-specified rules for mapping. */
+vector<vector<int>> Mapping::getMappingRules_doNot() const{
+  return mappingRules_doNot;
+}
+
+/** Gets the designer-specified system constraints. */
+SystemConstraints Mapping::getSystemConstraints() const{
+  return sysConstr;
 }
 
 void Mapping::setFirstMapping(vector<div_t>& _firstMapping) {
@@ -977,7 +1303,7 @@ int Mapping::getLeastTotalUtilization() {
 int Mapping::getLeastPowerConsumption() {
   int least_proc_power = INT_MAX;
   for (size_t i = 0; i < target->nodes(); i++) {
-    vector<int> powers = target->getPowerCons(i);
+    vector<int> powers = target->getDynPowerCons(i);
     auto minPower = std::min_element(std::begin(powers), std::end(powers));
     if (*minPower < least_proc_power)
       least_proc_power = *minPower;
@@ -1009,7 +1335,7 @@ int Mapping::getLeastPowerForTask(int task) {
   int least_power = INT_MAX;
   for (size_t k = 0; k < target->nodes(); k++) {
     vector<int> utils = getUtilizationModeVector(task, k);
-    vector<int> powers = target->getPowerCons(k);
+    vector<int> powers = target->getDynPowerCons(k);
     vector<int> powers_utils(powers.size(), 0);
     int size_diff = utils.size() - powers.size();
     std::transform(utils.begin(), utils.end() - size_diff, powers.begin(),
@@ -1354,4 +1680,73 @@ int Mapping::getProcCost(unsigned proc) const {
 vector<int> Mapping::getProcCosts() const {
   return proc_cost;
 }
+
+//vector<div_t> determineFirstMapping(vector<SDFGraph*>& sdfApps, Applications* apps, Platform* target, Mapping* mapping){
+  //vector<div_t> proc(apps->n_SDFApps());
+  ////Step 1: each app gets 1 proc
+  //vector<int> share(apps->n_SDFApps(), 1);
+  ////Step 2: check how many procs are left to be distributed
+  //int n_extraProcs = target->nodes() - apps->n_SDFApps();
+  //if(n_extraProcs>0){
+    //n_extraProcs = target->nodes();
+    ////Step 3: try to give all apps with throughput constraints as many as needed
+    //for(unsigned int i=0; i<sdfApps.size(); i++){
+
+      //if(apps->getPeriodBound(i) > 0){
+        //int sumMinWCETs = 0;
+        //for(int j=0; j<apps->n_programEntities(); j++){
+          //if(apps->getSDFGraph(j)==i){
+            //vector<int> wcets;
+            //for(int p=0; p<target->nodes(); p++){
+              //vector<int> wcets_proc = mapping->getValidWCETs(j, p);
+              //if(wcets_proc.size()>0)
+                //wcets.push_back(*min_element(wcets_proc.begin(),wcets_proc.end()));
+            //}
+            //sumMinWCETs += *min_element(wcets.begin(),wcets.end()); 
+          //}
+        //}
+        //share[i] = ceil((double)sumMinWCETs/apps->getPeriodBound(i));
+        //n_extraProcs -= share[i];
+      //}
+    //}
+  //}
+
+  //if(n_extraProcs>0){
+    //int optApps = 0;
+    //int remainder;
+    ////Step 4: give remaining procs to the graph with optimization
+    //for(unsigned int i=0; i<sdfApps.size(); i++){
+      //if(apps->getPeriodBound(i) == -1){
+        //optApps++;
+      //}
+    //}
+    //remainder = n_extraProcs%optApps;
+    //for(unsigned int i=0; i<sdfApps.size(); i++){
+      //if(apps->getPeriodBound(i) == -1){
+        //share[i] = n_extraProcs/optApps;
+        //if(remainder>0){
+          //share[i]+=remainder;
+          //remainder = 0;
+        //}
+        //share[i] = min(sdfApps[i]->n_actors(), share[i]);
+        //n_extraProcs -= share[i];
+        //optApps--;
+      //}
+    //}
+  //}
+  
+////  for(unsigned int i=0; i<sdfApps.size(); i++){
+  ////  share[i] += nearbyint((double)sdfApps[i]->n_actors()*n_extraProcs/apps->n_SDFActors());
+  ////}
+  
+  //int minProc=0;
+  //for(unsigned int i=0; i<sdfApps.size(); i++){
+    //cout << "First mapping app " << i << ": ";
+    //proc[i].quot = minProc;
+    //proc[i].rem = minProc + share[i] -1;
+    //cout << proc[i].quot << " - " << proc[i].rem << endl;
+    //minProc = proc[i].rem +1;
+  //}
+  //return proc;
+//}
 

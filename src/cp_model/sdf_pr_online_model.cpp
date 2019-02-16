@@ -5,114 +5,144 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
     platform(p_mapping->getPlatform()),
     mapping(p_mapping),
     cfg(_cfg),
-    next(*this, apps->n_SDFActors()+platform->nodes(), 0, apps->n_SDFActors()+platform->nodes()),    
+    next(*this, apps->n_SDFActors()+platform->nodes(), 0, apps->n_SDFActors()+platform->nodes()-1),
+    //rank(*this, apps->n_SDFActors(), 0, apps->n_SDFActors()-1),
     proc(*this, apps->n_programEntities(), 0, platform->nodes()-1),
     proc_mode(*this, platform->nodes(), 0, platform->getMaxModes()),
     tdmaAlloc(*this, platform->nodes(), 0, platform->tdmaSlots()),
+    injectionTable(*this, platform->nodes()*platform->getTDNCycles(), 0, platform->nodes()+1),
+    ic_mode(*this, 0, platform->getInterconnectModes()-1),
+    chosenRoute(*this, apps->n_programChannels(), 0, platform->getTDNCycles()),
     sendNext(*this, apps->n_programChannels()+platform->nodes(), 0, apps->n_programChannels()+platform->nodes()),
     recNext(*this, apps->n_programChannels()+platform->nodes(), 0, apps->n_programChannels()+platform->nodes()),
     sendbufferSz(*this, apps->n_programChannels(), 0, Int::Limits::max),
     recbufferSz(*this, apps->n_programChannels(), 0, Int::Limits::max),
     period(*this, apps->n_SDFApps(), 0, Int::Limits::max),
-    proc_period(*this, platform->nodes(), 0, Int::Limits::max),
-    latency(*this, apps->n_SDFApps(), 0, Int::Limits::max),
-    procsUsed(*this, 1, platform->nodes()),
-    utilization(*this, platform->nodes(), 0, p_mapping->max_utilization),
+    //proc_period(*this, platform->nodes(), 0, Int::Limits::max),
+    //latency(*this, apps->n_SDFApps(), 0, Int::Limits::max),
+    //procsUsed(*this, 1, platform->nodes()),
+    //utilization(*this, platform->nodes(), 0, p_mapping->max_utilization),
     sys_utilization(*this, 0, p_mapping->max_utilization),
     procsUsed_utilization(*this, 0, p_mapping->max_utilization),
-    proc_power(*this, platform->nodes(), 0, Int::Limits::max),
-    //sys_power(*this, mapping->getLeastPowerConsumption(), Int::Limits::max),
+    //proc_powerDyn(*this, platform->nodes(), 0, Int::Limits::max),
+    //flitsPerLink(*this, apps->n_programChannels()*(platform->getTDNGraph().size()/platform->getTDNCycles()), 0, Int::Limits::max),
+    //noc_power(*this, 0, Int::Limits::max),
+    //nocUsed_power(*this, 0, Int::Limits::max),
     sys_power(*this, 0, Int::Limits::max),
-    proc_area(*this, platform->nodes(), 0, Int::Limits::max),
+    sysUsed_power(*this, 0, Int::Limits::max),
+    //proc_area(*this, platform->nodes(), 0, Int::Limits::max),
+    //noc_area(*this, 0, Int::Limits::max),
+    //nocUsed_area(*this, 0, Int::Limits::max),
     sys_area(*this, 0, Int::Limits::max),
-    proc_cost(*this, platform->nodes(), 0, Int::Limits::max),
+    sysUsed_area(*this, 0, Int::Limits::max),
+    //proc_cost(*this, platform->nodes(), 0, Int::Limits::max),
+    //noc_cost(*this, 0, Int::Limits::max),
+    //nocUsed_cost(*this, 0, Int::Limits::max),
     sys_cost(*this, 0, Int::Limits::max),
-    wcct_b(*this, apps->n_programChannels(), 0, Int::Limits::max),
-    wcct_s(*this, apps->n_programChannels(), 0, Int::Limits::max),
-    wcct_r(*this, apps->n_programChannels(), 0, Int::Limits::max),
-    least_power_est(mapping->getLeastPowerConsumption()){
-    LOG_DEBUG("Creating CP model");
-    if(apps->n_SDFActors() > 0){
-        rank = IntVarArray(*this, apps->n_SDFActors(), 0, apps->n_SDFActors()-1);
-    }
+    sysUsed_cost(*this, 0, Int::Limits::max)//,
+    //wcct_b(*this, apps->n_programChannels(), 0, Int::Limits::max),
+    //wcct_s(*this, apps->n_programChannels(), 0, Int::Limits::max),
+    //wcct_r(*this, apps->n_programChannels(), 0, Int::Limits::max)
+    {
+      
+    //initialization of secondary variables
+    IntVarArgs rank(*this, apps->n_SDFActors(), 0, apps->n_SDFActors()-1);
+    IntVarArgs proc_period(*this, platform->nodes(), 0, Int::Limits::max);
+    IntVarArgs latency(*this, apps->n_SDFApps(), 0, Int::Limits::max);            
+    IntVar procsUsed(*this, 1, platform->nodes());     
+    IntVarArgs utilization(*this, platform->nodes(), 0, p_mapping->max_utilization);
+    IntVarArgs proc_powerDyn(*this, platform->nodes(), 0, Int::Limits::max);
+    IntVar noc_power(*this, 0, Int::Limits::max);
+    IntVar nocUsed_power(*this, 0, Int::Limits::max);
+    IntVarArgs proc_area(*this, platform->nodes(), 0, Int::Limits::max);
+    IntVar noc_area(*this, 0, Int::Limits::max); 
+    IntVar nocUsed_area(*this, 0, Int::Limits::max); 
+    IntVarArgs proc_cost(*this, platform->nodes(), 0, Int::Limits::max); 
+    IntVar noc_cost(*this, 0, Int::Limits::max);  
+    IntVar nocUsed_cost(*this, 0, Int::Limits::max);
+    IntVarArgs wcct_b(*this, apps->n_programChannels(), 0, Int::Limits::max); 
+    IntVarArgs wcct_s(*this, apps->n_programChannels(), 0, Int::Limits::max); 
+    IntVarArgs wcct_r(*this, apps->n_programChannels(), 0, Int::Limits::max); 
+    
+    LOG_DEBUG("Gecode version: " + tools::toString(GECODE_VERSION));
+    LOG_DEBUG("Int::Limits::max = " + tools::toString(Int::Limits::max));
+
     std::ostream debug_stream(nullptr); /**< debuging stream, it is printed only in debug mode. */
     debug_stream << "\n==========\ndebug log:\n..........\n";
     vector<SDFChannel*> channels = apps->getChannels();
 
-    cout << "Creating Model..." << endl;
-    cout << "  Platform with " << platform->nodes() << " nodes is ";
+    LOG_DEBUG("Creating Model...");
+    string outInfo = "";
+    outInfo += "  Platform with " + tools::toString(platform->nodes()) + " nodes is ";
     if(!mapping->homogeneousPlatform())
-        cout << "not ";
-    cout << "homogeneous." << endl;
+        outInfo += "not ";
+    outInfo += "homogeneous.\n";
     if(!mapping->homogeneousPlatform()){
-        cout << "  Homogeneous nodes: ";
+        outInfo += "  Homogeneous nodes: ";
         for(size_t ji = 0; ji < platform->nodes(); ji++){
             for(size_t jj = ji + 1; jj < platform->nodes(); jj++){
                 if(mapping->homogeneousNodes(ji, jj)){
-                    cout << "{" << ji << ", " << jj << "} ";
+                    outInfo += "{" + tools::toString(ji) + ", " + tools::toString(jj) + "} ";
                 }
             }
         }
-        cout << endl;
-        cout << "  Mode-homogeneous nodes: ";
+        outInfo += "\n";
+        outInfo += "  Mode-homogeneous nodes: ";
         for(size_t ji = 0; ji < platform->nodes(); ji++){
             for(size_t jj = ji + 1; jj < platform->nodes(); jj++){
                 if(mapping->homogeneousModeNodes(ji, jj)){
-                    cout << "{" << ji << ", " << jj << "} ";
+                    outInfo += "{" + tools::toString(ji) + ", " + tools::toString(jj) + "} ";
                 }
             }
         }
-        cout << endl;
+        outInfo += "\n";
     }
-
-    cout << "  Found " << apps->n_programEntities() << " program entities (", cout << apps->n_SDFActors() << " actors of ";
-    cout << apps->n_SDFApps() << " SDFGs and ";
-    cout << apps->n_IPTTasks() << " ipt tasks)." << endl;
-    cout << "   --Actors and Tasks------------------\n";
+    LOG_DEBUG(outInfo);
+    
+    
+    LOG_DEBUG("  Found " + tools::toString(apps->n_programEntities()) + " program entities (" 
+                 + tools::toString(apps->n_SDFActors()) + " actors of "
+                 + tools::toString(apps->n_SDFApps()) + " SDFGs and "
+                 + tools::toString(apps->n_IPTTasks()) + " ipt tasks).");
+    
+    LOG_DEBUG("   --Actors and Tasks------------------");
     for(size_t ii = 0; ii < apps->n_programEntities(); ii++){
-        cout << "   " << ii << ": " << apps->getName(ii) << endl;
+        LOG_DEBUG("   " + tools::toString(ii) + ": " + apps->getName(ii) + "");
     }
 
-    cout << "   --Channels------------------\n";
+    LOG_DEBUG("   --Channels------------------");
     for(size_t ki = 0; ki < channels.size(); ki++){
         int src_ch1 = channels[ki]->source;
         int dst_ch1 = channels[ki]->destination;
         int tok_ch1 = channels[ki]->initTokens;
 
-        cout << "   Ch " << ki << ": ";
-        cout << apps->getName(src_ch1) << " -> ";
-        cout << apps->getName(dst_ch1) << "   (";
-        cout << src_ch1 << " -> ";
-        cout << dst_ch1 << ")";
-        if(tok_ch1 > 0)
-            cout << " *";
-        cout << endl;
+        LOG_DEBUG("   Ch " + tools::toString(ki) + ": "
+                  +apps->getName(src_ch1) + " -> "
+                  +apps->getName(dst_ch1) + "   ("
+                  +tools::toString(src_ch1) + " -> "
+                  +tools::toString(dst_ch1) + ")"
+                  + (tok_ch1 > 0 ? " *" : ""));
     }
-    cout << endl;
+    
+    
 
-    cout << "Design Constraints: " << endl;
+    LOG_DEBUG("Design Constraints: ");
     for(size_t a = 0; a < apps->n_SDFApps(); a++){
-        cout << "   SDF " << apps->getGraphName(a) << ":\n \t period const: ";
-        if(apps->getPeriodConstraint(a)!=-1){
-            cout<< apps->getPeriodConstraint(a);
-        }else{
-            cout << "none";
-        }
-        cout << "\n \t latency const: ";
-        if(apps->getLatencyConstraint(a)!=-1){
-            cout<< apps->getLatencyConstraint(a);
-        }else{
-            cout << "none";
-        }
-        cout << endl;
+        LOG_DEBUG("   SDF " + apps->getGraphName(a) + ":\n \t period const: "
+        + ((apps->getPeriodConstraint(a)!=-1)?
+            tools::toString(apps->getPeriodConstraint(a)) :
+            "none")
+        + "\n \t latency const: "
+        +((apps->getLatencyConstraint(a)!=-1)?
+            tools::toString(apps->getLatencyConstraint(a)) :
+            "none"));
     }
-    cout << endl;
 
     if(apps->n_programEntities() <= 0){
-        cout << "No program entities found !!!" << endl;
+        LOG_INFO("No program entities found !!!");
         throw 42;
     }
-    cout << "Inserting mapping constraints \n";
+    LOG_INFO("Inserting mapping constraints ");
 
     /**
      * MAPPING
@@ -126,7 +156,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
     /**
      * Independent periodic tasks
      */
-    cout << "Inserting IPT scheduling constraints \n";
+    LOG_INFO("Inserting IPT scheduling constraints ");
     if(apps->n_IPTTasks() > 0){
         IntVarArgs n_instances(*this, apps->n_IPTTasks(), 0, apps->getMaxNumberOfIPTInstances());
         IntVarArgs instancesOnNode(*this, apps->n_IPTTasks() * platform->nodes(), 0, apps->getMaxNumberOfIPTInstances() * platform->nodes());
@@ -139,31 +169,58 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
      * SDF scheduling, Communication and Throughput
      */
     if(apps->n_SDFActors() > 0){
-        cout << "Inserting scheduling constraints \n";
+        LOG_INFO("Inserting scheduling constraints ");
         //IntVarArgs rank(*this, apps->n_SDFActors(), 0, apps->n_SDFActors()-1);                                                /**< rank of each actor. */
 #include "scheduling.constraints"
         /**
          * Communication
          */
-        cout << "Inserting communication constraints \n";
-        IntVarArgs blockingTime_s(*this, apps->n_programChannels(), 0, Int::Limits::max);
-        IntVarArgs blockingTime_r(*this, apps->n_programChannels(), 0, Int::Limits::max);
-        IntVarArgs transferTime_s(*this, apps->n_programChannels(), 0, Int::Limits::max);
-        IntVarArgs transferTime_r(*this, apps->n_programChannels(), 0, Int::Limits::max);
+        LOG_INFO("Inserting communication constraints ");
+        IntVar cycleLength(*this, 0, Int::Limits::max); //depends on chosen interconnect-mode
         //IntVarArgs sendbufferSz(*this, apps->n_programChannels(), 0, Int::Limits::max);                               /**< //sending buffer sizes. */
         //IntVarArgs recbufferSz(*this, apps->n_programChannels(), 1, Int::Limits::max);                                /**< //receiving buffer sizes. */
+        
+        vector<tdn_graphNode> tdn_graph;
+        size_t messages;
+        size_t links;
+        IntVarArgs flitsPerLink;
+        if(platform->getInterconnectType() == TDN_NOC){
+          tdn_graph = platform->getTDNGraph();
+          messages = channels.size(); 
+          links = tdn_graph.size()/platform->getTDNCycles();
+          IntVarArgs _flitsPerLink(*this, messages*links, 0, Int::Limits::max); 
+          flitsPerLink = _flitsPerLink;
+        }
 #include "wcct.constraints"
+
+        /**
+         * Power consumption
+         */
+        LOG_INFO("Inserting power constraints ");
+        if(cfg->settings().configTDN){
+          rel(*this, ic_mode == 0);
+          for(size_t p=0; p<platform->nodes(); p++){
+            rel(*this, proc_mode[p]==0);
+          }
+        }
+#include "power.constraints"
+
+        /**
+         * Cost metrics
+         */
+        LOG_INFO("Inserting cost metric constraints ");
+#include "costMetrics.constraints"
 
         /**
          * Memory
          */
-        cout << "Inserting memory constraints \n";
+        LOG_INFO("Inserting memory constraints ");
 #include "memory.constraints"
 
         /**
          * Throughput
          */
-        cout << "Inserting throughput constraints \n";
+        LOG_INFO("Inserting throughput constraints ");
         vector<int> maxMinWcet(apps->n_SDFApps(), 0);
         vector<int> maxMinWcetActor(apps->n_SDFActors(), 0);
         vector<int> sumMinWCETs(apps->n_SDFApps(), 0);
@@ -188,30 +245,30 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
 
                     sumMinWCETs[a] += maxMinWcetActor[i];
                 }
-      }
-    }
+            }
+        }
 #include "throughput.constraints"
 
-    cout << "Inserting presolver constraints \n";
-//#include "presolve.constraints"
-
-    if (cfg->is_presolved()) {
-      LOG_INFO("The model is presolved");
+//PRESOLVING
+    if (cfg->doPresolve() && cfg->is_presolved()) {
+      LOG_INFO("Inserting presolver constraints ");
+      
+      LOG_INFO("sdf_pr_online_model.cpp: The model is presolved");
       if (cfg->getPresolverResults()->it_mapping < cfg->getPresolverResults()->oneProcMappings.size()) {
         vector<tuple<int, int>> oneProcMapping =
-            cfg->getPresolverResults()->oneProcMappings[cfg->getPresolverResults()->it_mapping];
+            get<1>(cfg->getPresolverResults()->oneProcMappings[cfg->getPresolverResults()->it_mapping]);
 
         for (size_t a = 0; a < apps->n_SDFActors(); a++) {
           rel(*this, proc[a] == get<0>(oneProcMapping[apps->getSDFGraph(a)]));
           rel(*this, proc_mode[get<0>(oneProcMapping[apps->getSDFGraph(a)])] == get<1>(oneProcMapping[apps->getSDFGraph(a)]));
+          rel(*this, ic_mode == get<0>(cfg->getPresolverResults()->oneProcMappings[cfg->getPresolverResults()->it_mapping]));
         }
       } else { //...otherwise forbid all mappings in oneProcMappings
-        cout << "Now forbidding " << cfg->getPresolverResults()->oneProcMappings.size() << " mappings." << endl;
-        cout << endl;
+        LOG_INFO("Now forbidding " + tools::toString(cfg->getPresolverResults()->oneProcMappings.size()) + " mappings that have been explored by the PRESOLVER.");
         for (size_t i = 0;
             i < cfg->getPresolverResults()->oneProcMappings.size(); i++) {
           vector<tuple<int, int>> oneProcMapping =
-              cfg->getPresolverResults()->oneProcMappings[i];
+              get<1>(cfg->getPresolverResults()->oneProcMappings[i]);
           IntVarArgs t_mapping(*this, apps->n_programEntities(), 0,
               platform->nodes() - 1);
           for (size_t a = 0; a < apps->n_SDFActors(); a++) {
@@ -222,28 +279,86 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
         }
       }
     }
-
-    switch (cfg->settings().criteria[0]) {
-    case (Config::POWER):
-      for (size_t i = 0;
-          i < cfg->getPresolverResults()->sys_energys.size(); i++) {
-        rel(*this, sys_power < cfg->getPresolverResults()->sys_energys[i]);
-      }
-      break;
-    case (Config::THROUGHPUT):
-      for (size_t i = 0; i < apps->n_SDFApps(); i++) {
-        if (apps->getPeriodConstraint(i) == -1) {
-          for (size_t j = 0; j < cfg->getPresolverResults()->periods.size(); j++) {
-            rel(*this, period[i] < cfg->getPresolverResults()->periods[j][i]);
+    
+    if (cfg->doPresolve() && cfg->is_presolved()) {
+      if(cfg->doOptimizeThput(cfg->settings().optimizationStep)){
+        bool set = false;
+        for(size_t i=0;i<apps->n_SDFApps();i++)
+        {
+          if(!set){
+            if(apps->getPeriodConstraint(i) == -1){   
+              for (size_t j = 0; j < cfg->getPresolverResults()->optResults.size(); j++) {
+                rel(*this, period[i] < cfg->getPresolverResults()->optResults[j].values[i]);
+              }
+              set = true;
+            }
           }
-          break;
+        }
+      }else if(cfg->doOptimizePower(cfg->settings().optimizationStep)){
+        for (size_t j = 0; j < cfg->getPresolverResults()->optResults.size(); j++) {
+          if(cfg->doOptimizePower() && cfg->doOptimizeThput()){
+            rel(*this, sys_power < cfg->getPresolverResults()->optResults[j].values[apps->n_SDFApps()]);
+          }else if(cfg->doOptimizePower() && !cfg->doOptimizeThput()){
+            rel(*this, sys_power < cfg->getPresolverResults()->optResults[j].values[0]);
+          }
         }
       }
-      break;
-    default:
-      cout << "unknown optimization criterion !!!\n";
-      throw 42;
-      break;
+      
+    }
+//MULTI-STEP SOLVING
+    if (cfg->doMultiStep()){
+      vector<div_t> firstMapping = mapping->getFirstMapping();
+      for(unsigned int x=0; x<firstMapping.size(); x++){
+        for(size_t i=0; i<apps->n_programEntities(); i++){
+          if(x == apps->getSDFGraph(i)){
+            LOG_DEBUG("Inserting constraints for fixed mapping (multi-step solving):");
+            LOG_DEBUG("   proc[" + tools::toString(i) + "] >= " + tools::toString(firstMapping[x].quot) + " & <= " + tools::toString(firstMapping[x].rem));
+            rel(*this, proc[i]>=firstMapping[x].quot && proc[i]<=firstMapping[x].rem);
+          }
+        }
+      }
+
+      if(firstMapping.size()>0){
+        //cout << "procsUsed >= " << (firstMapping.back().quot+1) << endl;
+        rel(*this, procsUsed >= (firstMapping.back().quot+1));
+      }else{ //use found solutions for improving solution
+        LOG_INFO("Setting solutions found in previous steps (<="+tools::toString(cfg->settings().optimizationStep)+")");
+        
+        if(cfg->doOptimizePower() && cfg->doOptimizeThput()){
+          if(cfg->doOptimizePower(cfg->settings().optimizationStep) 
+             && cfg->doOptimizeThput(cfg->settings().optimizationStep-1)){ //first throughput, then power
+               
+            for(size_t i=0;i<apps->n_SDFApps();i++){
+              if(apps->getPeriodConstraint(i) == -1 && !cfg->getPresolverResults()->optResults.empty()){
+                rel(*this, (period[i] < cfg->getPresolverResults()->optResults.back().values[i]) ||
+                           ((period[i] == cfg->getPresolverResults()->optResults.back().values[i]) && 
+                            (sys_power < cfg->getPresolverResults()->optResults.back().values[apps->n_SDFApps()])));
+                break;
+              }
+            }
+          }else if(cfg->doOptimizeThput(cfg->settings().optimizationStep)
+             && cfg->doOptimizePower(cfg->settings().optimizationStep-1)){ //first power, then throughput
+               
+            for(size_t i=0;i<apps->n_SDFApps();i++){
+              if(apps->getPeriodConstraint(i) == -1 && !cfg->getPresolverResults()->optResults.empty()){
+                rel(*this, (sys_power < cfg->getPresolverResults()->optResults.back().values[apps->n_SDFApps()]) ||
+                           ((sys_power == cfg->getPresolverResults()->optResults.back().values[apps->n_SDFApps()]) && (period[i] < cfg->getPresolverResults()->optResults.back().values[i])));
+                break;
+              }
+            }
+          }
+        }else if(!cfg->doOptimizePower() && cfg->doOptimizeThput()){
+          for(size_t i=0;i<apps->n_SDFApps();i++){
+            if(apps->getPeriodConstraint(i) == -1 && !cfg->getPresolverResults()->optResults.empty()){
+              rel(*this, period[i] < cfg->getPresolverResults()->optResults.back().values[i]);break;
+            }
+          }
+        }else if(cfg->doOptimizePower() && !cfg->doOptimizeThput()){
+          if(!cfg->getPresolverResults()->optResults.empty()){
+            rel(*this, sys_power < cfg->getPresolverResults()->optResults.back().values[0]);
+          }
+        }//else... add the other metrics (area, money, ...)
+      }
     }
 
         for(size_t i = 0; i < channels.size(); i++){
@@ -253,7 +368,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
         /**
          * Creating the branching strategy
          */
-        cout << endl << "  Branching:" << endl;
+        string branchStrat = "  Branching:\n";
 
         vector<double> ratio;
         vector<int> ids;
@@ -261,7 +376,7 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
         for(size_t a = 0; a < apps->n_SDFApps(); a++){
             if(apps->getPeriodConstraint(a) < 0){
                 heaviestFirst = false;
-            }else{
+            }else if(apps->getPeriodConstraint(a) > 0){
                 double new_ratio = (double) apps->getPeriodConstraint(a) / sumMinWCETs[a];
                 if(ratio.size() == 0 || new_ratio > ratio.back()){
                     ratio.push_back(new_ratio);
@@ -277,99 +392,221 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
                 }
             }
         }
-        cout << "    ";
+        branchStrat += "    ";
         if(!heaviestFirst)
-            cout << "not ";
-        cout << "heaviestFirst" << endl;
-
+            branchStrat += "not ";
+        branchStrat += "heaviestFirst\n"; 
+        
+        branchStrat += "    ";
+        if (!cfg->doMultiStep()){
+          if(!cfg->doOptimizeThput())
+            branchStrat += "do not ";
+          branchStrat += "optimize throughput.\n";
+        } else {
+          if(!cfg->doOptimizeThput()){
+            branchStrat += "do not optimize throughput.\n";
+          }else{
+            if(cfg->doOptimizeThput(cfg->settings().optimizationStep)){
+              branchStrat += "optimize throughput.\n";
+            }else{
+              bool before = false;
+              for(size_t i=0; i<cfg->settings().optimizationStep; i++){
+                if(cfg->doOptimizeThput(i)){
+                  branchStrat += "keep or optimize throughput.\n";
+                  before = true;
+                  break;
+                }
+              }
+              if(!before) branchStrat += "do not optimize throughput.\n";
+            }
+          }
+        }
+        
+        branchStrat += "    ";
+        if (!cfg->doMultiStep()){
+          if(!cfg->doOptimizePower())
+            branchStrat += "do not ";
+          branchStrat += "optimize power.\n";
+        } else {
+          if(!cfg->doOptimizePower()){
+            branchStrat += "do not optimize power.\n";
+          }else{
+            if(cfg->doOptimizePower(cfg->settings().optimizationStep)){
+              branchStrat += "optimize power.\n";
+            }else{
+              bool before = false;
+              for(size_t i=0; i<cfg->settings().optimizationStep; i++){
+                if(cfg->doOptimizePower(i)){
+                  branchStrat += "keep or optimize power.\n";
+                  before = true;
+                  break;
+                }
+              }
+              if(!before) branchStrat += "do not optimize power.\n";
+            }
+          }
+        }
+        
+        LOG_INFO(branchStrat);
+        branchStrat = "";
+        
         IntVarArgs procBranchOrderSAT;
         IntVarArgs procBranchOrderOPT;
         IntVarArgs procBranchOrderOther;
-        cout << "    procBranchOrderSAT: " << endl;
+        branchStrat += "    procBranchOrderSAT: \n";
         for(unsigned a = 0; a < ids.size(); a++){
-            if(apps->getPeriodConstraint(ids[a]) > 0 && !cfg->doOptimize()){
+            if(apps->getPeriodConstraint(ids[a]) > 0 && !cfg->doOptimizeThput()){
                 vector<int> branchProc = mapping->sortedByWCETs(ids[a]);
-                cout << "      " << apps->getGraphName(ids[a]) << " [";
+                branchStrat += "      " + apps->getGraphName(ids[a]) + " [";
                 for(int i = minA[ids[a]]; i <= maxA[ids[a]]; i++){
                     procBranchOrderSAT << proc[i];
                     //procBranchOrderSAT << rank[i];
-                    cout << i << " ";
+                    branchStrat += tools::toString(i) + " ";
                 }
-                cout << "]" << endl;
+                branchStrat += "]\n";
             }
         }
-        cout << "    procBranchOrderOPT: " << endl;
+        branchStrat += "    procBranchOrderOPT: \n";
         for(size_t a = 0; a < ids.size(); a++){
-            if(apps->getPeriodConstraint(ids[a]) > 0 && cfg->doOptimize()){
+            if(apps->getPeriodConstraint(ids[a]) > 0 && cfg->doOptimizeThput()){
                 vector<int> branchProc = mapping->sortedByWCETs(ids[a]);
-                cout << "      " << apps->getGraphName(ids[a]) << " [";
+                branchStrat += "      " + apps->getGraphName(ids[a]) + " [";
                 for(int i = minA[ids[a]]; i <= maxA[ids[a]]; i++){
-                    procBranchOrderOPT << proc[i];
+                    procBranchOrderSAT << proc[i];
                     //procBranchOrderOPT << rank[i];
-                    cout << i << " ";
+                    branchStrat += tools::toString(i) + " ";
                 }
-                cout << "]" << endl;
+                branchStrat += "]\n";
             }
         }
         for(size_t a = 0; a < apps->n_SDFApps(); a++){
-            if(apps->getPeriodConstraint(a) < 0 && cfg->doOptimize()){
+            if(apps->getPeriodConstraint(a) < 0 && cfg->doOptimizeThput()){
                 vector<int> branchProc = mapping->sortedByWCETs(a);
-                cout << "      " << apps->getGraphName(a) << " [";
+                branchStrat += "      " + apps->getGraphName(a) + " [";
                 for(int i = minA[a]; i <= maxA[a]; i++){
                     procBranchOrderOPT << proc[i];
                     //procBranchOrderOPT << rank[i];
-                    cout << i << " ";
+                    branchStrat += tools::toString(i) + " ";
                 }
-                cout << "]" << endl;
+                branchStrat += "]\n";
             }
         }
-        cout << "    procBranchOrderOther: " << endl;
         for(unsigned a = 0; a < apps->n_SDFApps(); a++){
-            if(apps->getPeriodConstraint(a) <= 0 && !cfg->doOptimize()){
-                cout << "      " << apps->getGraphName(a) << " [";
+            if(apps->getPeriodConstraint(a) == 0 && cfg->doOptimizeThput()){
+                branchStrat += "      " + apps->getGraphName(a) + " [";
                 for(int i = minA[a]; i <= maxA[a]; i++){
                     procBranchOrderOther << proc[i];
                     //procBranchOrderOther << rank[i];
-                    cout << i << " ";
+                    branchStrat += tools::toString(i) + " ";
                 }
-                cout << "]" << endl;
+                branchStrat += "]\n";
             }
         }
-        cout << endl;
+        branchStrat += "    procBranchOrderOther: \n";
+        for(unsigned a = 0; a < apps->n_SDFApps(); a++){
+            if(apps->getPeriodConstraint(a) <= 0 && !cfg->doOptimizeThput()){
+                branchStrat += "      " + apps->getGraphName(a) + " [";
+                for(int i = minA[a]; i <= maxA[a]; i++){
+                    procBranchOrderOther << proc[i];
+                    //procBranchOrderOther << rank[i];
+                    branchStrat += tools::toString(i) + " ";
+                }
+                branchStrat += "]\n";
+            }
+        }
+        LOG_INFO(branchStrat);
         //branch(*this, next, INT_VAR_NONE(), INT_VAL_MIN());
 
         if(!heaviestFirst && (procBranchOrderSAT.size() > 0 || procBranchOrderOPT.size() > 0)){
-            //branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN());
-            branch(*this, procBranchOrderSAT, INT_VAR_NONE(), INT_VAL_MIN());
-            branch(*this, procBranchOrderOPT, INT_VAR_NONE(), INT_VAL_MIN());
-            branch(*this, proc_mode, INT_VAR_NONE(), INT_VAL_MIN());
+            rnd.hw();
+            branch(*this, procBranchOrderSAT, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN());
+            branch(*this, procBranchOrderOPT, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN());
+            branch(*this, procBranchOrderOther, INT_VAR_AFC_MAX(0.99), INT_VAL_RND(rnd));
         }else if(heaviestFirst && (procBranchOrderSAT.size() > 0 || procBranchOrderOPT.size() > 0)){
-            branch(*this, procBranchOrderSAT, INT_VAR_NONE(), INT_VAL_MIN());
+            branch(*this, procBranchOrderSAT, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN());
             branch(*this, procBranchOrderOPT, INT_VAR_NONE(), INT_VAL_MIN());
-            branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN());
+            rnd.hw();
+            branch(*this, procBranchOrderOther, INT_VAR_AFC_MAX(0.99), INT_VAL_RND(rnd));
         }else{
-            branch(*this, procBranchOrderOther, INT_VAR_NONE(), INT_VAL_MIN());
-            branch(*this, proc_mode, INT_VAR_NONE(), INT_VAL_MIN());
+            rnd.hw();
+            branch(*this, procBranchOrderOther, INT_VAR_AFC_MAX(0.99), INT_VAL_RND(rnd));
         }
-
+        
         //branch(*this, rank, INT_VAR_NONE(), INT_VAL_MIN());
-        branch(*this, next, INT_VAR_NONE(), INT_VAL_MIN());
-        branch(*this, tdmaAlloc, INT_VAR_NONE(), INT_VAL_MIN());
-        /**
+        branch(*this, next, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN());
+         /**
          * ordering of sending and receiving messages with same
+         * source (send) or destination (rec) for unresolved cases
+         */
+        if(cfg->settings().configTDN){
+          assign(*this, sendNext, INT_ASSIGN_MIN());
+        }else{
+          branch(*this, sendNext, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN());
+        }
+ 
+        /**
+         * ordering of receiving messages with same
          * source (send) or destination (rec) for unresolved cases
          */
         for(size_t k = 0; k < apps->n_programChannels() + platform->nodes(); k++){
             assign(*this, recNext[k], INT_ASSIGN_MIN());
         }
-        branch(*this, sendNext, INT_VAR_NONE(), INT_VAL_MIN());
+        
+        if(platform->getInterconnectType() == TDN_NOC){
+          if(platform->getTDNCyclesPerProc() == 1){
+            //branch(*this, chosenRoute, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN());
+            branch(*this, chosenRoute, INT_VAR_NONE(), INT_VAL_MIN()); 
+          }else if(platform->getTDNCyclesPerProc()>1 &&
+            !cfg->doOptimizeThput(cfg->settings().optimizationStep)){
+            rnd.hw();
+            branch(*this, chosenRoute, INT_VAR_AFC_MAX(0.99), INT_VAL_RND(rnd));
+          }
+          //assign(*this, injectionTable, INT_ASSIGN_MAX());
+          //assign(*this, flitsPerLink, INT_ASSIGN_MIN());
+        }else if(platform->getInterconnectType() == TDMA_BUS){
+          branch(*this, tdmaAlloc, INT_VAR_NONE(), INT_VAL_MIN());  
+        }
+        
+        if(platform->getInterconnectType() == TDN_NOC){
+          if(cfg->settings().configTDN){
+            assign(*this, ic_mode, INT_ASSIGN_MIN());
+          }else{
+            if(cfg->doOptimizeThput(cfg->settings().optimizationStep)){
+              branch(*this, ic_mode,  INT_VAL_MAX());
+            }else if(cfg->doOptimizePower(cfg->settings().optimizationStep)){
+              branch(*this, ic_mode, INT_VAL_MIN());
+            }else{
+              branch(*this, ic_mode, INT_VAL_MED());
+            }
+          }
+        }
+        
+        if(cfg->settings().configTDN){
+          assign(*this, proc_mode, INT_ASSIGN_MIN());
+        }else{
+          if(cfg->doOptimizeThput(cfg->settings().optimizationStep)){
+            branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VAL_MAX());
+          }else if(cfg->doOptimizePower(cfg->settings().optimizationStep)){
+            branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN());
+          }else{
+            branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VAL_MED());
+          } 
+        }
+        
+        if(platform->getTDNCyclesPerProc()>1 && cfg->doOptimizeThput(cfg->settings().optimizationStep)){
+          rnd.hw();
+          branch(*this, chosenRoute, INT_VAR_AFC_MAX(0.99), INT_VAL_RND(rnd));
+        }
+       
 
-        branch(*this, proc, INT_VAR_NONE(), INT_VAL(&valueProc));
+        //branch(*this, proc, INT_VAR_NONE(), INT_VAL(&valueProc));
+        rnd.hw();
+        branch(*this, proc, INT_VAR_NONE(), INT_VAL_RND(rnd));
     }else{ /**< end of SDF related constraints and branching. */
         /**
          * Memory
          */
-        cout << "Inserting memory constraints \n";
+        LOG_INFO("Inserting memory constraints ");
 #include "memory.constraints"
         /**
          * Branching for the periodic tasks
@@ -378,9 +615,18 @@ SDFPROnlineModel::SDFPROnlineModel(Mapping* p_mapping, Config* _cfg):
          * We also use valueProc to select the minimu slack proccessor
          * to mimic bestfit algorithm
          */
-        branch(*this, proc, INT_VAR_NONE(), INT_VAL(&valueProc));
-        branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VAL_MIN());
+        //branch(*this, proc, INT_VAR_NONE(), INT_VAL(&valueProc));
+        rnd.hw();
+        branch(*this, proc, INT_VAR_NONE(), INT_VAL_RND(rnd));
+        if(cfg->doOptimizeThput(cfg->settings().optimizationStep)){
+          branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VALUES_MAX());
+        }else if(cfg->doOptimizePower(cfg->settings().optimizationStep)){
+          branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VALUES_MIN());
+        }else{
+          branch(*this, proc_mode, INT_VAR_AFC_MAX(0.99), INT_VAL_MED());
+        }
     }
+    LOG_INFO("Model created.");
 }
 
 SDFPROnlineModel::SDFPROnlineModel(bool share, SDFPROnlineModel& s):
@@ -388,34 +634,49 @@ SDFPROnlineModel::SDFPROnlineModel(bool share, SDFPROnlineModel& s):
     apps(s.apps),
     platform(s.platform),
     mapping(s.mapping),
+    desDec(s.desDec),
     cfg(s.cfg),
+    rnd(s.rnd),
     least_power_est(s.least_power_est){
 
     next.update(*this, share, s.next);
-    rank.update(*this, share, s.rank);
+    //rank.update(*this, share, s.rank);
     proc.update(*this, share, s.proc);
     proc_mode.update(*this, share, s.proc_mode);
     tdmaAlloc.update(*this, share, s.tdmaAlloc);
+    injectionTable.update(*this, share, s.injectionTable);
+    ic_mode.update(*this, share, s.ic_mode);
+    chosenRoute.update(*this, share, s.chosenRoute);
     sendNext.update(*this, share, s.sendNext);
     recNext.update(*this, share, s.recNext);
     sendbufferSz.update(*this, share, s.sendbufferSz);
     recbufferSz.update(*this, share, s.recbufferSz);
     period.update(*this, share, s.period);
-    proc_period.update(*this, share, s.proc_period);
-    latency.update(*this, share, s.latency);
-    procsUsed.update(*this, share, s.procsUsed);
-    utilization.update(*this, share, s.utilization);
+    //proc_period.update(*this, share, s.proc_period);
+    //latency.update(*this, share, s.latency);
+    //procsUsed.update(*this, share, s.procsUsed);
+    //utilization.update(*this, share, s.utilization);
     sys_utilization.update(*this, share, s.sys_utilization);
     procsUsed_utilization.update(*this, share, s.procsUsed_utilization);
-    proc_power.update(*this, share, s.proc_power);
+    //proc_powerDyn.update(*this, share, s.proc_powerDyn);
+    //noc_power.update(*this, share, s.noc_power);
+    //nocUsed_power.update(*this, share, s.nocUsed_power);
+    //flitsPerLink.update(*this, share, s.flitsPerLink);
     sys_power.update(*this, share, s.sys_power);
-    proc_area.update(*this, share, s.proc_area);
+    sysUsed_power.update(*this, share, s.sysUsed_power);
+    //proc_area.update(*this, share, s.proc_area);
+    //noc_area.update(*this, share, s.noc_area);
+    //nocUsed_area.update(*this, share, s.nocUsed_area);
     sys_area.update(*this, share, s.sys_area);
-    proc_cost.update(*this, share, s.proc_cost);
+    sysUsed_area.update(*this, share, s.sysUsed_area);
+    //proc_cost.update(*this, share, s.proc_cost);
+    //noc_cost.update(*this, share, s.noc_cost);
+    //nocUsed_cost.update(*this, share, s.nocUsed_cost);
     sys_cost.update(*this, share, s.sys_cost);
-    wcct_b.update(*this, share, s.wcct_b);
-    wcct_s.update(*this, share, s.wcct_s);
-    wcct_r.update(*this, share, s.wcct_r);
+    sysUsed_cost.update(*this, share, s.sysUsed_cost);
+    //wcct_b.update(*this, share, s.wcct_b);
+    //wcct_s.update(*this, share, s.wcct_s);
+    //wcct_r.update(*this, share, s.wcct_r);
 }
 
 Space* SDFPROnlineModel::copy(bool share) {
@@ -426,20 +687,29 @@ void SDFPROnlineModel::print(std::ostream& out) const {
     out << "----------------------------------------" << endl;
     out << "Proc: " << proc << endl;
     out << "proc mode: " << proc_mode << endl;
-    out << "Latency: " << latency << endl;
+    out << "ic mode: " << ic_mode << endl;
+    //out << "Latency: " << latency << endl;
     out << "Period: " << period << endl;
-    out << "Procs used: " << procsUsed << endl;
-    out << "Proc_period: " << proc_period << endl;
-    out << "Proc utilization: " << utilization << endl;
+    //out << "Procs used: " << procsUsed << endl;
+    //out << "Proc_period: " << proc_period << endl;
+    //out << "Proc utilization: " << utilization << endl;
     out << "Sys utilization: " << sys_utilization << endl;
     out << "ProcsUsed utilization: " << procsUsed_utilization << endl;
-    out << "proc power: " << proc_power << endl;
+    //out << "proc power: " << proc_powerDyn << endl;
+    //out << "noc power: " << noc_power << endl;
+    //out << "noc power (only used parts): " << nocUsed_power << endl;
     out << "sys power: " << sys_power << endl;
-    out << "least_power_est: " << least_power_est << endl;
-    out << "proc area: " << proc_area << endl;
+    out << "sys power (only used parts): " << sysUsed_power << endl;
+    //out << "proc area: " << proc_area << endl;
+    //out << "noc area: " << noc_area << endl;
+    //out << "noc area (only used parts): " << nocUsed_area << endl;
     out << "sys area: " << sys_area << endl;
-    out << "proc cost: " << proc_cost << endl;
+    out << "sys area (only used parts): " << sysUsed_area << endl;
+    //out << "proc cost: " << proc_cost << endl;
+    //out << "noc cost: " << noc_cost << endl;
+    //out << "noc cost (only used parts): " << nocUsed_cost << endl;
     out << "sys cost: " << sys_cost << endl;
+    out << "sys cost (only used parts): " << sysUsed_cost << endl;
     out << "Next: ";
     for(size_t ii = 0; ii < apps->n_SDFActors(); ii++){
         out << next[ii] << " ";
@@ -449,28 +719,68 @@ void SDFPROnlineModel::print(std::ostream& out) const {
         out << next[apps->n_SDFActors() + ii] << " ";
     }
     out << endl;
-    out << "Rank: ";
-    for(size_t ii = 0; ii < apps->n_SDFActors(); ii++){
-        out << rank[ii] << " ";
-    }
+    //out << "Rank: ";
+    //for(size_t ii = 0; ii < apps->n_SDFActors(); ii++){
+    //    out << rank[ii] << " ";
+    //}
     out << endl;
-    out << "TDMA slots: " << tdmaAlloc << endl;
-    out << "S-order: " << sendNext << endl;
-    out << "wcct_b: " << wcct_b << endl;
-    out << "wcct_s: " << wcct_s << endl;
-    out << "R-order: " << recNext << endl;
-    out << "wcct_r: " << wcct_r << endl;
+    
+    if(platform->getInterconnectType() == TDMA_BUS){
+      out << "TDMA slots: " << tdmaAlloc << endl;
+    }
+    
+    //print TDN table
+    if(platform->getInterconnectType() == TDN_NOC){
+      out << endl << "Chosen routes: " << chosenRoute << endl;
+      
+      vector<tdn_graphNode> tdn_graph = platform->getTDNGraph();
+      out << endl << "TDN table: " << endl;
+      for(int ii = 0; ii < injectionTable.size(); ii++){
+        if(ii!=0 && ii%platform->getTDNCycles()==0){out << endl;}
+        if(ii%platform->getTDNCycles()==0){
+          out << ((tdn_graph[ii].link.from==-1)?"NI":("SW"+tools::toString(tdn_graph[ii].link.from))) << " -> ";
+          out << ((tdn_graph[ii].link.to==-1)?"NI":("SW"+tools::toString(tdn_graph[ii].link.to))) << ": ";
+        }
+        if(injectionTable[ii].assigned() && injectionTable[ii].val()==(int)platform->nodes()){
+          out << "_";
+        }else{
+          out << injectionTable[ii];
+        }
+        out << " ";
+        
+        if(ii == (int)(platform->getTDNCycles()*platform->nodes()-1))
+          out << endl << "-------------------------------------------";
+      }
+      out << endl << endl;
+    }
+   
+    //out << "Flits per link: " << endl;
+    //size_t links = tdn_graph.size()/platform->getTDNCycles();
+    /*for(size_t ii=0; ii<flitsPerLink.size(); ii++){
+      int msg = ii/links;
+      if(ii!=0 && ii%links==0) out << endl;
+      if(msg<10 && ii%links == 0) out << "Ch_0" << msg << ": ";
+      if(msg>=10 && ii%links == 0) out << "Ch_" << msg << ": ";
+      out << flitsPerLink[ii] << " ";
+    }
+    out << endl << endl;*/
+    
+    out << "Sending-order: " << sendNext << endl;
+    //out << "wcct_b: " << wcct_b << endl;
+    //out << "wcct_s: " << wcct_s << endl;
+    out << "Receiving-order: " << recNext << endl;
+    //out << "wcct_r: " << wcct_r << endl;
     out << "----------------------------------------" << endl;
 
 }
 
 void SDFPROnlineModel::printCSV(std::ostream& out) const {
     const char sep = ',';
-    for(auto i = 0; i < latency.size(); i++)
-        out << latency[i] << sep;
+    //for(auto i = 0; i < latency.size(); i++)
+    //    out << latency[i] << sep;
     for(auto i = 0; i < period.size(); i++)
         out << period[i] << sep;
-    out << procsUsed << sep;
+    //out << procsUsed << sep;
     out << sys_utilization << sep;
     out << sys_power << sep;
     out << least_power_est << sep;
@@ -496,6 +806,47 @@ vector<int> SDFPROnlineModel::getPeriodResults() {
     return periods;
 }
 
+/** returns the values of the parameters that are under optimization */
+vector<int> SDFPROnlineModel::getOptimizationValues(){
+  vector<int> values;
+  
+  if(cfg->doOptimizeThput()){
+    for(auto i : period){
+      if(i.assigned()) values.push_back(i.val());
+    }
+  }
+  if(cfg->doOptimizePower()){
+    if(sys_power.assigned()) values.push_back(sys_power.val());
+    if(sysUsed_power.assigned()) values.push_back(sysUsed_power.val());
+  }
+  
+  return values;
+}
+
+
+/** returns the values of the parameters that are under optimization */
+vector<int> SDFPROnlineModel::getPrintMetrics(){
+  vector<int> values;
+  
+  for(auto i: cfg->settings().printMetrics){
+    switch(i){
+      case(Config::THROUGHPUT):
+        for(auto j : period){
+          if(j.assigned()) values.push_back(j.val());
+        }
+        break;
+      case(Config::POWER):
+        if(sys_power.assigned()) values.push_back(sys_power.val());
+        if(sysUsed_power.assigned()) values.push_back(sysUsed_power.val());
+        break;
+      default:
+        break;
+    }
+  }
+  return values;
+}
+
+/*
 int SDFPROnlineModel::valueProc(const Space& home, IntVar x, int i) {
     int min_slack_proc = x.min();
 
@@ -508,9 +859,10 @@ int SDFPROnlineModel::valueProc(const Space& home, IntVar x, int i) {
         }
     }
     return min_slack_proc;
-}
+}*/
 
 Mapping* SDFPROnlineModel::extractResult() {
+  /*
     //cout << "Creating mapping..." << endl;
 
     vector<int> mem_load;
@@ -527,7 +879,7 @@ Mapping* SDFPROnlineModel::extractResult() {
         mapping->setProcMode(n, proc_mode[n].val());
         mapping->setProcPeriod(n, proc_period[n].min());
         mapping->setProcUtilization(n, utilization[n].val());
-        mapping->setProcEnergy(n, proc_power[n].val());
+        mapping->setProcEnergy(n, proc_powerDyn[n].val());
         mapping->setProcArea(n, proc_area[n].val());
         mapping->setProcCost(n, proc_cost[n].val());
     }
@@ -569,15 +921,15 @@ Mapping* SDFPROnlineModel::extractResult() {
     }
 
     //TODO: check if this part is still needed
-    vector<int> proc_tmp; /** a temp vector for converting IntVarArray to int vector. */
-    vector<int> proc_mode_tmp; /** a temp vector for converting IntVarArray to int vector. */
-
+    vector<int> proc_tmp;*/ /** a temp vector for converting IntVarArray to int vector. */
+    //vector<int> proc_mode_tmp; /** a temp vector for converting IntVarArray to int vector. */
+/*
     for(size_t j = 0; j < platform->nodes(); j++)
         proc_mode_tmp.push_back(proc_mode[j].val());
     for(size_t i = 0; i < apps->n_programEntities(); i++)
         proc_tmp.push_back(proc[i].val());
 
-    mapping->setMappingMode(proc_tmp, proc_mode_tmp);
+    mapping->setMappingMode(proc_tmp, proc_mode_tmp);*/
 
     return mapping;
 }

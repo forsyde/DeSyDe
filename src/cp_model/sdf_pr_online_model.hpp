@@ -54,18 +54,22 @@ class SDFPROnlineModel : public Space
 {
   
 private:
-    Applications*             apps;         /**< Pointer to the application object. */  
-    Platform*                 platform;    /**< Pointer to the platform object. */
-    Mapping*                 mapping;    /**< Pointer to the mapping object. */
-    DesignDecisions*         desDec;        /**< Pointer to the design decition object. */
+    Applications*           apps;         /**< Pointer to the application object. */  
+    Platform*               platform;    /**< Pointer to the platform object. */
+    Mapping*                mapping;    /**< Pointer to the mapping object. */
+    DesignDecisions*        desDec;        /**< Pointer to the design decition object. */
     //DSESettings*             settings;    /**< Pointer to the setting object. */
-    Config*                  cfg;    /**< Pointer to the config object. */
+    Config*                 cfg;    /**< Pointer to the config object. */
+    Rnd                     rnd;    /**< Random number generator. */
 
     IntVarArray             next;        /**< static schedule of firings. */
-    IntVarArray             rank;
+    //IntVarArray             rank;
     IntVarArray             proc;        /**< mapping of firings onto processors. */
     IntVarArray             proc_mode;    /**< processor modes: economy, regular and performance. */
-    IntVarArray                tdmaAlloc;    /**< allocation of TDMA slots to processors.__PRESOLVER__ */
+    IntVarArray             tdmaAlloc;    /**< allocation of TDMA slots to processors.*/
+    IntVarArray             injectionTable;     /**< TDN injection and state-of-NoC table.*/
+    IntVar                  ic_mode;     /**< assignment of interconnect mode. */
+    IntVarArray             chosenRoute; /**< Assignment of TDN slot to channel.*/
 
     IntVarArray             sendNext;    /**< a schedule for sent messages on interconnect. */
     IntVarArray             recNext;    /**< a schedule for sent messages on interconnect. */
@@ -77,22 +81,31 @@ private:
     * SECONDARY VARIABLES
     */   
     IntVarArray             period;                    /**< period of all applications (inverse of throughput). */
-    IntVarArray             proc_period;            /**< period of the processors. */
-    IntVarArray             latency;                /**< initial latency of all applications. */
-    IntVar                     procsUsed;                /**< number of processors used in mapping. */
-    IntVarArray             utilization;            /**< utilization of processing nodes. */
-    IntVarArray             proc_util_sum;            /**< sum utilization of processing nodes. */
-    IntVar                     sys_utilization;        /**< utilization of all procs. */
-    IntVar                     procsUsed_utilization;    /**< utilization of all used procs */
-    IntVarArray             proc_power;                /**< long-run consumption of each proc. */
-    IntVar                     sys_power;                /**< long-run consumption of system. */
-    IntVarArray             proc_area;                /**< area cost of each proc. */
-    IntVar                     sys_area;                /**< area cost of all procs combined. */
-    IntVarArray             proc_cost;                /**< monetary cost of each proc. */
-    IntVar                     sys_cost;                /**< monetary cost of all procs combined. */
-    IntVarArray             wcct_b;                    /**< communication delay, block (pre-send-wait). */
-    IntVarArray             wcct_s;                    /**< communication delay, send. */
-    IntVarArray             wcct_r;                    /**< coummunication delay, receive */
+    //IntVarArray             proc_period;            /**< period of the processors. */
+    //IntVarArray             latency;                /**< initial latency of all applications. */
+    //IntVar                  procsUsed;                /**< number of processors used in mapping. */
+    //IntVarArray             utilization;            /**< utilization of processing nodes. */
+    IntVar                  sys_utilization;        /**< utilization of all procs. */
+    IntVar                  procsUsed_utilization;    /**< utilization of all used procs */
+    //IntVarArray             proc_powerDyn;                /**< long-run consumption of each proc. */
+    //IntVarArray             flitsPerLink;              /**< flits per link and channel. */
+    //IntVar                  noc_power;                /**< long-run consumption of the NoC. */
+    //IntVar                  nocUsed_power;            /**< long-run consumption of the NoC. */
+    IntVar                  sys_power;                /**< long-run consumption of system. */
+    IntVar                  sysUsed_power;            /**< long-run consumption of system considering only the used parts. */
+    //IntVarArray             proc_area;                /**< area cost of each proc. */
+    //IntVar                  noc_area;                /**< area cost of the NoC. */
+    //IntVar                  nocUsed_area;                /**< area cost of the NoC, considering only the used parts. */
+    IntVar                  sys_area;                /**< area cost of all procs and noc combined. */
+    IntVar                  sysUsed_area;                /**< area cost of all procs and noc combined, considering only the used parts. */
+    //IntVarArray             proc_cost;                /**< monetary cost of each proc. */
+    //IntVar                  noc_cost;                /**< monetary cost of the NoC. */
+    //IntVar                  nocUsed_cost;                /**< monetary cost of the NoC, considering only the used parts. */
+    IntVar                  sys_cost;                /**< monetary cost of all procs and noc combined. */
+    IntVar                  sysUsed_cost;                /**< monetary cost of all procs and noc combined, considering only the used parts. */
+    //IntVarArray             wcct_b;                    /**< communication delay, block (pre-send-wait). */
+    //IntVarArray             wcct_s;                    /**< communication delay, send. */
+    //IntVarArray             wcct_r;                    /**< coummunication delay, receive */
     
 
     int                        least_power_est;        /**< estimated least power consumption. */
@@ -141,40 +154,78 @@ public:
     virtual void constrain(const Space& _b)
     {
         const SDFPROnlineModel& b = static_cast<const SDFPROnlineModel&>(_b);
-
-        switch(cfg->settings().criteria[0]) //creates the model based on the first criterion
-        {
-            case(Config::POWER):
-                rel(*this, sys_power < b.sys_power);
-                break;
-            case(Config::THROUGHPUT):
-                for(size_t i=0;i<apps->n_SDFApps();i++)
-                {
-                    if(apps->getPeriodConstraint(i) == -1)
-                    cout << "BAB app: " << i << "period=" << b.period[i] << endl;
-                        {    rel(*this, period[i] < b.period[i]);break;}
+        if(cfg->settings().optimizationStep == 0){
+          switch(cfg->settings().criteria[0]) //creates the model based on the first criterion
+          {
+              case(Config::POWER):
+                  rel(*this, sys_power < b.sys_power);
+                  break;
+              case(Config::THROUGHPUT):
+                  for(size_t i=0;i<apps->n_SDFApps();i++)
+                  {
+                      if(apps->getPeriodConstraint(i) == -1)
+                          {    rel(*this, period[i] < b.period[i]);break;}
+                  }
+                  break;
+             /* case(Config::LATENCY):
+                  for(size_t i=0;i<apps->n_SDFApps();i++)
+                  {
+                      if(apps->getLatencyConstraint(i) == -1)
+                          {rel(*this, latency[i] < b.latency[i]); break;} 
+                  }                
+                  break;*/
+              default:
+                  THROW_EXCEPTION(RuntimeException, "unknown optimization criterion in constrain function.");
+                  break;
+          }   
+        }else{
+          if(cfg->doOptimizePower() && cfg->doOptimizeThput()){
+            if(cfg->doOptimizePower(cfg->settings().optimizationStep) 
+               && cfg->doOptimizeThput(cfg->settings().optimizationStep-1)){ //first throughput, then power
+                 
+              for(size_t i=0;i<apps->n_SDFApps();i++){
+                if(apps->getPeriodConstraint(i) == -1){
+                  rel(*this, (period[i] < b.period[i]) ||
+                             ((period[i] == b.period[i]) && (sys_power < b.sys_power)));
+                  break;
                 }
-                break;
-            case(Config::LATENCY):
-                for(size_t i=0;i<apps->n_SDFApps();i++)
-                {
-                    if(apps->getLatencyConstraint(i) == -1)
-                        {rel(*this, latency[i] < b.latency[i]); break;} 
-                }                
-                break;
-            default:
-                cout << "unknown optimization criterion !!!\n";
-                throw 42;
-                break;
-        }   
+              }
+            }else if(cfg->doOptimizeThput(cfg->settings().optimizationStep)
+               && cfg->doOptimizePower(cfg->settings().optimizationStep-1)){ //first power, then throughput
+                 
+              for(size_t i=0;i<apps->n_SDFApps();i++){
+                if(apps->getPeriodConstraint(i) == -1){
+                  rel(*this, (sys_power < b.sys_power) ||
+                             ((sys_power == b.sys_power) && (period[i] < b.period[i])));
+                  break;
+                }
+              }
+            }
+          }else if(!cfg->doOptimizePower() && cfg->doOptimizeThput()){
+            for(size_t i=0;i<apps->n_SDFApps();i++){
+              if(apps->getPeriodConstraint(i) == -1){
+                rel(*this, period[i] < b.period[i]);break;
+              }
+            }
+          }else if(cfg->doOptimizePower() && !cfg->doOptimizeThput()){
+            rel(*this, sys_power < b.sys_power);
+          }//else... add the other metrics (area, money, ...)
+          
+          
+        }
     }
   
     vector<int> getPeriodResults();
     
+    /** returns the values of the parameters that are under optimization */
+    vector<int> getOptimizationValues();
+    /** returns the values of the parameters that are chosen for printing. */
+    vector<int> getPrintMetrics();
+    
     /**
     * Returns the processor number which task i has to be allocated.
     */ 
-    static int valueProc(const Space& home, IntVar x, int i);
+    //static int valueProc(const Space& home, IntVar x, int i);
     typedef int (*IntBranchVal)(const Space& home, IntVar x, int i);    
 };
 

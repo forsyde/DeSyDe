@@ -35,9 +35,11 @@
 #include <string.h>
 #include "../xml/xmldoc.hpp"
 
+#include "../exceptions/runtimeexception.h"
+
 using namespace std;
 
-enum InterconnectType { TDMA_BUS, NOC };
+enum InterconnectType { TDMA_BUS, TDN_NOC, NOC, UNASSIGNED };
 
 /**
  * Trivial class to represent a processing element.
@@ -48,36 +50,40 @@ public:
   std::string name;
   std::string type;
   std::string model;
-  int n_types;
+  vector<std::string> modes;
+  size_t n_modes;
   vector<double> cycle_length;
   vector<int> memorySize;
-  vector<int> powerCons;
+  vector<int> dynPowerCons;
+  vector<int> staticPowerCons;
   vector<int> areaCost;
   vector<int> monetaryCost;
   int NI_bufferSize;
 
   PE() {};
 
-  PE(std::string p_name, std::string p_type, vector<double> p_cycle,
-     vector<int> p_memSize, vector<int> _power, vector<int> _area, 
+  PE(std::string p_name, std::string p_type, vector<std::string> p_modes, vector<double> p_cycle,
+     vector<int> p_memSize, vector<int> _dynPower, vector<int> _staticPower, vector<int> _area, 
      vector<int> _money, int p_buffer){
-    name          = p_name; 
-    type          = p_type; 
-    n_types       = p_cycle.size();
-    cycle_length  = p_cycle; 
-    memorySize    = p_memSize; 
-    powerCons     = _power;
-    areaCost      = _area;
-    monetaryCost  = _money;
-    NI_bufferSize = p_buffer;
+    name            = p_name; 
+    type            = p_type; 
+    modes           = p_modes;
+    n_modes         = p_cycle.size();
+    cycle_length    = p_cycle; 
+    memorySize      = p_memSize; 
+    dynPowerCons    = _dynPower;
+    staticPowerCons = _staticPower;
+    areaCost        = _area;
+    monetaryCost    = _money;
+    NI_bufferSize   = p_buffer;
   }
    PE(std::string p_model, int id){
-    n_types       = 0;
+    n_modes       = 0;
     name          = p_model + "_" + tools::toString(id); 
     model         = p_model;
   }  
   PE(vector<char*> elements, vector<char*> values, int number)
-    : n_types(0),
+    : n_modes(0),
       NI_bufferSize(0) {
     
     for(unsigned int i=0;i< elements.size();i++) {
@@ -85,8 +91,8 @@ public:
         if(strcmp(elements[i], "NI_bufferSize") == 0)
           NI_bufferSize = atoi(values[i]);
                                         
-        if(strcmp(elements[i], "n_types") == 0)
-          n_types = atoi(values[i]);
+        if(strcmp(elements[i], "n_modes") == 0)
+          n_modes = atoi(values[i]);
 
         if(strcmp(elements[i], "type") == 0)
           type = string(values[i]);
@@ -107,21 +113,31 @@ public:
     /**
      * need to initialize in case some are not specified in the XML
      */          
+    string _mode_name           = "";
     double _cycle_length        = std::numeric_limits<double>::max(); 
-    int _powerCons                      = std::numeric_limits<int>::max() - 1; 
-    int _areaCost                       = std::numeric_limits<int>::max() - 1; 
+    int _dynPowerCons           = std::numeric_limits<int>::max() - 1; 
+    int _staticPowerCons        = std::numeric_limits<int>::max() - 1; 
+    int _areaCost               = std::numeric_limits<int>::max() - 1; 
     int _monetaryCost           = std::numeric_limits<int>::max() - 1; 
-    int _memorySize                     = 0;
+    int _memorySize             = 0;
                 
     for(unsigned int i=0;i< elements.size();i++) {
       try {   
+        
+        if(strcmp(elements[i], "mode_name") == 0) {
+          _mode_name = values[i];
+          //n_modes++; 
+        }
+        
         if(strcmp(elements[i], "cycle_length") == 0) {
           _cycle_length = atof(values[i]);
-          n_types++; ///each cycle_length is one operational mode
         }
                                 
-        if(strcmp(elements[i], "powerCons") == 0)
-          _powerCons = atoi(values[i]);
+        if(strcmp(elements[i], "dynPowerCons") == 0)
+          _dynPowerCons = atoi(values[i]);
+          
+        if(strcmp(elements[i], "staticPowerCons") == 0)
+          _staticPowerCons = atoi(values[i]);
                                 
         if(strcmp(elements[i], "areaCost") == 0)
           _areaCost = atoi(values[i]);
@@ -136,11 +152,11 @@ public:
         cout << "reading taskset xml file error : " << e.what() << endl;
       }
     }
-    AddMode(_cycle_length, _memorySize, _powerCons, _areaCost, _monetaryCost);
+    AddMode(_mode_name, _cycle_length, _memorySize, _dynPowerCons, _staticPowerCons, _areaCost, _monetaryCost);
   };
 
   friend std::ostream& operator<< (std::ostream &out, const PE &pe) {
-    out << "PE:" << pe.name << "[model=" << pe.model << "], no_types=" << pe.n_types << ", speeds(";
+    out << "PE:" << pe.name << "[model=" << pe.model << "], no_types=" << pe.n_modes << ", speeds(";
     for(unsigned int i=0;i<pe.cycle_length.size();i++)
       {
         i!=0 ? out << ", ": out << "" ;
@@ -150,14 +166,67 @@ public:
     return out;
   }
 
-  void AddMode(double _cycle_length, int _memorySize, int _powerCons, int _areaCost, int _monetaryCost) {
-      n_types++;///Increase the number of modes
+  void AddMode(string _mode_name, double _cycle_length, int _memorySize, int _dynPowerCons, int _staticPowerCons, int _areaCost, int _monetaryCost) {
+    n_modes++;///Increase the number of modes
+    modes.push_back(_mode_name);
     cycle_length.push_back(_cycle_length);
     memorySize.push_back(_memorySize);
-    powerCons.push_back(_powerCons);
+    dynPowerCons.push_back(_dynPowerCons);
+    staticPowerCons.push_back(_staticPowerCons);
     areaCost.push_back(_areaCost);
     monetaryCost.push_back(_monetaryCost);
   }    
+};
+
+//! Struct to capture the links of the TDN NoC.
+/*! Provides information on which link on the NoC, and at which TDN cycle. */
+struct tdn_link{
+  int from; /*!< Value -1: from NI to switch at NoC-node \ref tdn_link.to */
+  int to; /*!< Value -1: from switch to NI at NoC-node \ref tdn_link.from */
+  size_t cycle; /*!< TDN cycle */
+};
+
+//! Struct to capture a route through the TDN NoC.
+/*! Combines the destination processor with a path of nodes in the TDN graph.
+ * The \ref tnd_route.tdn_nodePath combines information about location with time (TND cycle). */
+struct tdn_route{
+  size_t srcProc;
+  size_t dstProc; /*!< Id of the destination processor / NoC node. */
+  vector<size_t> tdn_nodePath; /*!< The sequence of node Ids of the TDN-graph nodes, starting with the root node, ending with the node corresponding to \ref tdn_route.dstProc. */
+};
+
+//! Struct to capture a node in the TDN graph.
+/*!  */
+struct tdn_graphNode{
+    set<size_t> passingProcs; /*!< All processors whose messages can pass this link. */
+    tdn_link link; /*!< The link of the NoC that this node represents. */
+    vector<shared_ptr<tdn_route>> tdn_routes; /*!< All routes that go through this node. */
+};
+
+/**
+ * Trivial struct to represent the modes of the Interconnect.
+ */
+struct InterconnectMode {
+  string name;
+  size_t cycleLength;
+  size_t roundLength;
+  size_t dynPower_link;
+  size_t dynPower_NI;
+  size_t dynPower_switch;
+  size_t dynPower_bus;
+  size_t staticPow_link;
+  size_t staticPow_NI;
+  size_t staticPow_switch;
+  size_t staticPow_bus;
+  size_t area_link;
+  size_t area_NI;
+  size_t area_switch;
+  size_t area_bus;
+  size_t monetary_link;
+  size_t monetary_NI;
+  size_t monetary_switch;
+  size_t monetary_bus;
+  
 };
 
 
@@ -168,25 +237,88 @@ class Interconnect {
   
 public:
   enum InterconnectType type;
-  int dataPerSlot;
-  int dataPerRound;
-  int tdmaSlots;
-  int roundLength;
-  int columns;
-  int rows;
+  string name;
+  size_t dataPerSlot;
+  size_t dataPerRound;
+  size_t tdmaSlots;
+  size_t roundLength;
+  size_t columns;
+  size_t rows;
+  size_t flitSize;
+  size_t tdnCycles;
+  size_t tdnCyclesPerProc;
+  vector<InterconnectMode> modes;
+  vector<tdn_route> all_routes; //all routes, without time (TDN cycles) - unlink in the tdn graph
+  
 
-  Interconnect() {};
+  Interconnect() {
+    type = UNASSIGNED;
+  };
 
-  Interconnect(InterconnectType p_type, int p_dps, int p_tdma, int p_roundLength, int p_col, int p_row){
+ 
+  Interconnect(InterconnectType p_type, string p_name, size_t p_dps, size_t p_tdma, size_t p_roundLength, 
+               size_t p_col, size_t p_row, size_t p_fs, size_t p_tdnC, size_t p_tdnCPP){
     type         = p_type;
+    name         = p_name;
     dataPerSlot  = p_dps;
     tdmaSlots    = p_tdma;
     roundLength  = p_roundLength;
     columns      = p_col;
     rows         = p_row;
     dataPerRound = dataPerSlot * tdmaSlots;
+    flitSize     = p_fs;
+    tdnCycles    = p_tdnC;
+    tdnCyclesPerProc = p_tdnCPP;
+  }
+  
+  void addMode(string _name,
+               size_t _cycleLength,
+               size_t _dynPower_link,
+               size_t _dynPower_NI,
+               size_t _dynPower_switch,
+               size_t _staticPow_link,
+               size_t _staticPow_NI,
+               size_t _staticPow_switch,
+               size_t _area_link,
+               size_t _area_NI,
+               size_t _area_switch,
+               size_t _monetary_link,
+               size_t _monetary_NI,
+               size_t _monetary_switch){
+    modes.push_back(InterconnectMode{_name, _cycleLength, _cycleLength*(size_t)max(tdmaSlots, tdnCycles),
+                      _dynPower_link, _dynPower_NI, _dynPower_switch, 0,
+                      _staticPow_link, _staticPow_NI, _staticPow_switch, 0, 
+                      _area_link, _area_NI, _area_switch, 0, 
+                      _monetary_link, _monetary_NI, _monetary_switch, 0});
+  }
+  void addMode(string _name,
+               size_t _cycleLength,
+               size_t _dynPower_NI,
+               size_t _dynPower_bus,
+               size_t _staticPow_NI,
+               size_t _staticPow_bus,
+               size_t _area_NI,
+               size_t _area_bus,
+               size_t _monetary_NI,
+               size_t _monetary_bus){
+    modes.push_back(InterconnectMode{_name, _cycleLength, _cycleLength*(size_t)max(tdmaSlots, tdnCycles),
+                      0, _dynPower_NI, 0, _dynPower_bus,
+                      0, _staticPow_NI, 0, _staticPow_bus, 
+                      0, _area_NI, 0, _area_bus, 
+                      0, _monetary_NI, 0, _monetary_bus});
   }
 };
+
+//! Struct to capture the links to and from a switch.
+/*!  */
+struct neighborNode{
+    int node_id; /*!< Id of the neighbor node. */
+    int link_to; /*!< Id of the link to the neighbor node. */
+    int link_from; /*!< Id of the link from the node. */
+};
+
+
+
 
 /**
  * This class specifies a platform.
@@ -198,12 +330,16 @@ protected:
 
   std::vector<PE*> compNodes;
   Interconnect interconnect;
+  vector<tdn_graphNode> tdn_graph;
+  
+  void createTDNGraph() throw (InvalidArgumentException);
+  void createRouteTable();
 
 public:
 
   Platform() {};
   
-  Platform(XMLdoc& doc);
+  Platform(XMLdoc& doc) throw (InvalidArgumentException);
 
   Platform(size_t p_nodes, int p_cycle, size_t p_memSize, int p_buffer, enum InterconnectType p_type, int p_dps, int p_tdma, int p_roundLength);
   
@@ -216,12 +352,94 @@ public:
    */
   ~Platform();
 
-   void load_xml(XMLdoc& xml);
+   void load_xml(XMLdoc& xml) throw (InvalidArgumentException);
+   
+  /**
+   * For TDN config, setting no of TDN slots and slots per proc.
+   */
+  void setTDNconfig(size_t slots);
+   
   // Gives the number of nodes
   size_t nodes() const;
   
   // Gives the type of interconnect
   InterconnectType getInterconnectType() const;
+  
+  // Gives the TDN Graph / Table
+  vector<tdn_graphNode> getTDNGraph() const;
+  
+  size_t getTDNCycles() const;
+  
+  int getTDNCyclesPerProc() const;
+  
+  size_t getInterconnectModes() const;
+  
+  //int getTDNCycleLength() const;
+  
+  vector<tdn_route> getAllRoutes() const;
+  
+  vector<neighborNode> getNeighborNodes(size_t node) const;
+  
+  /*! Gets the cycle length, depending on the NoC mode. */
+  vector<int> getTDNCycleLengths() const;
+  
+  /*! Gets the dynamic power consumption of a link for each mode. */
+  vector<int> getDynPowerCons_link() const;
+  
+  /*! Gets the dynamic power consumption of an NI for each mode. */
+  vector<int> getDynPowerCons_NI() const;
+  
+  /*! Gets the dynamic power consumption of a switch for each mode. */
+  vector<int> getDynPowerCons_switch() const;
+  
+  /*! Gets the static power consumption of the entire NoC for each mode. */
+  vector<int> getStaticPowerCons() const;
+  
+  /*! Gets the dynamic power consumption of the link at node node for each mode. */
+  vector<int> getStaticPowerCons_link(size_t node) const;
+  
+  /*! Gets the dynamic power consumption of a link for each mode. */
+  vector<int> getStaticPowerCons_link() const;
+  
+  /*! Gets the dynamic power consumption of a NI for each mode. */
+  vector<int> getStaticPowerCons_NI() const;
+  
+  /*! Gets the dynamic power consumption of a switch for each mode. */
+  vector<int> getStaticPowerCons_switch() const;
+  
+  /*! Gets the area cost of the NoC, depending on the mode. */
+  vector<int> interconnectAreaCost() const;
+  
+  /*! Gets the area cost of the links at node node for each mode. */
+  vector<int> interconnectAreaCost_link(size_t node) const;
+  
+    /*! Gets the area cost of a link for each mode. */
+  vector<int> interconnectAreaCost_link() const;
+  
+  /*! Gets the area cost of an NI for each mode. */
+  vector<int> interconnectAreaCost_NI() const;
+  
+  /*! Gets the area cost of a switch for each mode. */
+  vector<int> interconnectAreaCost_switch() const;
+  
+  /*! Gets the monetary cost of the NoC, depending on the mode. */
+  vector<int> interconnectMonetaryCost() const;
+  
+  /*! Gets the monetary cost of the links at node node for each mode. */
+  vector<int> interconnectMonetaryCost_link(size_t node) const;
+  
+    /*! Gets the monetary cost of a link for each mode. */
+  vector<int> interconnectMonetaryCost_link() const;
+  
+  /*! Gets the monetary cost of a NI for each mode. */
+  vector<int> interconnectMonetaryCost_NI() const;
+  
+  /*! Gets the monetary cost of a switch for each mode. */
+  vector<int> interconnectMonetaryCost_switch() const;
+  
+  int getMaxNoCHops() const;
+  
+  int getFlitSize() const;
 
   // Gives the number of tdma slots of the interconnect
   int tdmaSlots() const;
@@ -243,7 +461,8 @@ public:
   size_t getMaxModes()const;
   
   vector<int> getMemorySize(int node)const;
-  vector<int> getPowerCons(int node)const;
+  vector<int> getDynPowerCons(int node)const;
+  vector<int> getStatPowerCons(int node)const;
   vector<int> getAreaCost(int node)const;
   vector<int> getMonetaryCost(int node)const;
 
@@ -280,6 +499,8 @@ public:
   bool allProcsFixed() const;
   
   string getProcModel(size_t id);
+  
+  string getProcModelMode(size_t proc_id, size_t mode_id);
   
   friend std::ostream& operator<< (std::ostream &out, const Platform &p);
 };

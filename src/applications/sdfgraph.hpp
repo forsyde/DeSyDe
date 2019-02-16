@@ -37,6 +37,7 @@
 
 
 #include "../xml/xmldoc.hpp"
+#include "../platform/platform.hpp"
 
 using namespace std;
 using boost::rational;
@@ -194,6 +195,11 @@ public:
    * Constructor. Creates an SDFGraph from the SDF3 representation of the graph.
    */
   SDFGraph(XMLdoc& doc);
+  
+  /**
+   * Constructor. Creates an SDFGraph for TDN config of the platform model.
+   */
+  SDFGraph(Platform* platform, XMLdoc& doc);
 
   /**
    * Destructor.

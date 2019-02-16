@@ -51,7 +51,7 @@ if(platform->homogeneous())
         debug_stream    << "\n \t binpacking: " <<      endl
                                         <<      proc                            <<      endl;
         for(size_t j=0; j<platform->nodes(); j++)                          
-                rel(*this, (nTasksOnProc[j]>0) >> (proc_power[j] == platform->getPowerCons(j)[0]*utilization[j]));
+                rel(*this, (nTasksOnProc[j]>0) >> (proc_powerDyn[j] == platform->getDynPowerCons(j)[0]*utilization[j]));
         
 }
 else
@@ -109,12 +109,12 @@ else
                 /**
                  * associating power with utilization for pr tasks
                  */ 
-                IntArgs proc_pows(platform->getPowerCons(j));
+                IntArgs proc_pows(platform->getDynPowerCons(j));
                         
                 for(size_t m=0; m<platform->getModes(j); m++)
                 {
                         rel(*this, ((proc_mode[j]==m) && (nTasksOnProc[j]>0) ) 
-                                          >> (proc_power[j] == proc_pows[m]*utilization[j]));
+                                          >> (proc_powerDyn[j] == proc_pows[m]*utilization[j]));
                         debug_stream    << "proc["              <<      j       <<      "], "   
                                                         <<      "mode["         <<      m       <<      "] "
                                                         <<      "power="        << proc_pows[m] <<      endl;

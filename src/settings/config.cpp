@@ -40,7 +40,7 @@ using namespace DeSyDe;
 
 
 const string help_intro = string()
-    + "DeSyDe - Analytical Design Space Exploration tool\n"
+    + "DeSyDe - Analytical Design Space Exploration tool with Constraint Programming\n"
     + "Developers: Kathrin Rosvall  <danmann@kth.se>\n"
     + "            Nima Khalilzad   <nkhal@kth.se>\n"
     + "            George Ungureanu <ugeorge@kth.se>\n"
@@ -78,6 +78,10 @@ int Config::parse(int argc, const char** argv) throw (IOException, InvalidArgume
       ("dump-cfg",
           po::value<string>()->implicit_value("config.cfg"),
           "creates a default configuration file and exits the program.")
+      ("config-TDN",
+          po::value<string>()->implicit_value("")->notifier(
+              boost::bind(&Config::setTDNconfig, this, _1)),
+          "provides a minimal TDN-configuration for the provided platform model that works for all-to-all communication.")
       ("output,o",
           po::value<string>()->default_value(".")->notifier(
               boost::bind(&Config::setOutputPaths, this, _1)),
@@ -100,7 +104,40 @@ int Config::parse(int argc, const char** argv) throw (IOException, InvalidArgume
           po::value<string>()->default_value(string("ALL_SOL"))->notifier(
               boost::bind(&Config::setOutputPrintFrequency, this, _1)),
           "Frequency of printing output.\n"
-          "Valid options ALL, LAST, Every_n. ");        
+          "Valid options ALL, LAST, Every_n, FIRSTandLAST. ") 
+      ("print-metric",
+          po::value<vector<string>>()->multitoken()->default_value({"NONE",""},
+              "NONE ")->notifier(boost::bind(&Config::setPrintMetrics, this, _1)),
+          "List of all metrics to be printed into CSV file\n"
+          "Valid options NONE, POWER, THROUGHPUT, LATENCY.");        
+          
+  po::options_description presolver("Presolver options");
+  presolver.add_options()
+    ("presolver.model",
+              po::value<vector<string>>()->multitoken()->default_value({"NONE",""},
+                  "NONE ")->notifier(boost::bind(&Config::setPresolverModel, this, _1)),
+              "Constraint pre-solving model.\n"
+              "Valid options NONE, ONE_PROC_MAPPINGS.")
+    ("presolver.search",
+               po::value<string>()->default_value(string("NONESEARCH"))->notifier(
+                  boost::bind(&Config::setPresolverSearch, this, _1)),
+             "Search type.\n"
+             "Valid options NONESEARCH, FIRST, ALL, OPTIMIZE, OPTIMIZE_IT, GIST_ALL, GIST_OPT. ")
+    ("presolver.heuristic",
+              po::value<vector<string>>()->multitoken()->default_value({"NONE",""},
+                  "NONE ")->notifier(boost::bind(&Config::setHeuristic, this, _1)),
+              "Multi-step approach using heuristics. Each step uses the optimization criterion in the order as in dse.criteria.\n"
+              "Valid options NONE, TODAES.")
+    ("presolver.multi-search",
+               po::value<string>()->default_value(string("NONESEARCH"))->notifier(
+                  boost::bind(&Config::setMultiStepSearch, this, _1)),
+             "Search type for the heuristic steps. Final step uses search type as defined in dse.search. \n"
+             "Valid options NONESEARCH, FIRST, ALL, OPTIMIZE, OPTIMIZE_IT, GIST_ALL, GIST_OPT. ")
+    ("presolver.timeout",
+        po::value<vector<unsigned long int>>()->multitoken()->default_value({0,0},
+            "0 0")->notifier(boost::bind(&Config::setTimeout_presolver, this, _1)),
+        "search timeout. 0 means infinite. If two values are provided, the first one specifies "
+        "the timeout for the first solution, and the second one for incremental time-out which is reset after each found solution.");
 
   po::options_description dse("DSE options");
   dse.add_options()
@@ -123,8 +160,16 @@ int Config::parse(int argc, const char** argv) throw (IOException, InvalidArgume
           po::value<vector<unsigned long int>>()->multitoken()->default_value({0,0},
               "0 0")->notifier(boost::bind(&Config::setTimeout, this, _1)),
           "search timeout. 0 means infinite. If two values are provided, the first one specifies "
-          "the timeout for the first solution, and the second one for all solutions.")
+          "the timeout for the first solution, and the second one for incremental time-out which is reset after each found solution.")
+      ("dse.threads",
+          po::value<unsigned int>()->default_value(0)->notifier(
+              boost::bind(&Config::setThreads, this, _1)),
+          "number of parallel search for threads (0=all procs)")      
       ("dse.luby_scale",
+          po::value<unsigned long int>()->default_value(0)->notifier(
+              boost::bind(&Config::setNoGoodDepth, this, _1)),
+          "Depth for no good generation")      
+      ("dse.noGoodDepth",
           po::value<unsigned long int>()->default_value(0)->notifier(
               boost::bind(&Config::setLubyScale, this, _1)),
           "Luby scale")      
@@ -133,19 +178,6 @@ int Config::parse(int argc, const char** argv) throw (IOException, InvalidArgume
               boost::bind(&Config::setThPropagator, this, _1)),
           "Throughput propagator type.\n"
           "Valid options SSE, MCR. ");
-
-  po::options_description presolver("Presolver options");
-  presolver.add_options()
-    ("presolver.model",
-              po::value<vector<string>>()->multitoken()->default_value({"NONE",""},
-                  "NONE ")->notifier(boost::bind(&Config::setPresolverModel, this, _1)),
-              "Constraint pre-solving model.\n"
-              "Valid options NONE, ONE_PROC_MAPPINGS.")
-    ("presolver.search",
-               po::value<string>()->default_value(string("ALL"))->notifier(
-                  boost::bind(&Config::setPresolverSearch, this, _1)),
-             "Search type.\n"
-             "Valid options NONESEARCH, FIRST, ALL, OPTIMIZE, OPTIMIZE_IT, GIST_ALL, GIST_OPT. ");
 
   po::variables_map vm;
   po::options_description visible_options, all_options;
@@ -224,11 +256,13 @@ string Config::printSettings() {
       + " | " +  Logger::logLevelToString(Logger::instance().getLogLevel().second)
       + "\n* model : " + tools::toString(settings_.model)
       + "\n* search : " + tools::toString(settings_.search)
-      + "\n* propagator : " + tools::toString(settings_.th_prop)
       + "\n* criteria : " + tools::toString(settings_.criteria)
       + "\n* timeout : " + tools::toString(settings_.timeout_first)
       + " | " + tools::toString(settings_.timeout_all)
-      + "\n* luby_scale : " + tools::toString(settings_.luby_scale);
+      + "\n* no of threads : " + tools::toString(settings_.threads)
+      + "\n* no good depth : " + tools::toString(settings_.noGoodDepth)
+      + "\n* luby_scale : " + tools::toString(settings_.luby_scale)
+      + "\n* throughput propagator : " + tools::toString(settings_.th_prop);
 }
 
 void Config::dumpConfigFile(string path, po::options_description opts) throw (IOException){
@@ -296,6 +330,10 @@ void Config::setInputPaths(const vector<string> & paths) throw (IOException) {
   for (auto p : paths) {
     tools::append(settings_.inputs_paths, tools::getFileNames(p, ".xml"));
   }
+}
+
+void Config::setTDNconfig(const string &p){
+  settings_.configTDN = true;
 }
 
 void Config::setOutputPaths(const string &path) throw (IOException) {
@@ -393,6 +431,7 @@ Config::OutputPrintFrequency stringToPrintFrequency(const string &str) throw (In
   if (str == "ALL_SOL")            return Config::ALL_SOL;
   else if (str == "LAST")      return Config::LAST;
   else if (str == "EVERY_n") return Config::EVERY_n;
+  else if (str == "FIRSTandLAST") return Config::FIRSTandLAST;
   else THROW_EXCEPTION(InvalidFormatException, str, "invalid option");
 }
 
@@ -400,6 +439,7 @@ string printFrequencyToString(Config::OutputPrintFrequency freq) throw (InvalidF
   if (freq == Config::ALL_SOL)     return "ALL_SOL";
   else if (freq == Config::LAST)    return "LAST";
   else if (freq == Config::EVERY_n) return "EVERY_n";
+  else if (freq == Config::FIRSTandLAST) return "FIRSTandLAST";
   else THROW_EXCEPTION(InvalidFormatException, "ouput frequency", "invalid option");
 }
 string Config::get_out_freq() const {
@@ -430,11 +470,32 @@ Config::PresolverModels stringToPresolverModel(const string &str) throw (Invalid
   else THROW_EXCEPTION(InvalidFormatException, str, "invalid option");
 }
 
+Config::MultiStepHeuristics stringToHeuristic(const string &str) throw (InvalidFormatException) {
+  if (str == "NONE")            return Config::NO_HEURISTIC;
+  else if (str == "TODAES")      return Config::TODAES;
+  else THROW_EXCEPTION(InvalidFormatException, str, "invalid option");
+}
+
+void Config::setPrintMetrics(const vector<string> &str) throw (InvalidFormatException) {
+  for (string s : str)
+    if (s.length() != 0)
+      settings_.printMetrics.push_back(stringToCriterion(tools::trim(s)));
+}
 
 void Config::setCriteria(const vector<string> &str) throw (InvalidFormatException) {
   for (string s : str)
     if (s.length() != 0)
       settings_.criteria.push_back(stringToCriterion(tools::trim(s)));
+}
+
+
+void Config::setTimeout_presolver(const vector<unsigned long int> &touts) throw (IllegalStateException) {
+  try {
+    settings_.pre_timeout_first = (touts.size() < 1) ? 0 : touts[0];
+    settings_.pre_timeout_all   = (touts.size() < 2) ? 0 : touts[1];
+  } catch (std::exception& e) {
+    THROW_EXCEPTION(IllegalStateException, "internal error");
+  }
 }
 
 void Config::setTimeout(const vector<unsigned long int> &touts) throw (IllegalStateException) {
@@ -444,6 +505,14 @@ void Config::setTimeout(const vector<unsigned long int> &touts) throw (IllegalSt
   } catch (std::exception& e) {
     THROW_EXCEPTION(IllegalStateException, "internal error");
   }
+}
+
+void Config::setThreads(unsigned int _t) throw () {
+  settings_.threads = _t;
+}
+
+void Config::setNoGoodDepth(unsigned long int _ngd) throw () {
+  settings_.noGoodDepth = _ngd;
 }
 
 void Config::setLubyScale(unsigned long int scale) throw () {
@@ -456,8 +525,23 @@ void Config::setPresolverModel(const vector<string> &str) throw (InvalidFormatEx
       settings_.pre_models.push_back(stringToPresolverModel(tools::trim(s)));
 }
 
+void Config::setHeuristic(const vector<string> &str) throw (InvalidFormatException) {
+  settings_.optimizationStep = 0;
+  for (string s : str)
+    if (s.length() != 0)
+      settings_.pre_heuristics.push_back(stringToHeuristic(tools::trim(s)));
+}
+
 void Config::setPresolverSearch(const string &str) throw (InvalidFormatException) {
   settings_.pre_search = stringToSearch(str);
+}
+
+void Config::setMultiStepSearch(const string &str) throw (InvalidFormatException) {
+  settings_.pre_multi_step_search = stringToSearch(str);
+}
+
+void Config::incOptimizationStep(){
+    settings_.optimizationStep = min(settings_.optimizationStep+1,settings_.criteria.size()-1);
 }
 
 void Config::setPresolverResults(shared_ptr<Config::PresolverResults> _p){
@@ -475,10 +559,57 @@ bool Config::doOptimize() const {
   }
   return false;
 }
+
+bool Config::doOptimizeThput() const{
+  for(auto i: settings_.criteria)
+    if(i==THROUGHPUT) return true;
+  
+  return false;
+}
+
+bool Config::doOptimizePower() const{
+  for(auto i: settings_.criteria)
+    if(i==POWER) return true;
+  
+  return false;
+}
+
+bool Config::doOptimizeThput(size_t step) const{
+  if(step < settings_.criteria.size())
+    if(settings_.criteria[step]==THROUGHPUT) return true;
+  
+  return false;
+}
+
+bool Config::doOptimizePower(size_t step) const{
+  if(step < settings_.criteria.size())
+    if(settings_.criteria[step]==POWER) return true;
+  
+  return false;
+  
+}
+
+bool Config::doMultiStep() const{
+  for(auto i : settings_.pre_heuristics){
+    if(i > NO_HEURISTIC) return true;
+  }
+  return false;
+}
+
+bool Config::doPresolve() const{
+  for(auto i : settings_.pre_models){
+    if(i > NO_PRE) return true;
+  }
+  return false;
+}
+
 bool Config::is_presolved()
 {
+  if(doPresolve()){
     if(pre_results->oneProcMappings.size() > 0)
         return true;
     else
         return false;
+  }
+  return false;
 }

@@ -57,11 +57,15 @@
 # defining LDFLAGS!<program binary path> and LDLIBS!<program binary path>, in
 # the same was as the MODULES variables are defined.
 
+#=====================
+# DEPENDENCY VARIABLES
+#=====================
 
-
-#===================
-# PROGRAM VARIABLES
-#===================
+GECODE_PATH := $(ROOTPATH)gecode
+GECODE_INC  := $(GECODE_PATH)/gecode
+GECODE_LIB  := $(GECODE_PATH)
+LIBXML_PATH := $(ROOTPATH)libxml2/include
+BOOST_PATH  := $(ROOTPATH)boost/build
 
 GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)
 
@@ -82,13 +86,18 @@ MODULES!adse := \
 
 # Flags common to all program builds
 CXXFLAGS += -Wall -Wno-maybe-uninitialized -Wno-unused-result -std=c++11 -g -O1 \
-            -I/usr/include/boost -I/usr/include/libxml2 -I. \
+            -I$(BOOST_PATH)/ -I$(LIBXML_PATH)/ -I$(GECODE_PATH)/  -I. \
             -DVERSION=\"$(GIT_VERSION)\"
-LDFLAGS  += 
-LDLIBS   += -L/usr/lib/ -lgecodeint -lgecodeset -lgecodesearch -lgecodekernel \
+LDFLAGS  += -Wl,-rpath,$(GECODE_PATH) \
+						-Wl,-rpath,$(LIBXML_PATH) \
+						-Wl,-rpath,$(BOOST_PATH) \
+						-Wl,-rpath,$$ORIGIN
+LDLIBS   += -L$(GECODE_LIB)/ -L/usr/local/lib/ \
+            -L$(LIBXML_PATH)/ -L$(BOOST_PATH)/ \
+            -lgecodeint -lgecodeset -lgecodesearch -lgecodekernel \
             -lgecodesupport -lgecodeminimodel -lgecodegist -lgecodefloat \
             -lxml2 -lboost_system \
-            -lboost_filesystem -lboost_program_options 
+            -lboost_filesystem -lboost_program_options
 
 
 
@@ -196,7 +205,7 @@ all: prebuild $(PROGRAMS)
 $(foreach mod,$(all-unique-modules),$(eval $(call obj-template,$(mod))))
 $(foreach prog,$(PROGRAMS),$(eval $(call program-template,$(prog))))
 
-$(PROGRAMS): 
+$(PROGRAMS):
 	@printf $(POSTBUILDMSG) ""
 	@$(MKDIR) $(BINPATH)
 	@printf $(PRELINKMSG) ""

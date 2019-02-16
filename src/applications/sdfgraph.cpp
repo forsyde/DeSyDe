@@ -11,7 +11,7 @@ SDFGraph::SDFGraph(XMLdoc& xmlAppGraph) : xml(xmlAppGraph) {
   latency_constraint = 0;
 
   graphName = xml.xpathStrings("///sdf/@name")[0];
-  LOG_INFO("Parsing application " + graphName + "...");
+  LOG_INFO("   ...application " + graphName );
 
   _d = new dictionaries();
   buildDictionaries();
@@ -22,6 +22,52 @@ SDFGraph::SDFGraph(XMLdoc& xmlAppGraph) : xml(xmlAppGraph) {
   LOG_DEBUG("SDFGraph intermediate representation built successfully");
   //LOG_DEBUG(getString());
 
+}
+
+SDFGraph::SDFGraph(Platform* platform, XMLdoc& doc): xml(doc) {
+  graphName = "TDNconfigG";
+  parentActors 	     = platform->nodes();
+  period_constraint  = 0;
+  latency_constraint = 0;
+  
+  //generate actors
+  for(size_t a=0; a<platform->nodes(); a++){
+    actors.push_back(new SDFActor());
+    actors[a]->id = a;
+    actors[a]->name = "actor_"+tools::toString(a);
+    actors[a]->parent_id = a;
+    actors[a]->parent_name = "parent_"+tools::toString(a);
+    actors[a]->codeSize = 0;
+    actors[a]->dataSize = 0;
+  }
+  
+  //create path matrix
+  pathMatrix.assign(actors.size() * actors.size(), simplePath());
+  
+  //generate channels between all actors
+  size_t id = 0;
+  for(size_t src=0; src<actors.size(); src++){
+    for(size_t dst=0; dst<actors.size(); dst++){
+      channels.push_back(new SDFChannel());
+      channels[id]->id = id;
+      channels[id]->name = "ch_"+tools::toString(id);
+      channels[id]->source = src;
+      channels[id]->src_name = actors[src]->name;
+      channels[id]->prod = 1;
+      channels[id]->destination = dst;
+      channels[id]->dst_name = actors[dst]->name;
+      channels[id]->cons = 1;
+      channels[id]->initTokens = (src<dst) ? 0 : 1;
+      channels[id]->tokenSize = platform->getFlitSize();
+      channels[id]->messageSize = channels[id]->tokenSize;
+      
+      pathMatrix[src * actors.size() + dst].exists = 1;
+      pathMatrix[src * actors.size() + dst].initTokens = channels[id]->initTokens;
+      
+      id++;
+    }
+  }
+  LOG_DEBUG("Path matrix of generated SDFG for TDN configuration:\n"+printPathMatrix());
 }
 
 SDFGraph::~SDFGraph(){
@@ -135,6 +181,27 @@ void SDFGraph::transform(){
   //Initiate corresponding transformation method
   bool isHSDF = all_of(rep_vec.begin(), rep_vec.end(), [](int i){return i==1;});
   isHSDF ? transformFromHSDF() : transformFromSDF(rep_vec);
+  
+  //print graph into debug log file
+  LOG_DEBUG("All " + tools::toString(actors.size()) + " actors of graph " + graphName +":");
+  for(auto i : actors){
+    LOG_DEBUG("actor " + tools::toString(i->id) + ": " + i->name
+              + ", parent(id): " + i->parent_name + "(" + tools::toString(i->parent_id) +")"
+              + "; code size: " + tools::toString(i->codeSize) 
+              + "; data size: " + tools::toString(i->dataSize));
+  }
+  
+  LOG_DEBUG("All " + tools::toString(channels.size()) + " channels of graph " + graphName +":");
+  for(auto i: channels){
+    LOG_DEBUG("channel " + tools::toString(i->id) + ": " + i->name
+              +" from " + i->src_name + "(" + tools::toString(i->source) + ")"
+              + " [prod: " + tools::toString(i->prod) + "]"
+              +" to " + i->dst_name + "(" + tools::toString(i->destination) + ")"
+              + " [cons: " + tools::toString(i->cons) + "]"
+              + "; initial tokens: " + tools::toString(i->initTokens)
+              + "; token size: " + tools::toString(i->tokenSize)
+              + "; message size: "+ tools::toString(i->messageSize));
+  }
 }
 
 size_t newIndex(size_t actor, const vector<int> &repVector){

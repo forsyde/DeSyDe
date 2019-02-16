@@ -10,7 +10,7 @@
 //    }
 
 if(cfg->is_presolved()){
-            LOG_INFO("The model is presolved");
+            LOG_INFO("presolve.constraints: The model is presolved");
             if(cfg->getPresolverResults()->it_mapping < cfg->getPresolverResults()->oneProcMappings.size()){
   vector<tuple<int,int>> oneProcMapping = settings->getPresolverResults()->oneProcMappings[settings->getPresolverResults()->it_mapping];
 

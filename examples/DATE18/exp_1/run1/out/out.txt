@@ -1,0 +1,7 @@
+
+ 
+*** 
+No (better) solution found.
+===== search ended after: 0 s (57 ms) (with 0 incremental timer reset(s).) =====
+0 solutions found
+search nodes: 47, fail: 24, propagate: 764787, depth: 9, nogoods: 0, restarts: 1 ***
