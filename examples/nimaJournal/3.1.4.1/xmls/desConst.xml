@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<designConstraints>
-	<constraint app_name="a_sobel" period="1000" latency="80000"></constraint> 
-    <constraint app_name="b_susan" period="-1" latency="80000"></constraint> 
-    <constraint app_name="d_jpegEnc1" period="3500" latency="80000"></constraint> 	
-</designConstraints>

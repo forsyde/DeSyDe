@@ -1,6 +1,0 @@
-digraph {
-  getLm -> usan[label="1 -> 1"];
-  usan -> dir[label="1 -> 1"];
-  dir -> thin[label="1 -> 1"];
-  thin -> putLm[label="1 -> 1"];
-}

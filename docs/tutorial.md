@@ -66,47 +66,39 @@ interconnect link, e.g. a 3 x 2 grid has 6 links.
 We shall model two applications that must be run on the platform of our choice. Let's start with
 the Sobel and SUSAN applications. Their SDF descriptions as follows:
 
-* Dot File:
-
-      digraph {
-        getPx -> gx[label="6 -> 6"];
-        getPx -> gy[label="6 -> 6"];
-        gx -> abs[label="1 -> 1"];
-        gy -> abs[label="1 -> 1"];
-      }
-
-      digraph {
-        getLm -> usan[label="1 -> 1"];
-        usan -> dir[label="1 -> 1"];
-        dir -> thin[label="1 -> 1"];
-        thin -> putLm[label="1 -> 1"];
-      }
-
-* Visual ASCII representation:
-
-    - Sobel:
-
-    ```
-    +----+  6 -> 6   +---------+
-    | gy | <-------- |  getPx  |
-    +----+           +---------+
-      |                |
-      |                | 6 -> 6
-      |                v
-      |              +---------+
-      |              |   gx    |
-      |              +---------+
-      |                |
-      |                | 1 -> 1
-      |                v
-      |    1 -> 1    +---------+
-      +------------> |   abs   |
-                    +---------+
-    ```
-
-    - Susan:
-   
-    ```
+<table>
+<tr>
+<td>Sobel</td>
+<td>
+<img src="Sobel.png" alt="Sobel">
+</td>
+<td>
+<pre>
++----+  6 -> 6   +---------+
+| gy | <-------- |  getPx  |
++----+           +---------+
+  |                |
+  |                | 6 -> 6
+  |                v
+  |              +---------+
+  |              |   gx    |
+  |              +---------+
+  |                |
+  |                | 1 -> 1
+  |                v
+  |    1 -> 1    +---------+
+  +------------> |   abs   |
+                 +---------+
+</pre>
+</td>
+</tr>
+<tr>
+<td>SUSAN</td>
+<td>
+<img src="Susan.png" alt="SUSAN">
+</td>
+<td>
+<pre>
         +---------+
         |  getLm  |
         +---------+
@@ -134,7 +126,12 @@ the Sobel and SUSAN applications. Their SDF descriptions as follows:
         +---------+
         |  putLm  |
         +---------+
-    ```
+</pre>
+</td>
+</tr>
+</table>
+
+
 
 So, starting with Sobel, we want to write a file `sobel.xml` by adding the actors with ports and then connecting
 everything with channels. This is the content of the file:

@@ -26,7 +26,7 @@
 *.tex.backup
 *.snm
 *.nav
-*.dot
+# *.dot
 *.vrb
 *.o
 *.d

@@ -1,0 +1,6 @@
+digraph {
+  getLm -> usan[headlabel = "1" taillabel = "1" labeldistance=3.2 labelangle=25];
+  usan -> dir[headlabel = "1" taillabel = "1" labeldistance=3.2 labelangle=25];
+  dir -> thin[headlabel = "1" taillabel = "1" labeldistance=3.2 labelangle=25];
+  thin -> putLm[headlabel = "1" taillabel = "1" labeldistance=3.2 labelangle=25];
+}

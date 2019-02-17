@@ -1,6 +1,0 @@
-digraph {
-  getPx -> gx[label="6 -> 6"];
-  getPx -> gy[label="6 -> 6"];
-  gx -> abs[label="1 -> 1"];
-  gy -> abs[label="1 -> 1"];
-}

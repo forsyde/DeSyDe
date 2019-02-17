@@ -1,0 +1,6 @@
+digraph {
+  getPx -> gx[headlabel = "6" taillabel = "6" labeldistance=3.5 labelangle=20];
+  getPx -> gy[headlabel = "6" taillabel = "6" labeldistance=3.5 labelangle=-20];
+  gx -> abs[headlabel = "1" taillabel = "1" labeldistance=3.5 labelangle=-20];
+  gy -> abs[headlabel = "1" taillabel = "1" labeldistance=3.5 labelangle=20];
+}
