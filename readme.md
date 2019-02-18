@@ -39,7 +39,7 @@ on how to setup your own experiment, check out the tutorial provided in this rep
 ## Included examples
 
 * DSD18: rejected paper dealing with TDN NoCs exploration that optimize power while respecting real time constraints.
-* ScalAnaysis: folder containing scripts that generate different sized NoCs platforms based on a template extracted from DSD18.
+* ScalAnalysis: folder containing scripts that generate different sized NoCs platforms based on a template extracted from DSD18.
 * tutorial: the files produced as seen in the tutorial.
 
 # Publications
