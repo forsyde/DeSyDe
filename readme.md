@@ -36,10 +36,11 @@ The experiments provided in the `examples` folder represent those that are still
 used as proof of concepts into previous papers this project was involved. For a step-by-step tutorial
 on how to setup your own experiment, check out the tutorial provided in this repo.
 
-<!-- 1. Run `make` in the DeSyDe root folder to build the tool. -->
-<!-- 2. All files for the experiments are in the directory **examples/TODAES/** -->
-<!-- 3. The directory also contains a script, `run_experiments.sh`. Run the script, it will prompt you for which experiment from the TODAES article you want to run (1-6). *Note that for Experiments 3-6, the script will run all scenarious, which each are in a seperate directory.* -->
-<!-- 4. The results of the experiment will be put into **examples/TODAES/exp_&ast;/out/** -->
+## Included examples
+
+* DSD18: rejected paper dealing with TDN NoCs exploration that optimize power while respecting real time constraints.
+* ScalAnaysis: folder containing scripts that generate different sized NoCs platforms based on a template extracted from DSD18.
+* tutorial: the files produced as seen in the tutorial.
 
 # Publications
 
