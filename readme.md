@@ -50,18 +50,16 @@ on how to setup your own experiment, check out the tutorial provided in this rep
 
 ## Included examples
 
-* DSD18: rejected paper dealing with TDN NoCs exploration that optimize power while respecting real time constraints.
-* ScalAnalysis: folder containing scripts that generate different sized NoCs platforms based on a template extracted from DSD18.
-* tutorial: the files produced as seen in the tutorial.
+* [DSD18](examples/DSD18): experiments from our [DSD'18](ttps://doi.org/10.1109/DSD.2018.00011.) dealing with TDN NoCs exploration that optimize power while respecting real time constraints.
+* [ScalAnalysis](examples/ScalAnalysis): folder containing scripts that generates experiments for different sized NoCs platforms based on a template extracted from [DSD18](examples/DSD18).
+* [tutorial](examples/tutorial): the files used for the user [tutorial](docs/tutorial.md).
 
 # Publications
 
-[Kathrin Rosvall, Nima Khalilzad, George Ungureanu, and Ingo Sander. Throughput propagation in constraint-based design space exploration for mixed-criticality systems. In Proceedings of the 2017 Workshop on Rapid Simulation and Performance Evaluation: Methods and Tools (RAPIDO '17), Stockholm, Sweden. ACM, January 2017.](https://doi.org/10.1145/3023973.3023977)
-
-[Nima Khalilzad, Kathrin Rosvall, and Ingo Sander. A modular design space exploration framework for multiprocessor real-time systems. In Forum on specification & Design Languages (FDL '16), Bremen, Germany. IEEE, September 2016.](https://doi.org/10.1109/FDL.2016.7880377)
-
-[Rosvall, Kathrin, Tage Mohammadat, George Ungureanu, Johnny Öberg, and Ingo Sander. “Exploring Power and Throughput for Dataflow Applications on Predictable NoC Multiprocessors,” 719–26, 2018.](https://doi.org/10.1109/DSD.2018.00011.)
+[Kathrin Rosvall, Tage Mohammadat, George Ungureanu, Johnny Öberg, and Ingo Sander. “Exploring Power and Throughput for Dataflow Applications on Predictable NoC Multiprocessors,” 719–26, 2018.](https://doi.org/10.1109/DSD.2018.00011.)
 
 [Kathrin Rosvall, Nima Khalilzad, George Ungureanu, and Ingo Sander. Throughput propagation in constraint-based design space exploration for mixed-criticality systems. In Proceedings of the 2017 Workshop on Rapid Simulation and Performance Evaluation: Methods and Tools (RAPIDO '17), Stockholm, Sweden. ACM, January 2017.](https://doi.org/10.1145/3023973.3023977)
 
 [Nima Khalilzad, Kathrin Rosvall, and Ingo Sander. A modular design space exploration framework for multiprocessor real-time systems. In Forum on specification & Design Languages (FDL '16), Bremen, Germany. IEEE, September 2016.](https://doi.org/10.1109/FDL.2016.7880377)
+
+[Kathrin Rosvall and Ingo Sander. A constraint-based design space exploration framework for real-time applications on MPSoCs. In Design Automation and Test in Europe (DATE '14), Dresden, Germany, Mar. 2014.](http://dx.doi.org/10.7873/DATE.2014.339)
