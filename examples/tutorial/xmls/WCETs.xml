@@ -2,48 +2,48 @@
   <!-- SOBEL -->
   <mapping task_type="get_pixel">
     <wcet processor="simple" mode="default" wcet="320"/>
-    <wcet processor="powerfull" mode="default" wcet="224"/>
-    <wcet processor="powerfull" mode="eco" wcet="288"/>
+    <wcet processor="powerful" mode="default" wcet="224"/>
+    <wcet processor="powerful" mode="eco" wcet="288"/>
   </mapping>
   <mapping task_type="gx">
     <wcet processor="simple" mode="default" wcet="77"/>
-    <wcet processor="powerfull" mode="default" wcet="54"/>
-    <wcet processor="powerfull" mode="eco" wcet="69"/>
+    <wcet processor="powerful" mode="default" wcet="54"/>
+    <wcet processor="powerful" mode="eco" wcet="69"/>
   </mapping>
   <mapping task_type="gy">
     <wcet processor="simple" mode="default" wcet="77"/>
-    <wcet processor="powerfull" mode="default" wcet="54"/>
-    <wcet processor="powerfull" mode="eco" wcet="69"/>
+    <wcet processor="powerful" mode="default" wcet="54"/>
+    <wcet processor="powerful" mode="eco" wcet="69"/>
   </mapping>
   <mapping task_type="abs">
     <wcet processor="simple" mode="default" wcet="123"/>
-    <wcet processor="powerfull" mode="default" wcet="86"/>
-    <wcet processor="powerfull" mode="eco" wcet="111"/>
+    <wcet processor="powerful" mode="default" wcet="86"/>
+    <wcet processor="powerful" mode="eco" wcet="111"/>
   </mapping>
   <!--SUSAN -->
   <mapping task_type="getImage">
     <wcet processor="simple" mode="default" wcet="15"/>
-    <wcet processor="powerfull" mode="default" wcet="10"/>
-    <wcet processor="powerfull" mode="eco" wcet="13"/>
+    <wcet processor="powerful" mode="default" wcet="10"/>
+    <wcet processor="powerful" mode="eco" wcet="13"/>
   </mapping>
   <mapping task_type="usan">
     <wcet processor="simple" mode="default" wcet="1177"/>
-    <wcet processor="powerfull" mode="default" wcet="824"/>
-    <wcet processor="powerfull" mode="eco" wcet="1059"/>
+    <wcet processor="powerful" mode="default" wcet="824"/>
+    <wcet processor="powerful" mode="eco" wcet="1059"/>
   </mapping>
   <mapping task_type="direction">
     <wcet processor="simple" mode="default" wcet="833"/>
-    <wcet processor="powerfull" mode="default" wcet="583"/>
-    <wcet processor="powerfull" mode="eco" wcet="750"/>
+    <wcet processor="powerful" mode="default" wcet="583"/>
+    <wcet processor="powerful" mode="eco" wcet="750"/>
   </mapping>
   <mapping task_type="thin">
     <wcet processor="simple" mode="default" wcet="32"/>
-    <wcet processor="powerfull" mode="default" wcet="22"/>
-    <wcet processor="powerfull" mode="eco" wcet="29"/>
+    <wcet processor="powerful" mode="default" wcet="22"/>
+    <wcet processor="powerful" mode="eco" wcet="29"/>
   </mapping>
   <mapping task_type="putImage">
     <wcet processor="simple" mode="default" wcet="15"/>
-    <wcet processor="powerfull" mode="default" wcet="10"/>
-    <wcet processor="powerfull" mode="eco" wcet="13"/>
+    <wcet processor="powerful" mode="default" wcet="10"/>
+    <wcet processor="powerful" mode="eco" wcet="13"/>
   </mapping>
 </WCET_table>
