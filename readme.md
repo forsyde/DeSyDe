@@ -33,6 +33,13 @@ packages, you should be good to go by issuing the following install
 command (do not forget to prepend sudo if necessary):
 
     apt install automake libtool qt5-default
+    
+As of 2019-06-05, it seems from user feedback that on ubuntu and other
+derived distros not all dependencies are pulled with these commands, so
+it may be necessary to install `qtcreator` to be able to compile DeSyDe
+(do not forget to prepend sudo if necessary):
+
+    apt install qtcreator
 
 Then, a `make` followed by `make install` should do the trick. Tested
 on Linux Mint 18.3 and Debian 10.
